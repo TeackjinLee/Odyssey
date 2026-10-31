@@ -90,6 +90,8 @@ export class WorldSimulation {
       comboStep: 1,
       comboResetTimer: 0,
       hasDealtSwingDamage: false,
+      attackBufferTimer: 0,
+      lungeDistance: 0,
 
       bowCharge: 0,
       isFullCharged: false,
@@ -717,6 +719,7 @@ export class WorldSimulation {
     if (p.boonCooldown > 0) p.boonCooldown = Math.max(0, p.boonCooldown - dt);
     if (p.invulnerableTimer > 0) p.invulnerableTimer = Math.max(0, p.invulnerableTimer - dt);
     if (p.hitFlashTimer > 0) p.hitFlashTimer = Math.max(0, p.hitFlashTimer - dt);
+    if (p.attackBufferTimer > 0) p.attackBufferTimer = Math.max(0, p.attackBufferTimer - dt);
 
     if (p.state === 'idle' || p.state === 'move') {
       if (p.comboResetTimer > 0) {
@@ -727,12 +730,25 @@ export class WorldSimulation {
 
     const aimDx = input.aimWorldPos.x - p.x;
     const aimDz = input.aimWorldPos.z - p.z;
-    if (Math.hypot(aimDx, aimDz) > 0.01 && p.state !== 'dash') {
+    // 창을 준비하고 휘두르는 동안에는 방향을 고정 (시작할 때 마우스 쪽으로 정해짐)
+    const aimLocked = p.state === 'dash' || p.state === 'spear_windup' || p.state === 'spear_swing';
+    if (Math.hypot(aimDx, aimDz) > 0.01 && !aimLocked) {
       p.facingAngle = Math.atan2(aimDz, aimDx);
     }
 
     const moveVec = input.getMoveVector();
     const baseMoveSpeed = COMBAT_CONFIG.player.moveSpeed * (hasHermes ? 1.25 : 1.0);
+
+    // 공격 중·대시 중 누른 클릭은 버리지 않고 기억했다가 이어지는 타로 씀
+    if (
+      input.leftClickJustPressed &&
+      (p.state === 'dash' ||
+        p.state === 'spear_windup' ||
+        p.state === 'spear_swing' ||
+        p.state === 'spear_recovery')
+    ) {
+      p.attackBufferTimer = COMBAT_CONFIG.player.spear.inputBuffer;
+    }
 
     // 1. E키: 신의 권능 발동 (보유한 가호에 따라 신성 스킬 발동!)
     if (input.boonJustPressed && p.boonCooldown <= 0) {
@@ -817,9 +833,10 @@ export class WorldSimulation {
         this.movePlayerWithCollision(dt);
         p.stateTimer -= dt;
         if (p.stateTimer <= 0) {
+          // 대시가 끝나도 바로 서지 않고 조금 미끄러지며 멈춤
           p.state = 'idle';
-          p.vx = 0;
-          p.vz = 0;
+          p.vx *= 0.35;
+          p.vz *= 0.35;
         }
         break;
       }
@@ -848,14 +865,15 @@ export class WorldSimulation {
 
       case 'spear_windup': {
         const stepCfg = COMBAT_CONFIG.player.spear.steps[p.comboStep];
-        p.vx = Math.cos(p.facingAngle) * stepCfg.stepForward;
-        p.vz = Math.sin(p.facingAngle) * stepCfg.stepForward;
+        // 준비 동작에서는 발을 멈추고 힘을 모음
+        this.steerPlayerVelocity(0, 0, 24, dt);
         this.movePlayerWithCollision(dt);
         p.stateTimer -= dt;
         if (p.stateTimer <= 0) {
           p.state = 'spear_swing';
           p.stateTimer = stepCfg.active;
           p.hasDealtSwingDamage = false;
+          p.lungeDistance = this.computeLungeDistance(stepCfg.stepForward);
           this.audio.playSpearSwing(p.comboStep);
           this.spawnSpearSwingVisual(p.comboStep);
         }
@@ -864,8 +882,11 @@ export class WorldSimulation {
 
       case 'spear_swing': {
         const stepCfg = COMBAT_CONFIG.player.spear.steps[p.comboStep];
-        p.vx = Math.cos(p.facingAngle) * (stepCfg.stepForward * 0.5);
-        p.vz = Math.sin(p.facingAngle) * (stepCfg.stepForward * 0.5);
+        // 휘두르는 동안 lungeDistance만큼 내딛음: 처음엔 빠르게, 끝으로 갈수록 느리게
+        const t = 1 - Math.max(0, p.stateTimer) / stepCfg.active;
+        const lungeSpeed = ((2 * p.lungeDistance) / stepCfg.active) * Math.max(0, 1 - t);
+        p.vx = Math.cos(p.facingAngle) * lungeSpeed;
+        p.vz = Math.sin(p.facingAngle) * lungeSpeed;
         this.movePlayerWithCollision(dt);
 
         if (!p.hasDealtSwingDamage) {
@@ -882,14 +903,27 @@ export class WorldSimulation {
       }
 
       case 'spear_recovery': {
-        p.vx = moveVec.x * baseMoveSpeed * 0.45;
-        p.vz = moveVec.z * baseMoveSpeed * 0.45;
+        const stepCfg = COMBAT_CONFIG.player.spear.steps[p.comboStep];
+        this.steerPlayerVelocity(moveVec.x * baseMoveSpeed * 0.45, moveVec.z * baseMoveSpeed * 0.45, 14, dt);
         this.movePlayerWithCollision(dt);
         p.stateTimer -= dt;
+        const recoveryProgress = 1 - Math.max(0, p.stateTimer) / stepCfg.recovery;
 
-        if (input.leftClickJustPressed && p.stateTimer <= 0.09) {
+        // 3타 뒤에는 회복 동작을 끝까지 해야 다음 1타가 나감
+        const comboCancelAt = p.comboStep === 3 ? 0.8 : COMBAT_CONFIG.player.spear.comboCancelAt;
+        if (p.attackBufferTimer > 0 && recoveryProgress >= comboCancelAt) {
+          p.attackBufferTimer = 0;
           this.advanceSpearCombo();
           this.startSpearAttack();
+          break;
+        }
+
+        if (
+          Math.hypot(moveVec.x, moveVec.z) > 0.1 &&
+          recoveryProgress >= COMBAT_CONFIG.player.spear.moveCancelAt
+        ) {
+          this.advanceSpearCombo();
+          p.state = 'move';
           break;
         }
 
@@ -925,7 +959,8 @@ export class WorldSimulation {
       case 'idle':
       case 'move':
       default: {
-        if (input.leftClickJustPressed) {
+        if (input.leftClickJustPressed || p.attackBufferTimer > 0) {
+          p.attackBufferTimer = 0;
           this.startSpearAttack();
           break;
         }
@@ -935,10 +970,15 @@ export class WorldSimulation {
           p.isFullCharged = false;
           break;
         }
-        p.vx = moveVec.x * baseMoveSpeed;
-        p.vz = moveVec.z * baseMoveSpeed;
+        const hasMoveInput = Math.hypot(moveVec.x, moveVec.z) > 0.1;
+        this.steerPlayerVelocity(
+          moveVec.x * baseMoveSpeed,
+          moveVec.z * baseMoveSpeed,
+          hasMoveInput ? COMBAT_CONFIG.player.acceleration : COMBAT_CONFIG.player.deceleration,
+          dt
+        );
         this.movePlayerWithCollision(dt);
-        p.state = Math.hypot(p.vx, p.vz) > 0.1 ? 'move' : 'idle';
+        p.state = hasMoveInput || Math.hypot(p.vx, p.vz) > 0.3 ? 'move' : 'idle';
         break;
       }
     }
@@ -1095,10 +1135,38 @@ export class WorldSimulation {
     }
 
     if (hitAny) {
+      const stepCfg = COMBAT_CONFIG.player.spear.steps[step];
       this.audio.playHit(step === 3);
-      this.hitStopTimer = step === 3 ? 0.055 : 0.03;
-      this.cameraShake = Math.max(this.cameraShake, step === 3 ? 0.35 : 0.16);
+      this.hitStopTimer = stepCfg.hitStop;
+      this.cameraShake = Math.max(this.cameraShake, stepCfg.shake);
     }
+  }
+
+  /** 현재 속도를 목표 속도로 부드럽게 따라붙게 함 (rate가 클수록 빠르게 붙음) */
+  private steerPlayerVelocity(targetVx: number, targetVz: number, rate: number, dt: number): void {
+    const p = this.player;
+    const k = 1 - Math.exp(-rate * dt);
+    p.vx += (targetVx - p.vx) * k;
+    p.vz += (targetVz - p.vz) * k;
+  }
+
+  /** 바라보는 쪽 가까이에 적이 붙어 있으면 그 앞에서 멈추도록 내딛는 거리를 줄임 */
+  private computeLungeDistance(maxDistance: number): number {
+    const p = this.player;
+    const dirX = Math.cos(p.facingAngle);
+    const dirZ = Math.sin(p.facingAngle);
+    let distance = maxDistance;
+    for (const enemy of this.enemies) {
+      if (enemy.hp <= 0) continue;
+      const dx = enemy.x - p.x;
+      const dz = enemy.z - p.z;
+      const forward = dx * dirX + dz * dirZ;
+      const side = Math.abs(-dx * dirZ + dz * dirX);
+      if (forward <= 0 || side > enemy.radius + p.radius) continue;
+      const gap = forward - enemy.radius - p.radius - 0.25;
+      distance = Math.min(distance, Math.max(0, gap));
+    }
+    return distance;
   }
 
   private triggerZeusChainLightning(sourceEnemy: EnemyEntity): void {

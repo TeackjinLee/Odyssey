@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ODYSSEY: 귀환의 항해 — TypeScript + Three.js + Vite로 만든 브라우저용 2.5D 쿼터뷰(38°) 그리스 신화 액션 로그라이트. 게임 디자인과 8개 씬의 연출 명세는 `SPEC.md`, 마일스톤 진행은 `PLAN.md`에 있다. 문서·주석·UI 문구는 한국어로 쓴다.
 
-이 폴더는 자체 저장소가 아니라 상위 `~/study` git 저장소 안에 있다(현재 추적 안 됨).
+이 폴더는 자체 git 저장소다(상위 `~/study` 저장소 안에 있지만 따로 관리).
 
 ## 명령
 
@@ -35,8 +35,9 @@ npx tsc           # 타입 검사만 (noEmit, strict)
 - `src/data/combatConfig.ts` — 수치 조정은 `COMBAT_CONFIG`, 4신 가호 정의는 `OLYMPIAN_BOONS`.
 - `WorldSimulation.loadScene(sceneId)` — 씬별 적·지형(pillars, hubInteractables) 배치. 흐름: title → hub → cyclops_cave → polyphemus_boss → (가호 선택 `openBoonSelection`/`selectBoon`) → siren_reef → parthenope_boss → return. `training_grounds`는 별도 훈련장.
 - `src/rendering/SceneRenderer25D.ts` — 씬이 바뀌면(`renderedSceneId` 비교) 바이옴 지형·조명·수면을 다시 짓고, 엔티티는 빌보드 스프라이트로 그림. Bloom 후처리(EffectComposer + UnrealBloomPass).
-- `src/rendering/ProceduralSprites.ts` — 캐릭터·적 스프라이트를 캔버스로 절차 생성한 텍스처 아틀라스. `public/assets/`의 이미지(odysseus.png, polyphemus.svg, parthenope.svg, 선택적 odysseus_back.png)가 있으면 그걸 우선 쓴다.
-- `src/rendering/ArticulatedCharacterRenderer.ts` — 플레이어 원본 이미지(1024×1536)를 신체 레이어로 잘라 8방향·무기 동작으로 움직이는 2D 퍼펫.
+- `src/rendering/odysseus/` — 오디세우스는 도형으로 만든 **3D 툰 모델**(적·보스는 스프라이트). `OdysseusRig`가 몸·창·방패를 관절로 잇고, `OdysseusPoses`가 자세 숫자 묶음(대기·달리기·대시·창 1~3타 키 자세)을, `OdysseusModel`이 매 프레임 PlayerEntity를 읽어 자세를 섞고 팔을 2관절 IK로 무기에 닿게 한다. 걸을 땐 가는 쪽, 공격 땐 조준(`facingAngle`) 쪽을 본다. `CapeCloth`는 Verlet 천 망토, `SpearTrail`은 창끝 궤적, `ToonMaterials`는 씬 조명과 무관한 고정 빛 툰 셰이더+외곽선. 모델은 +Z가 앞, -X가 오른쪽.
+- 창 공격 타이밍·내딛는 거리·히트스톱·입력 버퍼는 `COMBAT_CONFIG.player.spear`에 있고, 애니메이션은 `stateTimer`로 그 구간 진행도를 계산해 따라간다. 히트스톱 중엔 렌더러가 모델에 dt=0을 넘겨 동작도 멈춘다.
+- `src/rendering/ProceduralSprites.ts` — 적·보스 스프라이트를 캔버스로 절차 생성한 텍스처 아틀라스. `public/assets/`의 보스 이미지(polyphemus.svg, parthenope.svg)가 있으면 그걸 우선 쓴다.
 - `src/rendering/KeyArtRenderer.ts` — 타이틀 키아트(`#keyart-canvas`), `/assets/storyboard.png` 사용.
 - `src/ui/HudController.ts` — `index.html`에 미리 있는 DOM 요소(id로 찾음: 타이틀·허브 프롬프트·가호 모달·귀환 강화 화면·HUD 슬롯)를 갱신하고 버튼을 `world.loadScene` 등에 연결. HUD 마크업과 CSS는 전부 `index.html`에 있다.
 - `src/core/AudioSynth.ts` — WebAudio로 효과음 합성(오디오 파일 없음). `InputManager.ts` — WASD(화면 기준)·마우스 조준·Space 대시·Q 패링·E 권능.

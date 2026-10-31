@@ -5,6 +5,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { COMBAT_CONFIG } from '../data/combatConfig';
 import { WorldSimulation } from '../combat/WorldSimulation';
 import { ProceduralSprites } from './ProceduralSprites';
+import { OdysseusModel } from './odysseus/OdysseusModel';
 import { EnemyEntity, SceneId, Vec2 } from '../types/combat';
 
 interface EnemyVisualNode {
@@ -32,7 +33,7 @@ export class SceneRenderer25D {
   private ambientParticles: THREE.Points | null = null;
 
   private playerGroup: THREE.Group;
-  private playerSprite: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  private odysseus: OdysseusModel;
   private playerFacingRing: THREE.Group;
   private bowAimLine: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private weakPointSightline: THREE.Line;
@@ -150,19 +151,7 @@ export class SceneRenderer25D {
     this.weakPointSightline.visible = false;
     this.scene.add(this.weakPointSightline);
 
-    const spriteGeo = new THREE.PlaneGeometry(2.55, 3.18);
-    spriteGeo.translate(0, 1.54, 0);
-    this.playerSprite = new THREE.Mesh(
-      spriteGeo,
-      new THREE.MeshBasicMaterial({
-        map: this.sprites.updateAndGetPlayerTexture(world.player, 0),
-        transparent: true,
-        alphaTest: 0.05,
-        side: THREE.DoubleSide,
-      })
-    );
-    this.playerSprite.rotation.x = -this.cameraPitchRad;
-    this.playerGroup.add(this.playerSprite);
+    this.odysseus = new OdysseusModel(this.scene);
 
     this.scene.add(this.swingGroup);
     this.scene.add(this.projectileGroup);
@@ -698,30 +687,18 @@ export class SceneRenderer25D {
     this.playerGroup.position.set(p.x, 0, p.z);
     this.playerFacingRing.rotation.y = -p.facingAngle;
 
-    // 8방향 스프라이트 시트 기반 다관절 보행 및 창/활/방패 모션 동적 텍스처 갱신
-    this.playerSprite.material.map = this.sprites.updateAndGetPlayerTexture(p, dt);
-    this.playerSprite.material.needsUpdate = true;
-
-    // 8방향 시트(N, NE, E, SE, S, SW, W, NW)가 방향별 좌우를 자체 처리하므로 중복 반전 방지
-    this.playerSprite.scale.x = 1;
-
-    // 보행 시 3D 빌보드 탄성 스텝(Stride Tilt & Footstep Dust) 추가
-    if (p.state === 'move') {
-      const walkPhase = this.sprites.getWalkPhase();
-      this.playerSprite.rotation.z = Math.sin(walkPhase) * 0.045;
-      if (Math.abs(Math.cos(walkPhase)) > 0.96 && Math.random() < 0.35) {
-        world.shockwaves.push({
-          id: Math.random(),
-          x: p.x + (Math.random() - 0.5) * 0.35,
-          z: p.z + 0.12,
-          maxRadius: 0.55,
-          color: '#a8a29e',
-          timer: 0,
-          duration: 0.22,
-        });
-      }
-    } else {
-      this.playerSprite.rotation.z = 0;
+    // 오디세우스 3D 모델 (히트스톱 중에는 동작도 멈춤)
+    this.odysseus.update(p, world.hitStopTimer > 0 ? 0 : dt);
+    for (const step of this.odysseus.footsteps) {
+      world.shockwaves.push({
+        id: Math.random(),
+        x: step.x + (Math.random() - 0.5) * 0.3,
+        z: step.z + (Math.random() - 0.5) * 0.3,
+        maxRadius: 0.55,
+        color: '#a8a29e',
+        timer: 0,
+        duration: 0.22,
+      });
     }
 
     // 강궁 청백색 차징 화살 조준선 & 보스 금빛 외눈 약점 시선의 선(Sightline)

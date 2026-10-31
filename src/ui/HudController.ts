@@ -92,7 +92,7 @@ export class HudController {
       world.loadScene('training_grounds');
     });
 
-    // 하단 리셋 & 신의 가호 열기 버튼 & 캐릭터 이미지 적용 버튼 (드래그 앤 드롭 지원)
+    // 하단 리셋 & 신의 가호 열기 버튼
     document.getElementById('btn-respawn-enemies')?.addEventListener('click', () => {
       world.loadScene(world.currentScene);
     });
@@ -100,37 +100,27 @@ export class HudController {
       world.openBoonSelection(world.currentScene);
     });
 
-    const spriteInput = document.getElementById('sprite-file-input') as HTMLInputElement | null;
-    document.getElementById('btn-upload-sprite')?.addEventListener('click', () => {
-      spriteInput?.click();
-    });
-    spriteInput?.addEventListener('change', () => {
-      const file = spriteInput.files?.[0];
-      if (file) {
-        renderer.sprites.applyUserUploadedImage(file, 'player', () => {
-          world.showBanner('✅ 오디세우스 커스텀 이미지 적용 완료! (흰색 배경 자동 투명화됨)');
-        });
-      }
-    });
-
-    // 브라우저 창 어디에든 캐릭터 이미지 파일을 드래그 앤 드롭하면 즉시 배경 제거 후 적용!
+    // 브라우저 창에 보스 이미지 파일(이름에 poly / siren·parthenope)을 드래그 앤 드롭하면 배경 제거 후 적용
     window.addEventListener('dragover', (e) => {
       e.preventDefault();
     });
     window.addEventListener('drop', (e) => {
       e.preventDefault();
       const file = e.dataTransfer?.files?.[0];
-      if (file && file.type.startsWith('image/')) {
-        const lower = file.name.toLowerCase();
-        const target = lower.includes('poly')
-          ? 'boss_polyphemus'
-          : lower.includes('siren') || lower.includes('parthenope')
-            ? 'boss_parthenope'
-            : 'player';
-        renderer.sprites.applyUserUploadedImage(file, target, () => {
-          world.showBanner(`✅ [${file.name}] 캐릭터 스프라이트 적용 완료! (외곽 흰색 배경 자동 제거됨)`);
-        });
+      if (!file || !file.type.startsWith('image/')) return;
+      const lower = file.name.toLowerCase();
+      const target = lower.includes('poly')
+        ? 'boss_polyphemus'
+        : lower.includes('siren') || lower.includes('parthenope')
+          ? 'boss_parthenope'
+          : null;
+      if (!target) {
+        world.showBanner('보스 이미지만 바꿀 수 있습니다 (파일 이름에 poly 또는 parthenope)');
+        return;
       }
+      renderer.sprites.applyUserUploadedImage(file, target, () => {
+        world.showBanner(`✅ [${file.name}] 보스 스프라이트 적용 완료! (외곽 흰색 배경 자동 제거됨)`);
+      });
     });
 
     // Scene 8 메타 업그레이드 버튼 (청동 주화로 최대 체력, 기본 공격력 강화)

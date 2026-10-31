@@ -203,6 +203,8 @@ export interface PlayerEntity {
   comboStep: 1 | 2 | 3;
   comboResetTimer: number;
   hasDealtSwingDamage: boolean;
+  attackBufferTimer: number; // 공격 중·대시 중에 미리 누른 클릭을 기억하는 시간 (다음 타로 이어짐)
+  lungeDistance: number; // 이번 타격에서 앞으로 내딛는 거리 (앞에 적이 붙어 있으면 줄어듦)
 
   bowCharge: number; // 0.0 ~ 1.0
   isFullCharged: boolean;

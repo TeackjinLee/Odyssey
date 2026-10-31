@@ -1,34 +1,20 @@
 import * as THREE from 'three';
-import { EnemyKind, GodId, PlayerEntity } from '../types/combat';
-import { ArticulatedCharacterRenderer } from './ArticulatedCharacterRenderer';
+import { EnemyKind, GodId } from '../types/combat';
 
 /**
- * 오디세우스 주인공 관절 애니메이션 렌더러(ArticulatedCharacterRenderer)와
- * 적/보스 고해상도 스프라이트 및 사용자 PNG 드래그 앤 드롭(Flood-Fill 흰 배경 자동 투명화)을 관리하는 매니저.
+ * 적·보스 고해상도 스프라이트와 사용자 PNG 드래그 앤 드롭(Flood-Fill 흰 배경 자동 투명화)을 관리하는 매니저.
+ * (오디세우스는 3D 모델이라 여기서 그리지 않음 — rendering/odysseus/)
  */
 export class ProceduralSprites {
   private cache = new Map<string, THREE.CanvasTexture>();
-  private articulatedPlayer = new ArticulatedCharacterRenderer();
-  private playerDynamicTex: THREE.CanvasTexture;
-  private customPlayerCanvas: HTMLCanvasElement | null = null;
-  private customPlayerAttackCanvas: HTMLCanvasElement | null = null;
   private customEnemyTex = new Map<EnemyKind, THREE.CanvasTexture>();
 
-  private walkAccumTime = 0;
-  private idleAccumTime = 0;
-
   constructor() {
-    this.playerDynamicTex = new THREE.CanvasTexture(this.articulatedPlayer.getCanvas());
-    this.playerDynamicTex.colorSpace = THREE.SRGBColorSpace;
     this.initDefaultAndSavedSprites();
   }
 
   private initDefaultAndSavedSprites(): void {
     try {
-      // 1) 8방향 이동/대기 시트(/assets/odysseus_8dir.png) 및 2) 6프레임 전투 액션 시트(/assets/odysseus_attack.png) 로드!
-      this.tryLoadExternalAsset('/assets/odysseus_8dir.png', 'player', true);
-      this.tryLoadExternalAsset('/assets/odysseus_attack.png', 'player_attack', true);
-
       const savedPoly = localStorage.getItem('odyssey_custom_sprite_boss_polyphemus');
       if (savedPoly) {
         this.loadDataUrlIntoCustomSprite('boss_polyphemus', savedPoly, false);
@@ -47,65 +33,23 @@ export class ProceduralSprites {
     }
   }
 
-  private tryLoadExternalAsset(
-    url: string,
-    target: 'player' | 'player_attack' | EnemyKind,
-    removeWhiteBg = true
-  ): void {
+  private tryLoadExternalAsset(url: string, target: EnemyKind, removeWhiteBg = true): void {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const tex = removeWhiteBg
         ? this.createFloodFillKeyedTexture(img)
         : this.createDirectTexture(img);
-      if (target === 'player') {
-        this.customPlayerCanvas = tex.image as HTMLCanvasElement;
-      } else if (target === 'player_attack') {
-        this.customPlayerAttackCanvas = tex.image as HTMLCanvasElement;
-      } else {
-        this.customEnemyTex.set(target, tex);
-      }
+      this.customEnemyTex.set(target, tex);
     };
     img.src = url;
   }
 
   /**
-   * 매 프레임 오디세우스의 8방향 시트 셀(N, NE, E, SE, S, SW, W, NW)과
-   * 6프레임 전투 액션 키프레임(창 1·2·3타, Q 패링, Space 대시)을 결합하여 동적 텍스처를 반환
+   * 사용자가 업로드한 보스 이미지(흰색 배경 PNG/JPG 포함)에서
+   * 외곽 흰색 배경만 Flood-Fill로 투명화하여 적용
    */
-  public updateAndGetPlayerTexture(player: PlayerEntity, dt: number): THREE.CanvasTexture {
-    this.idleAccumTime += dt;
-    const speed = Math.hypot(player.vx, player.vz);
-    if (player.state === 'move' || (player.state === 'bow_charge' && speed > 0.2)) {
-      this.walkAccumTime += dt * (speed / 7.8);
-    } else {
-      this.walkAccumTime = 0;
-    }
-
-    this.articulatedPlayer.renderOdysseusFrame(
-      player,
-      this.walkAccumTime,
-      this.idleAccumTime,
-      this.customPlayerCanvas,
-      this.customPlayerAttackCanvas
-    );
-    this.playerDynamicTex.needsUpdate = true;
-    return this.playerDynamicTex;
-  }
-
-  public getWalkPhase(): number {
-    return this.walkAccumTime * 13.5;
-  }
-
-  /**
-   * 사용자가 업로드한 이미지(흰색 배경 PNG/JPG 포함)에서
-   * 외곽 흰색 배경만 Flood-Fill로 투명화하여 적용 (업로드된 이미지도 3분할 다리 보행 모션이 자동 적용됨)
-   */
-  public applyUserUploadedImage(
-    file: File,
-    target: 'player' | EnemyKind = 'player',
-    onComplete?: () => void
-  ): void {
+  public applyUserUploadedImage(file: File, target: EnemyKind, onComplete?: () => void): void {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
@@ -114,17 +58,8 @@ export class ProceduralSprites {
     reader.readAsDataURL(file);
   }
 
-  public resetToBuiltInOdysseusRig(): void {
-    this.customPlayerCanvas = null;
-    try {
-      localStorage.removeItem('odyssey_custom_sprite_player');
-    } catch {
-      // ignore
-    }
-  }
-
   private loadDataUrlIntoCustomSprite(
-    target: 'player' | EnemyKind,
+    target: EnemyKind,
     dataUrl: string,
     saveToStorage: boolean,
     onComplete?: () => void
@@ -132,21 +67,12 @@ export class ProceduralSprites {
     const img = new Image();
     img.onload = () => {
       const tex = this.createFloodFillKeyedTexture(img);
-      if (target === 'player') {
-        this.customPlayerCanvas = tex.image as HTMLCanvasElement;
-      } else {
-        this.customEnemyTex.set(target, tex);
-      }
+      this.customEnemyTex.set(target, tex);
 
       if (saveToStorage) {
         try {
           const keyedCanvas = tex.image as HTMLCanvasElement;
-          const compressedUrl = keyedCanvas.toDataURL('image/png');
-          const storageKey =
-            target === 'player'
-              ? 'odyssey_custom_sprite_player'
-              : `odyssey_custom_sprite_${target}`;
-          localStorage.setItem(storageKey, compressedUrl);
+          localStorage.setItem(`odyssey_custom_sprite_${target}`, keyedCanvas.toDataURL('image/png'));
         } catch {
           // ignore quota error
         }
