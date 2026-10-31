@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { COMBAT_CONFIG } from '../data/combatConfig';
 import { WorldSimulation } from '../combat/WorldSimulation';
 import { ProceduralSprites } from './ProceduralSprites';
-import { OdysseusModel } from './odysseus/OdysseusModel';
+import { OdysseusAvatar } from './odysseus/OdysseusAvatar';
 import { EnemyEntity, SceneId, Vec2 } from '../types/combat';
 
 interface EnemyVisualNode {
@@ -33,7 +33,7 @@ export class SceneRenderer25D {
   private ambientParticles: THREE.Points | null = null;
 
   private playerGroup: THREE.Group;
-  private odysseus: OdysseusModel;
+  private odysseus: OdysseusAvatar;
   private playerFacingRing: THREE.Group;
   private bowAimLine: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private weakPointSightline: THREE.Line;
@@ -151,7 +151,7 @@ export class SceneRenderer25D {
     this.weakPointSightline.visible = false;
     this.scene.add(this.weakPointSightline);
 
-    this.odysseus = new OdysseusModel(this.scene);
+    this.odysseus = new OdysseusAvatar(this.scene);
 
     this.scene.add(this.swingGroup);
     this.scene.add(this.projectileGroup);

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildBowProp, buildShieldProp, buildSpearProp, toonPart } from './Props';
 import { ToonMaterialKit } from './ToonMaterials';
 
 /**
@@ -25,8 +26,6 @@ export const PALETTE = {
 export const MODEL_SCALE = 1.22;
 
 export const HIP_HEIGHT = 1.0;
-export const SPEAR_TIP = 1.55;
-export const SPEAR_HEAD_LENGTH = 0.28;
 
 export class OdysseusRig {
   public readonly root = new THREE.Group();
@@ -99,11 +98,7 @@ export class OdysseusRig {
     z = 0,
     outline = true
   ): THREE.Mesh {
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, y, z);
-    parent.add(mesh);
-    if (outline) mesh.add(new THREE.Mesh(geo, this.kit.outline()));
-    return mesh;
+    return toonPart(this.kit, parent, geo, mat, x, y, z, outline);
   }
 
   /** 아래로 늘어진 팔다리 한 마디: 관절에서 -Y 방향으로 length만큼 */
@@ -224,57 +219,22 @@ export class OdysseusRig {
   }
 
   private buildSpear(): void {
-    // 손잡이 자리가 원점, +Y가 창끝 방향
+    this.spear.add(buildSpearProp(this.kit));
     this.body.add(this.spear);
-    const butt = -0.85;
-    const shaftLen = SPEAR_TIP - butt;
-    this.part(this.spear, new THREE.CylinderGeometry(0.024, 0.026, shaftLen, 8), this.mats.shaft, 0, butt + shaftLen / 2, 0);
-    this.part(this.spear, new THREE.CylinderGeometry(0.033, 0.033, 0.2, 8), this.mats.wrap, 0, 0.36, 0);
-    this.part(this.spear, new THREE.CylinderGeometry(0.036, 0.036, 0.05, 8), this.mats.gold, 0, SPEAR_TIP - 0.02, 0);
-    const head = new THREE.ConeGeometry(0.075, SPEAR_HEAD_LENGTH, 4);
-    head.scale(1, 1, 0.4);
-    head.computeVertexNormals();
-    this.part(this.spear, head, this.mats.gold, 0, SPEAR_TIP + SPEAR_HEAD_LENGTH / 2, 0);
-    const spike = new THREE.ConeGeometry(0.035, 0.12, 6);
-    spike.rotateX(Math.PI);
-    this.part(this.spear, spike, this.mats.gold, 0, butt - 0.05, 0);
   }
 
   private buildShield(): void {
-    // 원점이 방패 중심, +Z가 앞면 방향
+    this.shield.add(buildShieldProp(this.kit));
     this.body.add(this.shield);
-    const disc = new THREE.CylinderGeometry(0.37, 0.37, 0.05, 28);
-    disc.rotateX(Math.PI / 2);
-    this.part(this.shield, disc, this.mats.bronzeDark);
-    const rim = new THREE.TorusGeometry(0.36, 0.03, 6, 28);
-    this.part(this.shield, rim, this.mats.bronze, 0, 0, 0.02, false);
-    const boss = new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-    boss.rotateX(Math.PI / 2);
-    this.part(this.shield, boss, this.mats.gold, 0, 0, 0.025, false);
-    // 태양 문양 빛살 8개
-    const ray = new THREE.ConeGeometry(0.045, 0.2, 3);
-    ray.scale(1, 1, 0.25);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      const mesh = this.part(this.shield, ray, this.mats.gold, Math.cos(a) * 0.2, Math.sin(a) * 0.2, 0.03, false);
-      mesh.rotation.z = a - Math.PI / 2;
-    }
   }
 
   private buildBows(): void {
-    const makeBow = (group: THREE.Group): void => {
-      const arc = new THREE.TorusGeometry(0.42, 0.022, 6, 16, Math.PI * 0.85);
-      arc.rotateZ(-Math.PI * 0.425);
-      this.part(group, arc, this.mats.leather, -0.42, 0, 0);
-      const string = new THREE.CylinderGeometry(0.005, 0.005, 0.82, 4);
-      this.part(group, string, this.mats.cloth, -0.32, 0, 0, false);
-    };
-    // 활을 쏠 때 왼손에 드는 활 (원점이 손잡이, 활 몸통은 로컬 +X로 휘고 시위는 -X 쪽)
-    makeBow(this.handBow);
+    // 활을 쏠 때 왼손에 드는 활 (활 몸통이 앞으로 휘게 돌림)
+    this.handBow.add(buildBowProp(this.kit));
     this.handBow.rotation.y = -Math.PI / 2;
     this.body.add(this.handBow);
     // 평소 등에 멘 활
-    makeBow(this.backBow);
+    this.backBow.add(buildBowProp(this.kit));
     this.backBow.position.set(-0.05, 0.3, -0.27);
     this.backBow.rotation.set(0, Math.PI / 2, 0.6);
     this.spine.add(this.backBow);

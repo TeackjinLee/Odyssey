@@ -1,66 +1,31 @@
 import * as THREE from 'three';
-import { COMBAT_CONFIG } from '../../data/combatConfig';
-import { PlayerEntity, Vec2 } from '../../types/combat';
+import { PlayerEntity } from '../../types/combat';
+import { AvatarMotion, clamp } from './AvatarMotion';
 import { CapeCloth } from './CapeCloth';
-import { HIP_HEIGHT, MODEL_SCALE, OdysseusRig, PALETTE, SPEAR_HEAD_LENGTH, SPEAR_TIP } from './OdysseusRig';
-import {
-  DASH_POSE,
-  LEG_KEYS,
-  PARRY_POSE,
-  Pose,
-  SPIN_RECOVERY_SHARE,
-  attackFrame,
-  bowPose,
-  copyPose,
-  idlePose,
-  lerpPose,
-  runPose,
-} from './OdysseusPoses';
+import { HIP_HEIGHT, MODEL_SCALE, OdysseusRig, PALETTE } from './OdysseusRig';
+import { PoseDriver } from './PoseDriver';
+import { SPEAR_HEAD_LENGTH, SPEAR_TIP } from './Props';
 import { SpearTrail } from './SpearTrail';
 import { ToonMaterialKit } from './ToonMaterials';
 
-/** 달리기 한 주기(두 걸음) 동안 나아가는 거리 — 발이 미끄러져 보이지 않게 속도에 맞춤 */
-const STRIDE = 2.5;
 const UP = new THREE.Vector3(0, 1, 0);
 const FRONT = new THREE.Vector3(0, 0, 1);
-const SPEAR_BACK_SLOT = new THREE.Vector3(0.05, 1.35, -0.3);
-const SPEAR_BACK_DIR = new THREE.Vector3(-0.45, 0.85, -0.15).normalize();
+export const SPEAR_BACK_SLOT = new THREE.Vector3(0.05, 1.35, -0.3);
+export const SPEAR_BACK_DIR = new THREE.Vector3(-0.45, 0.85, -0.15).normalize();
 const SHIELD_BACK_SLOT = new THREE.Vector3(0, 1.22, -0.36);
 const SHIELD_BACK_DIR = new THREE.Vector3(0, 0, -1);
-const POLE_R = new THREE.Vector3(-0.6, -0.4, -1);
-const POLE_L = new THREE.Vector3(0.6, -0.4, -1);
-
-const wrapAngle = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
-const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
-const approach = (rate: number, dt: number): number => 1 - Math.exp(-rate * dt);
+export const POLE_R = new THREE.Vector3(-0.6, -0.4, -1);
+export const POLE_L = new THREE.Vector3(0.6, -0.4, -1);
 
 /**
- * 오디세우스 3D 모델: 시뮬레이션의 PlayerEntity를 읽어 매 프레임 자세를 정하고 그린다.
- * - 걸을 때는 가는 쪽을 보고, 공격·활·패링 때만 조준(facingAngle) 쪽으로 몸을 돌린다.
- * - 팔은 2관절 IK로 창·방패를 쥔 손 위치에 닿게 한다.
+ * 오디세우스 도형 3D 모델 (GLB 모델이 없거나 불러오지 못했을 때 쓰는 기본 모델).
+ * PoseDriver가 고른 자세를 관절에 입히고, 팔은 2관절 IK로 창·방패를 쥔 손 위치에 닿게 한다.
  */
 export class OdysseusModel {
-  /** 이번 프레임에 땅을 디딘 발 위치 (먼지 효과용) */
-  public readonly footsteps: Vec2[] = [];
-
   private readonly kit = new ToonMaterialKit();
   private readonly rig: OdysseusRig;
   private readonly cape: CapeCloth;
   private readonly trail = new SpearTrail();
-
-  private readonly current: Pose;
-  private readonly target: Pose;
-  private readonly loco: Pose;
-
-  private bodyAngle = -Math.PI / 2;
-  private runPhase = 0;
-  private time = 0;
-  private prevVx = 0;
-  private prevVz = 0;
-  private leanForward = 0;
-  private leanSide = 0;
-  private lastState = '';
-  private transitionTimer = 0;
 
   private readonly v1 = new THREE.Vector3();
   private readonly v2 = new THREE.Vector3();
@@ -79,156 +44,46 @@ export class OdysseusModel {
     this.rig = new OdysseusRig(this.kit);
     this.cape = new CapeCloth(this.kit.surface(PALETTE.cape, { doubleSide: true }), MODEL_SCALE);
     this.capeAnchorsWorld = this.rig.capeAnchors.map(() => new THREE.Vector3());
-    this.current = copyPose(idlePose(0));
-    this.target = copyPose(this.current);
-    this.loco = copyPose(this.current);
 
     scene.add(this.rig.root);
     scene.add(this.cape.mesh);
     scene.add(this.trail.mesh);
   }
 
-  public update(p: PlayerEntity, dt: number): void {
-    this.footsteps.length = 0;
-    // 히트스톱 중에는 모든 움직임이 멈춤
+  public setVisible(visible: boolean): void {
+    this.rig.root.visible = visible;
+    this.cape.mesh.visible = visible;
+    this.trail.mesh.visible = visible;
+  }
+
+  /** dt가 0이면(히트스톱) 모든 움직임이 멈춤 */
+  public update(p: PlayerEntity, motion: AvatarMotion, poses: PoseDriver, dt: number): void {
     if (dt <= 0) return;
-    this.time += dt;
-
-    const speed = Math.hypot(p.vx, p.vz);
-    this.updateFacing(p, speed, dt);
-    this.updateLean(p, dt);
-    this.updateRunPhase(p, speed, dt);
-
-    const runWeight = THREE.MathUtils.smoothstep(speed, 0.4, 4.5);
-    lerpPose(idlePose(this.time), runPose(this.runPhase), runWeight, this.loco);
-
-    const { rate, spin, trail, legsFromLoco } = this.chooseTarget(p, runWeight, dt);
-    if (legsFromLoco > 0) {
-      for (const k of LEG_KEYS) this.target[k] += (this.loco[k] - this.target[k]) * legsFromLoco;
-    }
-    if (p.hitFlashTimer > 0) {
-      const flinch = Math.min(1, p.hitFlashTimer * 5);
-      this.target.spinePitch -= 0.3 * flinch;
-      this.target.hipY -= 0.05 * flinch;
-    }
-    lerpPose(this.current, this.target, approach(rate, dt), this.current);
-
-    this.applyPose(p, spin);
-    this.placeArmsAndGear();
+    this.applyPose(p, motion, poses);
+    this.placeArmsAndGear(poses);
     this.updateCape(dt);
-    this.updateTrail(p, dt, trail);
+    this.trail.setColor(p.comboStep === 3 ? '#fb923c' : '#fde68a');
+    this.updateTrail(p, dt, poses.trail);
     this.kit.flash.value = Math.min(1, p.hitFlashTimer * 5) * 0.75;
   }
 
-  private updateFacing(p: PlayerEntity, speed: number, dt: number): void {
-    let target = this.bodyAngle;
-    let rate = 16;
-    if (p.state === 'dash') {
-      target = Math.atan2(p.dashDirZ, p.dashDirX);
-      rate = 40;
-    } else if (p.state !== 'idle' && p.state !== 'move') {
-      // 공격·활·패링: 조준한 쪽으로 빠르게 몸을 돌림
-      target = p.facingAngle;
-      rate = 40;
-    } else if (speed > 0.5) {
-      target = Math.atan2(p.vz, p.vx);
-    }
-    this.bodyAngle = wrapAngle(this.bodyAngle + wrapAngle(target - this.bodyAngle) * approach(rate, dt));
-  }
-
-  /** 속도가 바뀌는 쪽으로 몸이 기울어짐 (출발할 때 앞으로, 멈출 때 뒤로, 돌 때 안쪽으로) */
-  private updateLean(p: PlayerEntity, dt: number): void {
-    const ax = (p.vx - this.prevVx) / dt;
-    const az = (p.vz - this.prevVz) / dt;
-    this.prevVx = p.vx;
-    this.prevVz = p.vz;
-    if (p.state === 'dash' || p.state === 'spear_swing') return;
-    const fx = Math.cos(this.bodyAngle);
-    const fz = Math.sin(this.bodyAngle);
-    const forwardAccel = ax * fx + az * fz;
-    const sideAccel = ax * -fz + az * fx;
-    const k = approach(10, dt);
-    this.leanForward += (clamp(forwardAccel * 0.006, -0.18, 0.2) - this.leanForward) * k;
-    this.leanSide += (clamp(-sideAccel * 0.005, -0.15, 0.15) - this.leanSide) * k;
-  }
-
-  private updateRunPhase(p: PlayerEntity, speed: number, dt: number): void {
-    const before = Math.floor((this.runPhase - Math.PI / 2) / Math.PI);
-    this.runPhase += (speed * dt * Math.PI * 2) / STRIDE;
-    const after = Math.floor((this.runPhase - Math.PI / 2) / Math.PI);
-    if (after !== before && speed > 3 && p.state !== 'dash') {
-      this.footsteps.push({ x: p.x, z: p.z });
-    }
-    if (speed < 0.3) this.runPhase = 0;
-  }
-
-  private chooseTarget(
-    p: PlayerEntity,
-    runWeight: number,
-    dt: number
-  ): { rate: number; spin: number; trail: boolean; legsFromLoco: number } {
-    if (p.state !== this.lastState) {
-      this.lastState = p.state;
-      this.transitionTimer = 0.18;
-    }
-    this.transitionTimer = Math.max(0, this.transitionTimer - dt);
-
-    switch (p.state) {
-      case 'spear_windup':
-      case 'spear_swing':
-      case 'spear_recovery': {
-        const step = p.comboStep;
-        const cfg = COMBAT_CONFIG.player.spear.steps[step];
-        const phase = p.state === 'spear_windup' ? 'windup' : p.state === 'spear_swing' ? 'swing' : 'recovery';
-        const duration = phase === 'windup' ? cfg.windup : phase === 'swing' ? cfg.active : cfg.recovery;
-        const t = clamp(1 - p.stateTimer / duration, 0, 1);
-        const spinSpan = cfg.active + cfg.recovery * SPIN_RECOVERY_SHARE;
-        const spinT =
-          phase === 'windup' ? 0 : phase === 'swing' ? (cfg.active * t) / spinSpan : (cfg.active + cfg.recovery * t) / spinSpan;
-        const frame = attackFrame(step, phase, t, spinT);
-        copyPose(frame.pose, this.target);
-        this.trail.setColor(step === 3 ? '#fb923c' : '#fde68a');
-        return { rate: frame.rate, spin: frame.spin, trail: frame.trail, legsFromLoco: phase === 'recovery' ? runWeight : 0 };
-      }
-      case 'dash':
-        copyPose(DASH_POSE, this.target);
-        return { rate: 30, spin: 0, trail: false, legsFromLoco: 0 };
-      case 'parry_active':
-      case 'parry_recovery':
-        copyPose(PARRY_POSE, this.target);
-        return { rate: 30, spin: 0, trail: false, legsFromLoco: runWeight };
-      case 'bow_charge':
-      case 'bow_recovery':
-        copyPose(bowPose(p.state === 'bow_charge' ? p.bowCharge : 0), this.target);
-        return { rate: 18, spin: 0, trail: false, legsFromLoco: runWeight };
-      default:
-        copyPose(this.loco, this.target);
-        // 동작이 막 끝났을 때만 천천히 섞고, 걷는 중에는 걷기 자세를 그대로 따라감
-        return { rate: this.transitionTimer > 0 ? 14 : 60, spin: 0, trail: false, legsFromLoco: 0 };
-    }
-  }
-
-  private applyPose(p: PlayerEntity, spin: number): void {
+  private applyPose(p: PlayerEntity, motion: AvatarMotion, poses: PoseDriver): void {
     const r = this.rig;
-    const c = this.current;
+    const c = poses.current;
 
     r.root.position.set(p.x, 0, p.z);
-    r.root.rotation.y = Math.PI / 2 - this.bodyAngle;
-    r.body.rotation.y = spin;
+    r.root.rotation.y = motion.rootYaw;
+    r.body.rotation.y = poses.spin;
     const dashStretch = p.state === 'dash' ? 1 : 0;
     r.body.scale.set(1, 1 - 0.05 * dashStretch, 1 + 0.08 * dashStretch);
 
     r.hips.position.y = HIP_HEIGHT + c.hipY;
-    r.hips.rotation.set(0, c.hipYaw, c.hipRoll + this.leanSide);
-    const pitch = c.spinePitch + this.leanForward;
+    r.hips.rotation.set(0, c.hipYaw, c.hipRoll + motion.leanSide);
+    const pitch = c.spinePitch + motion.leanForward;
     r.spine.rotation.set(pitch, c.spineYaw, c.spineRoll);
 
     // 머리는 앞을 보려고 몸의 비틀림을 되돌리고, 서 있거나 걸을 때는 조준 쪽을 살짝 봄
-    let look = 0;
-    if (p.state === 'idle' || p.state === 'move') {
-      look = clamp(wrapAngle(this.bodyAngle - p.facingAngle), -0.7, 0.7) * 0.8;
-    }
-    const headYaw = clamp(-(c.hipYaw + c.spineYaw) + look, -1.2, 1.2);
+    const headYaw = clamp(-(c.hipYaw + c.spineYaw) + motion.lookYaw(p), -1.2, 1.2);
     r.head.rotation.set(c.headPitch - pitch * 0.5, headYaw, -c.spineRoll);
 
     const leg = (thigh: THREE.Group, knee: THREE.Group, ankle: THREE.Group, t: number, k: number, a: number, s: number): void => {
@@ -243,9 +98,9 @@ export class OdysseusModel {
     r.root.updateMatrixWorld(true);
   }
 
-  private placeArmsAndGear(): void {
+  private placeArmsAndGear(poses: PoseDriver): void {
     const r = this.rig;
-    const c = this.current;
+    const c = poses.current;
     const stow = clamp(c.stow, 0, 1);
 
     // 오른손: 창 손잡이
