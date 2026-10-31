@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ODYSSEY: 귀환의 항해 — 2.5D 그리스 신화 액션 로그라이트</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #060d15;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, serif;
+        color: #f4efe6;
+      }
+      #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        cursor: crosshair;
+      }
+      canvas#game-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      /* Scene 1 & Scene 8 16:9 Key Art Canvas Layer */
+      canvas#keyart-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        display: none;
+        z-index: 10;
+      }
+
+      /* 8대 시나리오 즉시 이동 내비게이션 바 (상단 중앙) */
+      #scene-nav {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 40;
+        display: flex;
+        gap: 5px;
+        background: rgba(8, 22, 31, 0.9);
+        border: 1px solid #d4a853;
+        border-radius: 999px;
+        padding: 5px 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+        pointer-events: auto;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .scene-tab {
+        background: rgba(19, 48, 61, 0.75);
+        border: 1px solid rgba(212, 168, 83, 0.35);
+        color: #e2e8f0;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .scene-tab:hover {
+        border-color: #fbbf24;
+        color: #fef08a;
+      }
+      .scene-tab.active {
+        background: linear-gradient(135deg, #b45309, #d97706);
+        border-color: #fef08a;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+      }
+
+      /* HUD Overlay */
+      #hud {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 56px 22px 18px 22px;
+        z-index: 20;
+      }
+      .hud-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .player-panel {
+        background: linear-gradient(180deg, rgba(9, 25, 34, 0.92), rgba(7, 17, 26, 0.92));
+        border: 2px solid #d4a853;
+        border-radius: 10px;
+        padding: 12px 16px;
+        min-width: 335px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+      }
+      .title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .game-title {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #fbbf24;
+      }
+      .revive-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(20, 184, 166, 0.22);
+        border: 1px solid #2dd4bf;
+        color: #99f6e4;
+      }
+      .revive-badge.used {
+        background: rgba(148, 163, 184, 0.15);
+        border-color: rgba(148, 163, 184, 0.35);
+        color: #94a3b8;
+      }
+      .hp-bar-outer {
+        position: relative;
+        width: 100%;
+        height: 18px;
+        background: rgba(13, 43, 54, 0.95);
+        border: 1px solid #d4a853;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .hp-bar-inner {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #991b1b, #dc2626, #f59e0b);
+        transition: width 0.12s ease-out;
+      }
+      .hp-bar-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+      }
+      .action-slots {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+      .slot {
+        background: rgba(13, 38, 48, 0.92);
+        border: 1px solid rgba(212, 168, 83, 0.38);
+        border-radius: 6px;
+        padding: 6px 4px;
+        text-align: center;
+      }
+      .slot.active {
+        border-color: #fde047;
+        box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+      }
+      .slot.ready {
+        border-color: rgba(45, 212, 191, 0.6);
+      }
+      .slot-key {
+        font-size: 10px;
+        font-weight: 800;
+        color: #fbbf24;
+        display: block;
+      }
+      .slot-name {
+        font-size: 11px;
+        font-weight: 700;
+        color: #f8fafc;
+        display: block;
+        margin-top: 2px;
+      }
+      .slot-sub {
+        font-size: 10px;
+        color: #94a3b8;
+        display: block;
+        margin-top: 1px;
+      }
+      .boon-badges-row {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .boon-pill {
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid #fde047;
+        background: rgba(180, 83, 9, 0.35);
+        color: #fef08a;
+      }
+
+      /* Boss Health Bar (Scene 4 & Scene 7) */
+      #boss-bar-wrap {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        min-width: 460px;
+        background: rgba(9, 22, 32, 0.92);
+        border: 2px solid #d4a853;
+        border-radius: 10px;
+        padding: 10px 18px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+      }
+      #boss-name {
+        font-size: 15px;
+        font-weight: 900;
+        color: #fde047;
+        letter-spacing: 0.06em;
+      }
+      #boss-subtitle {
+        font-size: 11px;
+        color: #99f6e4;
+        margin-bottom: 6px;
+      }
+      .boss-hp-outer {
+        width: 100%;
+        height: 16px;
+        background: #091924;
+        border: 1px solid #fbbf24;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      #boss-hp-inner {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #991b1b, #ea580c, #facc15);
+        transition: width 0.12s;
+      }
+
+      .perf-panel {
+        background: linear-gradient(180deg, rgba(9, 25, 34, 0.92), rgba(7, 17, 26, 0.92));
+        border: 2px solid #d4a853;
+        border-radius: 10px;
+        padding: 10px 14px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+      }
+      .fps-main {
+        font-size: 15px;
+        font-weight: 800;
+        color: #4ade80;
+      }
+      .fps-sub {
+        font-size: 11px;
+        color: #cbd5e1;
+        margin-top: 2px;
+      }
+
+      .hud-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+      }
+      .controls-guide {
+        background: rgba(9, 24, 34, 0.9);
+        border: 1px solid #d4a853;
+        border-radius: 10px;
+        padding: 10px 15px;
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 680px;
+      }
+      .controls-guide h3 {
+        font-size: 12px;
+        color: #fbbf24;
+        margin-bottom: 3px;
+      }
+      .key-badge {
+        display: inline-block;
+        background: rgba(212, 168, 83, 0.2);
+        border: 1px solid #fbbf24;
+        color: #fef08a;
+        border-radius: 4px;
+        padding: 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-right: 3px;
+      }
+      .reset-btn-wrap {
+        pointer-events: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .hud-btn {
+        background: linear-gradient(135deg, #78350f, #b45309);
+        border: 1px solid #fde047;
+        color: #fef9c3;
+        padding: 9px 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      }
+      .hud-btn:hover {
+        filter: brightness(1.15);
+      }
+
+      /* Scene 1: 메인 키아트 타이틀 오버레이 (상단 제목 여백 확보) */
+      #title-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 68px 24px 46px 24px;
+        pointer-events: none;
+      }
+      .title-header-box {
+        text-align: center;
+        background: rgba(7, 18, 28, 0.65);
+        border-top: 2px solid #fbbf24;
+        border-bottom: 2px solid #fbbf24;
+        padding: 16px 48px;
+        backdrop-filter: blur(4px);
+      }
+      .title-main {
+        font-size: 46px;
+        font-weight: 900;
+        letter-spacing: 0.22em;
+        color: #fef08a;
+        text-shadow: 0 4px 18px rgba(0, 0, 0, 0.95);
+      }
+      .title-sub {
+        font-size: 16px;
+        font-weight: 700;
+        color: #99f6e4;
+        letter-spacing: 0.14em;
+        margin-top: 6px;
+      }
+      .title-actions {
+        pointer-events: auto;
+        display: flex;
+        gap: 14px;
+      }
+      .cta-btn {
+        background: linear-gradient(135deg, #92400e, #d97706);
+        border: 2px solid #fef08a;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 900;
+        padding: 13px 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+      }
+      .cta-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.12);
+      }
+
+      /* Scene 2: 전함 허브 인터랙션 카드 */
+      #hub-prompt {
+        position: absolute;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 28;
+        background: rgba(8, 24, 34, 0.95);
+        border: 2px solid #fbbf24;
+        border-radius: 12px;
+        padding: 14px 22px;
+        text-align: center;
+        display: none;
+        pointer-events: auto;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+      }
+
+      /* Scene 5: 신의 가호 — “올림포스의 선택” (3지선다 모달) */
+      #boon-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 35;
+        background: radial-gradient(circle at center, rgba(13, 43, 54, 0.78), rgba(4, 10, 18, 0.94));
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 24px;
+        pointer-events: auto;
+      }
+      .boon-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .boon-header h2 {
+        font-size: 28px;
+        color: #fef08a;
+        letter-spacing: 0.12em;
+      }
+      .boon-header p {
+        font-size: 13px;
+        color: #99f6e4;
+        margin-top: 6px;
+      }
+      .boon-cards-row {
+        display: grid;
+        grid-template-columns: repeat(3, 290px);
+        gap: 22px;
+      }
+      .boon-card {
+        background: linear-gradient(180deg, rgba(13, 38, 50, 0.96), rgba(8, 20, 30, 0.98));
+        border: 2px solid #d4a853;
+        border-radius: 14px;
+        padding: 20px 18px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8);
+      }
+      .boon-card:hover {
+        transform: translateY(-6px);
+        border-color: #fef08a;
+        box-shadow: 0 18px 42px rgba(250, 204, 21, 0.35);
+      }
+      .boon-emblem-img {
+        width: 118px;
+        height: 118px;
+        margin: 0 auto 12px auto;
+        display: block;
+      }
+      .boon-god-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: #99f6e4;
+      }
+      .boon-title {
+        font-size: 17px;
+        font-weight: 900;
+        color: #fef08a;
+        margin: 4px 0 8px 0;
+      }
+      .boon-emblem-desc {
+        font-size: 11px;
+        color: #cbd5e1;
+        margin-bottom: 10px;
+      }
+      .boon-effect-desc {
+        font-size: 12px;
+        line-height: 1.55;
+        color: #f8fafc;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(212, 168, 83, 0.3);
+      }
+
+      /* Scene 8: 귀환 — “아직 끝나지 않은 항해” (메타 성장 패널) */
+      #return-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 32;
+        display: none;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 60px;
+        pointer-events: none;
+      }
+      .return-card {
+        pointer-events: auto;
+        width: 460px;
+        background: linear-gradient(180deg, rgba(11, 29, 39, 0.95), rgba(7, 18, 26, 0.97));
+        border: 2px solid #d4a853;
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.85);
+      }
+      .upgrade-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(15, 38, 50, 0.85);
+        border: 1px solid rgba(212, 168, 83, 0.4);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-top: 10px;
+      }
+
+      #floating-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 25;
+      }
+      .floating-text {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        font-weight: 800;
+        font-size: 14px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
+        white-space: nowrap;
+      }
+      #status-banner {
+        position: absolute;
+        top: 56px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 26;
+        background: rgba(9, 25, 34, 0.94);
+        border: 1px solid #fbbf24;
+        border-radius: 999px;
+        padding: 6px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fef08a;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+      #status-banner.visible {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <canvas id="game-canvas"></canvas>
+      <canvas id="keyart-canvas"></canvas>
+
+      <!-- 8대 시나리오 즉시 이동 탭 바 -->
+      <div id="scene-nav">
+        <button class="scene-tab active" data-scene="scene1_title">1. 메인 키아트</button>
+        <button class="scene-tab" data-scene="scene2_hub">2. 전함 허브</button>
+        <button class="scene-tab" data-scene="scene3_cyclops_cave">3. 키클롭스의 동굴</button>
+        <button class="scene-tab" data-scene="scene4_polyphemus_boss">4. 폴리페모스 보스전</button>
+        <button class="scene-tab" data-scene="scene5_boon_trigger">5. 신의 가호(선택)</button>
+        <button class="scene-tab" data-scene="scene6_siren_reef">6. 세이렌의 암초</button>
+        <button class="scene-tab" data-scene="scene7_parthenope_boss">7. 파르테노페 보스전</button>
+        <button class="scene-tab" data-scene="scene8_return">8. 귀환(메타 성장)</button>
+        <button class="scene-tab" data-scene="training_grounds">⚔️ 전술 훈련장</button>
+      </div>
+
+      <!-- Scene 1: 메인 키아트 타이틀 오버레이 -->
+      <div id="title-overlay">
+        <div class="title-header-box">
+          <div class="title-main">O D Y S S E Y</div>
+          <div class="title-sub">귀환의 항해 — “고향은 아직 수평선 너머에”</div>
+        </div>
+        <div class="title-actions">
+          <button id="btn-start-hub" class="cta-btn">⚓ 전함 갑판으로 승선 (Scene 2 허브)</button>
+          <button id="btn-start-stage1" class="cta-btn">👁️ 키클롭스의 동굴 출항 (Scene 3)</button>
+          <button id="btn-start-training" class="cta-btn">⚔️ 전술 훈련장 바로가기</button>
+        </div>
+      </div>
+
+      <!-- Scene 2: 전함 허브 인터랙션 안내 창 -->
+      <div id="hub-prompt">
+        <div id="hub-prompt-title" style="font-size:15px;font-weight:800;color:#fde047;"></div>
+        <div id="hub-prompt-sub" style="font-size:12px;color:#cbd5e1;margin:4px 0 10px 0;"></div>
+        <div id="hub-prompt-buttons" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- Scene 5: 신의 가호 — “올림포스의 선택” 3지선다 모달 -->
+      <div id="boon-modal">
+        <div class="boon-header">
+          <h2>신의 가호 — “올림포스의 선택”</h2>
+          <p>전투가 끝난 폐허 위, 세 갈래의 신성한 문양이 떠올랐습니다. 항해를 도울 하나의 축복을 선택하세요.</p>
+        </div>
+        <div id="boon-cards-container" class="boon-cards-row"></div>
+      </div>
+
+      <!-- Scene 8: 귀환 — “아직 끝나지 않은 항해” 메타 성장 화면 -->
+      <div id="return-overlay">
+        <div class="return-card">
+          <div style="font-size:12px;font-weight:800;color:#fdba74;letter-spacing:0.08em;">SCENE 8 // RETURN AT DAWN</div>
+          <h2 id="return-title" style="font-size:24px;color:#fef08a;margin:4px 0;">귀환 — “아직 끝나지 않은 항해”</h2>
+          <p style="font-size:12px;color:#cbd5e1;line-height:1.55;margin-bottom:12px;">
+            새벽의 전함 갑판에서 눈을 떴습니다. 젖은 손안에 남은 <b>청동 주화</b>로 영구 능력을 단련하고 다시 해도를 펼치세요.
+          </p>
+          <div id="return-coins-text" style="font-size:15px;font-weight:900;color:#fbbf24;margin-bottom:10px;">
+            보유 청동 주화: 60 🪙
+          </div>
+
+          <div class="upgrade-row">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#f8fafc;">강인한 육체 (최대 체력 +25)</div>
+              <div id="upg-hp-desc" style="font-size:11px;color:#99f6e4;">현재 단계: Lv.0 (최대 HP 120)</div>
+            </div>
+            <button id="btn-upg-hp" class="hud-btn">강화 (20 주화)</button>
+          </div>
+
+          <div class="upgrade-row">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#f8fafc;">벼려진 청동 (기본 공격력 +15%)</div>
+              <div id="upg-atk-desc" style="font-size:11px;color:#99f6e4;">현재 단계: Lv.0 (+0%)</div>
+            </div>
+            <button id="btn-upg-atk" class="hud-btn">강화 (25 주화)</button>
+          </div>
+
+          <div class="upgrade-row">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#f8fafc;">여신의 축복 (항해당 부활 최대 1회)</div>
+              <div id="upg-rev-desc" style="font-size:11px;color:#99f6e4;">항해당 최대 1회 50% 체력 부활 활성</div>
+            </div>
+            <button id="btn-upg-rev" class="hud-btn">항해 부활 충전 완료</button>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:18px;">
+            <button id="btn-return-hub" class="cta-btn" style="flex:1;padding:10px;font-size:13px;">
+              ⚓ 전함 허브 갑판으로 (Scene 2)
+            </button>
+            <button id="btn-return-stage1" class="cta-btn" style="flex:1;padding:10px;font-size:13px;">
+              🌊 즉시 재출항 (Scene 3)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="floating-layer"></div>
+      <div id="status-banner"></div>
+
+      <div id="hud">
+        <div class="hud-top">
+          <div class="player-panel">
+            <div class="title-row">
+              <span id="hud-scene-label" class="game-title">ODYSSEY // 2.5D VOYAGE</span>
+              <span id="revive-badge" class="revive-badge">여신의 축복(부활): 1 / 1</span>
+            </div>
+            <div class="hp-bar-outer">
+              <div id="hp-bar-inner" class="hp-bar-inner"></div>
+              <div id="hp-bar-text" class="hp-bar-text">HP 120 / 120</div>
+            </div>
+            <div class="action-slots">
+              <div id="slot-spear" class="slot ready">
+                <span class="slot-key">LMB</span>
+                <span class="slot-name">청동 창</span>
+                <span id="spear-combo-text" class="slot-sub">1타: 횡베기</span>
+              </div>
+              <div id="slot-bow" class="slot ready">
+                <span class="slot-key">RMB 홀드</span>
+                <span class="slot-name">강궁 차징</span>
+                <span id="bow-charge-text" class="slot-sub">무제한 화살</span>
+              </div>
+              <div id="slot-dash" class="slot ready">
+                <span class="slot-key">SPACE</span>
+                <span class="slot-name">회피 대시</span>
+                <span id="dash-cd-text" class="slot-sub">READY</span>
+              </div>
+              <div id="slot-parry" class="slot ready">
+                <span class="slot-key">Q</span>
+                <span class="slot-name">방패 패링</span>
+                <span id="parry-cd-text" class="slot-sub">READY</span>
+              </div>
+              <div id="slot-boon" class="slot ready">
+                <span class="slot-key">E</span>
+                <span class="slot-name">신의 권능</span>
+                <span id="boon-cd-text" class="slot-sub">READY</span>
+              </div>
+            </div>
+            <div id="boon-badges-row" class="boon-badges-row"></div>
+          </div>
+
+          <div id="boss-bar-wrap">
+            <div id="boss-name">폴리페모스</div>
+            <div id="boss-subtitle">단 하나의 눈</div>
+            <div class="boss-hp-outer">
+              <div id="boss-hp-inner"></div>
+            </div>
+          </div>
+
+          <div class="perf-panel">
+            <div id="fps-main" class="fps-main">60 FPS</div>
+            <div id="fps-sub" class="fps-sub">Frame: 16.6 ms | Min: 60 FPS</div>
+            <div id="coin-sub" class="fps-sub" style="color: #fbbf24; margin-top: 4px; font-weight: 800;">
+              청동 주화: 60 🪙 | 처치·파훼: 0
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="controls-guide">
+            <h3>[오디세우스 전투 & 보스 기믹 가이드]</h3>
+            <div><span class="key-badge">WASD</span>화면 기준 이동 &nbsp;|&nbsp; <span class="key-badge">마우스 커서</span>조준 통일 &nbsp;|&nbsp; <span class="key-badge">SPACE</span>무적 대시 (차징 취소) &nbsp;|&nbsp; <span class="key-badge">좌클릭</span><b>청동 창 3단 콤보</b></div>
+            <div><span class="key-badge">우클릭 홀드</span><b>강궁 차징</b> (100% 풀차징 시 <b>청백색 관통 화살 + 보스 금빛 외눈 약점 시선 저격!</b>)</div>
+            <div><span class="key-badge">Q</span><b>방패 패링</b> (투사체 반사 / 근접 경직) &nbsp;|&nbsp; <span class="key-badge">E</span><b>신의 권능</b> &nbsp;|&nbsp; <b>청동 종 타격</b>: 황금 공명으로 세이렌 음파 파훼!</div>
+          </div>
+          <div class="reset-btn-wrap">
+            <input type="file" id="sprite-file-input" accept="image/*" style="display:none;" />
+            <button id="btn-upload-sprite" class="hud-btn">🖼️ 캐릭터 이미지 파일 적용 (드롭 가능)</button>
+            <button id="btn-open-boon" class="hud-btn">✨ 신의 가호 선택 (Scene 5)</button>
+            <button id="btn-respawn-enemies" class="hud-btn">🔄 현재 스테이지 리셋 (R)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

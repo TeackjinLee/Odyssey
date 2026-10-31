@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <linearGradient id="titanSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3c69f"/>
+      <stop offset="50%" stop-color="#c68b59"/>
+      <stop offset="100%" stop-color="#6e3f1d"/>
+    </linearGradient>
+    <linearGradient id="goldBronze" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="clubWood" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78472a"/>
+      <stop offset="60%" stop-color="#452210"/>
+      <stop offset="100%" stop-color="#1c0d06"/>
+    </linearGradient>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </radialGradient>
+    <filter id="dropS" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#dropS)" stroke="#140c08" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 양다리 근육, 황금 정강이 받이(Greaves) & 가죽 샌들 -->
+    <g id="legs">
+      <!-- 왼쪽 다리 -->
+      <path d="M 235 550 L 365 565 L 335 795 L 220 790 Z" fill="url(#titanSkin)" stroke-width="6"/>
+      <path d="M 192 850 L 315 860 C 318 935, 295 975, 235 978 L 185 965 C 172 935, 178 890, 192 850 Z" fill="url(#titanSkin)" stroke-width="6"/>
+      <path d="M 185 885 L 312 895 M 182 918 L 310 928 M 252 865 L 245 945" fill="none" stroke="#3e2011" stroke-width="14"/>
+      <path d="M 205 695 C 218 655, 315 662, 338 712 L 315 865 C 275 882, 222 878, 198 855 Z" fill="url(#goldBronze)" stroke-width="6"/>
+
+      <!-- 오른쪽 다리 -->
+      <path d="M 485 535 L 595 545 L 625 755 L 515 765 Z" fill="url(#titanSkin)" stroke-width="6"/>
+      <path d="M 522 795 L 642 785 C 692 825, 705 872, 665 892 L 525 855 Z" fill="url(#titanSkin)" stroke-width="6"/>
+      <path d="M 545 812 L 648 805 M 568 838 L 672 828" fill="none" stroke="#3e2011" stroke-width="14"/>
+      <path d="M 538 648 C 562 612, 638 608, 648 645 L 605 805 C 572 818, 535 808, 525 785 Z" fill="url(#goldBronze)" stroke-width="6"/>
+    </g>
+
+    <!-- 다크 브라운 가죽 프테루게스 치마 & 황금 징 -->
+    <g id="kilt" fill="#422a1b" stroke-width="5.5">
+      <polygon points="265,425 322,448 285,595 245,575"/>
+      <polygon points="320,448 378,468 352,638 308,618"/>
+      <polygon points="376,468 438,478 435,682 392,665"/>
+      <polygon points="436,478 492,478 492,695 445,672"/>
+      <polygon points="490,478 542,465 545,645 505,632"/>
+      <polygon points="538,462 585,435 618,568 575,585"/>
+      <!-- 허리 가죽 벨트 -->
+      <path d="M 285 415 C 385 468, 505 468, 565 422 L 568 468 C 495 512, 378 512, 282 458 Z" fill="#3e2011"/>
+      <g fill="url(#goldBronze)" stroke-width="3.5">
+        <circle cx="328" cy="595" r="9"/>
+        <circle cx="412" cy="642" r="9"/>
+        <circle cx="468" cy="652" r="9"/>
+        <circle cx="525" cy="608" r="9"/>
+        <circle cx="365" cy="468" r="8"/>
+        <circle cx="418" cy="482" r="8"/>
+        <circle cx="472" cy="484" r="8"/>
+        <circle cx="522" cy="472" r="8"/>
+      </g>
+    </g>
+
+    <!-- 압도적인 역삼각형 근육질 상체 & 왼팔 -->
+    <g id="torso-and-arms">
+      <!-- 왼팔(화면 오른쪽 팔)과 주먹 -->
+      <path d="M 555 162 C 625 182, 655 265, 645 345 L 725 452 C 758 485, 738 548, 675 545 L 635 505 L 555 398 Z" fill="url(#titanSkin)" stroke-width="6.5"/>
+      <!-- 근육질 몸통 -->
+      <path d="M 235 155 C 325 125, 515 125, 578 175 L 548 448 C 468 482, 355 482, 288 438 Z" fill="url(#titanSkin)" stroke-width="6.5"/>
+      <!-- 대흉근 및 복근 라인 -->
+      <path d="M 305 285 C 355 322, 435 322, 472 288 M 472 288 C 512 318, 558 312, 575 282 M 385 352 L 505 355 M 382 398 L 498 402 M 448 288 L 442 435" fill="none" stroke="#3e2011" stroke-width="5"/>
+
+      <!-- 가슴을 X자로 가로지르는 두 줄의 무거운 황금 사슬 (Heavy Bronze Chains) -->
+      <path d="M 295 142 L 562 395 M 552 142 L 285 392" fill="none" stroke="#140c08" stroke-width="28"/>
+      <path d="M 295 142 L 562 395 M 552 142 L 285 392" fill="none" stroke="url(#goldBronze)" stroke-width="18" stroke-dasharray="24,8"/>
+
+      <!-- 오른팔(화면 왼쪽 거대 근육 팔) -->
+      <path d="M 285 165 C 185 185, 145 275, 132 385 L 118 565 C 138 628, 212 632, 238 575 L 222 495 L 298 325 Z" fill="url(#titanSkin)" stroke-width="6.5"/>
+    </g>
+
+    <!-- 오른손에 쥔 황금 철띠가 박힌 거대 통나무 곤봉 (Massive Wooden Club with Bronze Bands) -->
+    <g id="club" transform="translate(265, 655) rotate(-42)">
+      <path d="M -28 -285 L 28 -285 L 68 215 C 45 258, -45 258, -68 215 Z" fill="url(#clubWood)" stroke-width="6.5"/>
+      <!-- 나무 결 -->
+      <path d="M -12 -245 L -28 195 M 14 -245 L 28 195" fill="none" stroke="#1c0d06" stroke-width="4"/>
+      <!-- 두 줄의 황금 철띠와 리벳 -->
+      <rect x="-54" y="10" width="108" height="36" rx="8" fill="url(#goldBronze)" stroke-width="5.5"/>
+      <rect x="-64" y="95" width="128" height="40" rx="8" fill="url(#goldBronze)" stroke-width="5.5"/>
+      <circle cx="-25" cy="28" r="6" fill="#fef08a"/>
+      <circle cx="25" cy="28" r="6" fill="#fef08a"/>
+      <circle cx="-32" cy="115" r="7" fill="#fef08a"/>
+      <circle cx="0" cy="115" r="7" fill="#fef08a"/>
+      <circle cx="32" cy="115" r="7" fill="#fef08a"/>
+    </g>
+
+    <!-- 폴리페모스의 머리, 검은 산발 머리카락·수염, 그리고 이마 중앙의 빛나는 금빛 외눈 -->
+    <g id="cyclops-head">
+      <!-- 뒷머리 산발 갈기 -->
+      <path d="M 345 148 C 342 75, 415 35, 468 42 C 525 48, 558 95, 545 155 Z" fill="#27201c" stroke-width="6"/>
+      <!-- 얼굴 -->
+      <path d="M 405 92 L 525 98 L 528 195 L 412 195 Z" fill="url(#titanSkin)" stroke-width="5.5"/>
+      <!-- 덥수룩한 수염과 포효하는 이빨 -->
+      <path d="M 398 152 L 435 175 L 518 175 L 538 155 L 532 238 L 485 265 L 435 258 L 395 215 Z" fill="#27201c" stroke-width="5.5"/>
+      <rect x="462" y="182" width="46" height="18" rx="4" fill="#fef3c7" stroke-width="4"/>
+
+      <!-- 이마 한가운데의 빛나는 황금 외눈 (Single Glowing Golden Eye on Forehead) -->
+      <ellipse cx="492" cy="122" rx="22" ry="15" fill="url(#eyeGlow)" stroke-width="5"/>
+      <circle cx="492" cy="122" r="8" fill="#fde047" stroke="none"/>
+    </g>
+  </g>
+</svg>

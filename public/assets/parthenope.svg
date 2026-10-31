@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <linearGradient id="wingDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#134e4a"/>
+    </linearGradient>
+    <linearGradient id="sirenGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#713f12"/>
+    </linearGradient>
+    <linearGradient id="sirenDress" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </linearGradient>
+    <radialGradient id="sonicOrb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#818cf8"/>
+      <stop offset="70%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="rgba(79,70,229,0)"/>
+    </radialGradient>
+    <filter id="sirenShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.48"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#sirenShadow)" stroke="#0f172a" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 1. 거대한 검푸른·청록빛 세이렌 깃털 날개 한 쌍 (Majestic Spread Indigo-Teal Feathered Wings) -->
+    <g id="siren-wings" fill="url(#wingDark)" stroke-width="5.5">
+      <!-- 왼쪽 날개 외곽 & 다층 깃털 -->
+      <path d="M 335 285 C 245 145, 195 45, 135 42 C 75 45, 25 225, 32 455 C 38 585, 78 685, 112 725 L 138 625 L 165 695 L 195 575 L 235 615 L 265 485 L 335 425 Z"/>
+      <!-- 오른쪽 날개 외곽 & 다층 깃털 -->
+      <path d="M 465 285 C 555 145, 595 45, 655 48 C 725 55, 775 235, 768 465 C 762 595, 718 695, 682 735 L 655 635 L 628 705 L 598 585 L 558 625 L 528 495 L 465 425 Z"/>
+      <!-- 깃털 내부 결 하이라이트 -->
+      <path d="M 145 95 C 95 245, 85 435, 112 655 M 195 165 C 155 305, 148 455, 168 615 M 645 98 C 695 248, 705 438, 678 658 M 595 168 C 635 308, 642 458, 622 618" fill="none" stroke="#2dd4bf" stroke-width="3.5" opacity="0.65"/>
+    </g>
+
+    <!-- 2. 바다 물결처럼 흐르는 검푸른·청록 드레스 자락 -->
+    <path d="M 315 445 L 485 445 L 615 865 L 565 835 L 525 885 L 445 785 L 355 882 L 245 845 L 215 735 Z" fill="url(#sirenDress)" stroke-width="5.5"/>
+
+    <!-- 3. 날개 장식이 달린 황금 조류 발톱 정강이 받이 (Golden Taloned Greaves) -->
+    <g id="talon-legs">
+      <path d="M 332 545 L 415 545 L 448 685 L 368 695 Z" fill="#f5d0c5" stroke-width="5"/>
+      <!-- 황금 날개 무릎 보호대 & 조류 발톱 정강이 받이 -->
+      <path d="M 325 635 L 395 605 L 478 825 L 425 855 Z" fill="url(#sirenGold)" stroke-width="5.5"/>
+      <path d="M 312 685 L 365 675 L 442 915 L 392 935 Z" fill="url(#sirenGold)" stroke-width="5.5"/>
+      <!-- 날카로운 황금 발톱 -->
+      <path d="M 435 835 L 485 875 M 455 825 L 495 855 M 392 925 L 428 965 M 415 918 L 452 952" stroke="url(#sirenGold)" stroke-width="10"/>
+    </g>
+
+    <!-- 4. 그리스 뇌문 황금 코르셋 갑옷 (Royal Gold & Deep-Blue Armored Bodice with Meander Belt) -->
+    <g id="bodice">
+      <path d="M 318 285 L 472 285 L 458 465 L 395 495 L 332 465 Z" fill="#1e3a5f" stroke-width="5.5"/>
+      <path d="M 318 285 L 395 365 L 472 285 M 325 425 L 395 485 L 465 425" fill="none" stroke="url(#sirenGold)" stroke-width="16"/>
+      <path d="M 325 425 L 395 485 L 465 425" fill="none" stroke="#451a03" stroke-width="5" stroke-dasharray="10,6"/>
+    </g>
+
+    <!-- 5. 양팔, 황금 팔찌 & 왼손에서 소용돌이치는 보랏빛·푸른 음파 구체 (Glowing Violet-Blue Sonic Orb) -->
+    <g id="arms-and-orb">
+      <path d="M 318 295 L 235 365 L 185 285 L 212 268 L 252 332 L 315 278 Z" fill="#e2d4e0" stroke-width="5"/>
+      <path d="M 472 295 L 545 375 L 615 315 L 595 292 L 542 338 L 475 278 Z" fill="#e2d4e0" stroke-width="5"/>
+      <!-- 왼손 위의 소용돌이 음파 구체 -->
+      <circle cx="585" cy="255" r="85" fill="url(#sonicOrb)" stroke="none"/>
+      <path d="M 555 255 A 30 30 0 1 1 615 255 A 45 45 0 1 1 535 255" fill="none" stroke="#e0e7ff" stroke-width="5"/>
+    </g>
+
+    <!-- 6. 파르테노페의 얼굴, 보랏빛 발광 눈동자, 흩날리는 검은 머리카락 & 황금 태양 왕관 -->
+    <g id="queen-head">
+      <!-- 황금 태양 왕관 (Ornate Golden Sunburst Crown) -->
+      <polygon points="
+        335,178 315,152 352,158 345,122 375,145 382,105 405,138
+        412,96 425,138 448,108 448,145 478,125 468,158 498,155 465,178"
+        fill="url(#sirenGold)" stroke-width="4.5"/>
+      <!-- 검은 머리카락 -->
+      <path d="M 342 168 C 312 215, 315 285, 345 305 L 475 295 C 535 285, 558 225, 545 185 C 505 162, 415 152, 342 168 Z" fill="#0f172a" stroke-width="5"/>
+      <!-- 창백하고 신비로운 얼굴 -->
+      <path d="M 368 182 L 435 182 L 432 252 L 402 268 L 368 248 Z" fill="#e2d4e0" stroke-width="4.5"/>
+      <!-- 보랏빛으로 빛나는 두 눈 (Glowing Violet Eyes) -->
+      <ellipse cx="386" cy="212" rx="10" ry="5" fill="#f0abfc" stroke="#581c87" stroke-width="2.5"/>
+      <ellipse cx="418" cy="212" rx="10" ry="5" fill="#f0abfc" stroke="#581c87" stroke-width="2.5"/>
+    </g>
+  </g>
+</svg>

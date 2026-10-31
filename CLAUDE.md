@@ -1,0 +1,44 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 프로젝트
+
+ODYSSEY: 귀환의 항해 — TypeScript + Three.js + Vite로 만든 브라우저용 2.5D 쿼터뷰(38°) 그리스 신화 액션 로그라이트. 게임 디자인과 8개 씬의 연출 명세는 `SPEC.md`, 마일스톤 진행은 `PLAN.md`에 있다. 문서·주석·UI 문구는 한국어로 쓴다.
+
+이 폴더는 자체 저장소가 아니라 상위 `~/study` git 저장소 안에 있다(현재 추적 안 됨).
+
+## 명령
+
+```bash
+npm run dev       # Vite 개발 서버, 포트 5173 (host: true)
+npm run build     # tsc 타입 검사 후 vite build → dist/
+npm run preview   # dist/ 미리보기
+npx tsc           # 타입 검사만 (noEmit, strict)
+```
+
+테스트·린터는 없다. 변경 확인은 `npx tsc`와 개발 서버에서 직접 플레이로 한다(타이틀의 씬 이동 버튼 `#scene-nav`·훈련장 바로가기로 원하는 씬에 바로 들어갈 수 있다).
+
+## 구조
+
+`src/main.ts`가 하나의 `requestAnimationFrame` 루프를 돌린다. 매 프레임 순서:
+
+1. `renderer.updateMouseGroundPosition()` — 마우스를 지면 좌표로 바꿔 `input.aimWorldPos`에 넣음
+2. `world.update(dt, input)` — 게임 로직 (dt는 0.05초로 상한)
+3. `renderer.render(world, dt)` — Three.js 그리기
+4. `hud.update(...)` — DOM HUD 갱신
+5. `input.consumeFrameTriggers()` — 한 프레임짜리 입력 소비
+
+**로직과 렌더링이 분리되어 있다.** `WorldSimulation`(`src/combat/`)이 모든 게임 상태(player, enemies, projectiles, swings, shockwaves, telegraphs, lightningArcs, cameraShake, 씬 전환, 가호, 메타 성장)를 가지고, 렌더러와 HUD는 그 필드를 매 프레임 읽기만 한다. 좌표는 `Vec2 { x, z }`(지면 평면). 새 게임 동작은 `WorldSimulation`에, 보이는 것은 렌더러에 넣는다.
+
+- `src/types/combat.ts` — 공유 타입. `SceneId`, `EnemyKind`, `EnemyState`(idle→chase→windup→attack, weak_open/staggered), `PlayerActionState`, `TelegraphShape`(circle/sector/line 공격 예고) 등. 적·씬을 추가하면 여기부터 고친다.
+- `src/data/combatConfig.ts` — 수치 조정은 `COMBAT_CONFIG`, 4신 가호 정의는 `OLYMPIAN_BOONS`.
+- `WorldSimulation.loadScene(sceneId)` — 씬별 적·지형(pillars, hubInteractables) 배치. 흐름: title → hub → cyclops_cave → polyphemus_boss → (가호 선택 `openBoonSelection`/`selectBoon`) → siren_reef → parthenope_boss → return. `training_grounds`는 별도 훈련장.
+- `src/rendering/SceneRenderer25D.ts` — 씬이 바뀌면(`renderedSceneId` 비교) 바이옴 지형·조명·수면을 다시 짓고, 엔티티는 빌보드 스프라이트로 그림. Bloom 후처리(EffectComposer + UnrealBloomPass).
+- `src/rendering/ProceduralSprites.ts` — 캐릭터·적 스프라이트를 캔버스로 절차 생성한 텍스처 아틀라스. `public/assets/`의 이미지(odysseus.png, polyphemus.svg, parthenope.svg, 선택적 odysseus_back.png)가 있으면 그걸 우선 쓴다.
+- `src/rendering/ArticulatedCharacterRenderer.ts` — 플레이어 원본 이미지(1024×1536)를 신체 레이어로 잘라 8방향·무기 동작으로 움직이는 2D 퍼펫.
+- `src/rendering/KeyArtRenderer.ts` — 타이틀 키아트(`#keyart-canvas`), `/assets/storyboard.png` 사용.
+- `src/ui/HudController.ts` — `index.html`에 미리 있는 DOM 요소(id로 찾음: 타이틀·허브 프롬프트·가호 모달·귀환 강화 화면·HUD 슬롯)를 갱신하고 버튼을 `world.loadScene` 등에 연결. HUD 마크업과 CSS는 전부 `index.html`에 있다.
+- `src/core/AudioSynth.ts` — WebAudio로 효과음 합성(오디오 파일 없음). `InputManager.ts` — WASD(화면 기준)·마우스 조준·Space 대시·Q 패링·E 권능.
+
+`dist/`는 빌드 결과물이므로 직접 고치지 않는다. 정적 이미지는 `public/assets/`에 두고 `/assets/...` 경로로 불러온다.

@@ -1,0 +1,270 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <!-- 골드·브론즈 갑옷 그라데이션 -->
+    <linearGradient id="goldArmor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="28%" stop-color="#eab308"/>
+      <stop offset="65%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="goldBright" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fef9c3"/>
+      <stop offset="50%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </linearGradient>
+    <linearGradient id="crimsonCape" x1="0%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="50%" stop-color="#991b1b"/>
+      <stop offset="100%" stop-color="#450a0a"/>
+    </linearGradient>
+    <linearGradient id="skinTone" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3be96"/>
+      <stop offset="55%" stop-color="#d48c5c"/>
+      <stop offset="100%" stop-color="#7c4222"/>
+    </linearGradient>
+    <linearGradient id="leatherDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b3e26"/>
+      <stop offset="60%" stop-color="#3e2011"/>
+      <stop offset="100%" stop-color="#1c0d06"/>
+    </linearGradient>
+    <linearGradient id="shieldField" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#57534e"/>
+      <stop offset="50%" stop-color="#292524"/>
+      <stop offset="100%" stop-color="#0c0a09"/>
+    </linearGradient>
+    <filter id="inkShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#inkShadow)" stroke="#140c08" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 1. 등 뒤의 그리스 뇌문 조각 곡궁 (Recurve Bow) & 황금 화살통 (Quiver with 4 feathered arrows) -->
+    <g id="back-bow-and-quiver">
+      <!-- 활시위 -->
+      <line x1="654" y1="115" x2="596" y2="395" stroke="#44403c" stroke-width="4.5"/>
+      <!-- 곡궁 몸체 -->
+      <path d="M 520 265 C 575 165, 620 120, 650 105 C 668 95, 678 65, 658 58 C 642 54, 638 82, 628 96 C 585 135, 535 195, 495 275 Z" fill="url(#leatherDark)" stroke-width="5"/>
+      <path d="M 605 140 C 622 215, 642 290, 608 385 L 580 375 C 612 285, 595 215, 578 152 Z" fill="url(#leatherDark)" stroke-width="5"/>
+      <!-- 곡궁 위 금빛 뇌문 장식선 & 황금 팁 -->
+      <path d="M 642 96 C 655 82, 668 62, 655 56 C 642 52, 636 74, 630 88 Z" fill="url(#goldArmor)" stroke-width="4.5"/>
+      <path d="M 596 175 C 610 235, 620 295, 596 365" fill="none" stroke="#eab308" stroke-width="5" stroke-dasharray="10,6"/>
+
+      <!-- 화살통(Quiver) & 4발의 깃털 화살 -->
+      <g transform="translate(535, 225) rotate(28)">
+        <!-- 화살 깃털 4개 -->
+        <g fill="#d97706" stroke-width="3.5">
+          <polygon points="-28,-52 -16,-78 -4,-50"/>
+          <polygon points="-10,-56 2,-84 14,-54"/>
+          <polygon points="8,-52 20,-80 32,-50"/>
+          <polygon points="24,-46 36,-72 46,-44"/>
+        </g>
+        <!-- 화살대 -->
+        <line x1="-16" y1="-55" x2="-8" y2="10" stroke="#78350f" stroke-width="5"/>
+        <line x1="2" y1="-60" x2="6" y2="10" stroke="#78350f" stroke-width="5"/>
+        <line x1="20" y1="-55" x2="20" y2="10" stroke="#78350f" stroke-width="5"/>
+        <line x1="34" y1="-48" x2="32" y2="10" stroke="#78350f" stroke-width="5"/>
+        <!-- 황금 화살통 본체 -->
+        <rect x="-26" y="-12" width="72" height="95" rx="8" fill="url(#goldArmor)" stroke-width="5"/>
+        <line x1="-26" y1="8" x2="46" y2="8" stroke="#fef08a" stroke-width="4"/>
+      </g>
+    </g>
+
+    <!-- 2. 등 뒤로 흐르는 해진 진홍빛 망토 뒷자락 -->
+    <path d="M 310 290 L 635 345 L 705 445 L 690 735 L 665 698 L 648 725 L 620 682 L 595 705 L 445 550 L 310 465 Z" fill="url(#crimsonCape)" stroke-width="5.5"/>
+
+    <!-- 3. 뒷다리(화면 왼쪽 다리) — 근육질 허벅지, 양각 황금 정강이 받이(Greave), 가죽 샌들과 발가락 -->
+    <g id="back-leg">
+      <!-- 허벅지 -->
+      <path d="M 290 585 L 385 605 L 380 680 L 295 670 Z" fill="url(#skinTone)" stroke-width="5"/>
+      <!-- 샌들 가죽 스트랩 & 발 -->
+      <path d="M 325 745 L 408 758 C 415 795, 385 832, 345 842 L 262 858 C 242 852, 244 818, 268 798 L 325 745 Z" fill="url(#skinTone)" stroke-width="5.5"/>
+      <!-- 샌들 밑창 -->
+      <path d="M 248 842 C 248 865, 305 872, 355 852 L 408 812 L 405 795 L 348 838 C 300 854, 255 848, 248 830 Z" fill="#29150a" stroke-width="5"/>
+      <!-- 샌들 가죽 끈 -->
+      <path d="M 282 788 C 312 792, 338 815, 342 842 M 308 768 C 338 775, 362 798, 368 825 M 330 745 L 398 765 L 392 795 L 325 775 Z" fill="none" stroke="#451a03" stroke-width="11"/>
+      <!-- 황금 정강이 보호대 (Back Greave) -->
+      <path d="M 285 628 C 285 602, 340 605, 355 645 L 392 745 C 375 768, 335 768, 318 750 L 285 628 Z" fill="url(#goldArmor)" stroke-width="5.5"/>
+      <path d="M 298 632 C 305 618, 332 622, 342 648 L 368 738" fill="none" stroke="#fef08a" stroke-width="3.5"/>
+    </g>
+
+    <!-- 4. 앞다리(화면 오른쪽 다리) — 근육질 무릎, 사자 문양 황금 정강이 받이, 가죽 샌들 -->
+    <g id="front-leg">
+      <!-- 허벅지 -->
+      <path d="M 480 615 L 585 625 L 605 735 L 505 735 Z" fill="url(#skinTone)" stroke-width="5.5"/>
+      <!-- 앞발 & 가죽 샌들 -->
+      <path d="M 595 855 L 668 855 C 682 910, 675 968, 635 978 L 568 975 C 548 958, 560 905, 595 855 Z" fill="url(#skinTone)" stroke-width="5.5"/>
+      <!-- 샌들 밑창 -->
+      <path d="M 555 955 C 562 986, 652 992, 675 962 L 672 945 C 648 972, 568 968, 555 942 Z" fill="#29150a" stroke-width="5"/>
+      <!-- 샌들 교차 가죽 스트랩 -->
+      <path d="M 588 862 L 665 868 M 576 892 L 672 898 M 566 922 L 672 928 M 622 860 L 615 935" fill="none" stroke="#451a03" stroke-width="13"/>
+      <!-- 앞다리 대형 황금 정강이 보호대 (Front Greave with Lion/Crest Knee Relief) -->
+      <path d="M 512 715 C 515 668, 588 668, 608 718 L 662 855 C 635 878, 595 875, 578 855 L 512 715 Z" fill="url(#goldArmor)" stroke-width="6"/>
+      <!-- 무릎 문양 양각 & 중앙 릿지선 -->
+      <path d="M 532 708 C 548 682, 582 685, 592 715 L 570 765 Z" fill="url(#goldBright)" stroke-width="4"/>
+      <line x1="570" y1="765" x2="622" y2="858" stroke="#fef08a" stroke-width="4"/>
+    </g>
+
+    <!-- 5. 해진 흰색 속치마(키톤) & 두 줄의 붉은 장식선 (White Tunic with Double Crimson Stripes) -->
+    <g id="white-chiton-skirt">
+      <path d="M 282 525 L 575 555 L 598 665 L 565 655 L 542 682 L 502 668 L 468 702 L 425 675 L 385 685 L 335 635 L 275 605 Z" fill="#f5f0e6" stroke-width="5"/>
+      <!-- 두 줄 붉은 수평 장식선 -->
+      <path d="M 285 572 L 420 638 L 585 628" fill="none" stroke="#b91c1c" stroke-width="6"/>
+      <path d="M 280 586 L 418 652 L 588 642" fill="none" stroke="#b91c1c" stroke-width="5"/>
+    </g>
+
+    <!-- 6. 다층 가죽 치마(Pteruges) & 황금 둥근 징(Gold Studs) -->
+    <g id="leather-pteruges" fill="url(#leatherDark)" stroke-width="5">
+      <!-- 좌측부터 우측으로 겹쳐진 가죽 스트립 6개 -->
+      <polygon points="315,478 355,488 308,582 282,568 272,535"/>
+      <polygon points="352,492 396,502 365,618 335,625 316,595"/>
+      <polygon points="392,502 442,512 428,655 395,668 370,635"/>
+      <polygon points="440,512 490,515 498,668 472,688 442,658"/>
+      <polygon points="488,512 532,508 558,645 536,668 506,645"/>
+      <polygon points="528,502 568,492 605,612 588,632 558,615"/>
+      <!-- 각 가죽 스트립 끝의 황금 원형 징 (Gold Studs) -->
+      <g fill="url(#goldBright)" stroke-width="3.5">
+        <circle cx="298" cy="552" r="9"/>
+        <circle cx="344" cy="598" r="10"/>
+        <circle cx="400" cy="638" r="11"/>
+        <circle cx="470" cy="655" r="11"/>
+        <circle cx="534" cy="638" r="10"/>
+        <circle cx="578" cy="605" r="9"/>
+      </g>
+    </g>
+
+    <!-- 7. 황금 근육 흉갑(Bronze Muscled Cuirass), 그리스 뇌문 띠, 대각선 가죽 벨트 & 허리 단검(Xiphos) -->
+    <g id="torso-cuirass">
+      <!-- 양팔의 해진 흰색 속소매 -->
+      <path d="M 262 315 L 318 335 L 302 415 L 252 385 Z" fill="#f5f0e6" stroke-width="4.5"/>
+      <path d="M 522 365 L 598 375 L 592 448 L 525 435 Z" fill="#f5f0e6" stroke-width="4.5"/>
+
+      <!-- 황금 흉갑 본체 -->
+      <path d="M 322 332 L 518 345 L 508 508 L 328 492 Z" fill="url(#goldArmor)" stroke-width="5.5"/>
+      <!-- 가슴 아래 그리스 뇌문(Meander) 양각 띠 -->
+      <rect x="330" y="405" width="176" height="24" fill="url(#goldBright)" stroke-width="4"/>
+      <path d="M 336 417 L 500 417" stroke="#78350f" stroke-width="6" stroke-dasharray="12,6"/>
+      <!-- 복근 양각 하이라이트 -->
+      <ellipse cx="385" cy="452" rx="26" ry="16" fill="url(#goldBright)" stroke-width="3.5"/>
+      <ellipse cx="445" cy="456" rx="26" ry="16" fill="url(#goldBright)" stroke-width="3.5"/>
+
+      <!-- 이중 가죽 허리띠 & 황금 사각 버클 -->
+      <path d="M 318 468 L 525 492 L 520 528 L 312 502 Z" fill="url(#leatherDark)" stroke-width="5"/>
+      <rect x="368" y="476" width="38" height="32" rx="5" fill="none" stroke="url(#goldBright)" stroke-width="7"/>
+
+      <!-- 가슴을 가로지르는 대각선 가죽 멜빵(Baldric) & 황금 버클 -->
+      <path d="M 332 362 L 495 495 L 472 512 L 315 382 Z" fill="url(#leatherDark)" stroke-width="4.5"/>
+      <rect x="362" y="388" width="28" height="24" rx="4" transform="rotate(38 376 400)" fill="none" stroke="url(#goldBright)" stroke-width="6"/>
+
+      <!-- 왼쪽 허리춤에 찬 그리스 단검(Xiphos) 황금 손잡이와 검집 -->
+      <g transform="translate(495, 488) rotate(-32)">
+        <rect x="-12" y="0" width="24" height="115" rx="4" fill="#3e2011" stroke-width="4.5"/>
+        <rect x="-18" y="-8" width="36" height="14" rx="4" fill="url(#goldBright)" stroke-width="4"/>
+        <rect x="-9" y="-52" width="18" height="44" rx="5" fill="url(#goldArmor)" stroke-width="4"/>
+        <circle cx="0" cy="-58" r="13" fill="url(#goldBright)" stroke-width="4"/>
+      </g>
+    </g>
+
+    <!-- 8. 오른팔(화면 왼쪽 팔) & 장창(Long Spear with Crimson Grip Wrap & Gold Butt-Spike) -->
+    <g id="right-arm-and-spear">
+      <!-- 근육질 오른팔 & 가죽 손목 보호대(Bracer) -->
+      <path d="M 255 365 C 225 395, 205 445, 222 478 L 285 455 C 295 425, 295 385, 265 365 Z" fill="url(#skinTone)" stroke-width="5.5"/>
+      <path d="M 218 415 L 265 405 L 278 462 L 228 475 Z" fill="url(#leatherDark)" stroke-width="5"/>
+
+      <!-- 대각선 장창 (Top-Left to Bottom-Right) -->
+      <g transform="translate(185, 425) rotate(-17)">
+        <!-- 창대 (Dark Hardwood Shaft) -->
+        <rect x="-10" y="-290" width="20" height="635" fill="#452210" stroke-width="5"/>
+        <!-- 상단 붉은 가죽 교차 그립 (Crimson-Red Leather Grip Wrap) -->
+        <rect x="-12" y="-235" width="24" height="82" fill="#991b1b" stroke-width="4.5"/>
+        <path d="M -12 -220 L 12 -205 M -12 -200 L 12 -185 M -12 -180 L 12 -165" stroke="#450a0a" stroke-width="3.5"/>
+        <!-- 그립 위아래 황금 링 소켓 -->
+        <rect x="-14" y="-155" width="28" height="18" fill="url(#goldBright)" stroke-width="4"/>
+        <rect x="-14" y="-295" width="28" height="62" fill="url(#goldArmor)" stroke-width="4.5"/>
+        <!-- 넓고 날카로운 다이아몬드 단면 황금 창날 (Broad Golden Spearhead) -->
+        <polygon points="0,-438 34,-310 14,-295 -14,-295 -34,-310" fill="url(#goldArmor)" stroke-width="5.5"/>
+        <line x1="0" y1="-434" x2="0" y2="-295" stroke="#fef9c3" stroke-width="4"/>
+
+        <!-- 하단 황금 나선 밴드 & 창끝 물미(Golden Butt-Spike) -->
+        <rect x="-12" y="195" width="24" height="72" fill="url(#goldArmor)" stroke-width="4.5"/>
+        <polygon points="-13,335 13,335 0,395" fill="url(#goldBright)" stroke-width="5"/>
+      </g>
+
+      <!-- 창대를 굳게 쥔 오른손 주먹과 손가락 마디 -->
+      <g fill="url(#skinTone)" stroke-width="4.5">
+        <rect x="155" y="388" width="38" height="18" rx="7"/>
+        <rect x="152" y="405" width="42" height="18" rx="7"/>
+        <rect x="155" y="422" width="40" height="18" rx="7"/>
+        <rect x="160" y="438" width="35" height="16" rx="7"/>
+        <path d="M 186 385 C 208 388, 212 415, 192 422 Z"/>
+      </g>
+    </g>
+
+    <!-- 9. 어깨를 감싼 진홍빛 망토 앞자락 & 8각 별 황금 브로치(8-Pointed Star Golden Brooch) -->
+    <g id="shoulder-cape-and-brooch">
+      <path d="M 280 268 C 295 348, 395 375, 488 338 L 665 405 C 635 325, 575 275, 502 258 C 445 315, 345 315, 280 268 Z" fill="url(#crimsonCape)" stroke-width="5.5"/>
+      <!-- 망토 주름 하이라이트 -->
+      <path d="M 305 312 C 365 348, 435 345, 485 322 M 488 338 L 615 365" fill="none" stroke="#ef4444" stroke-width="4"/>
+
+      <!-- 8각 별 문양 황금 브로치 (Circular Gold Brooch with 8-Pointed Star) -->
+      <circle cx="476" cy="340" r="26" fill="url(#goldArmor)" stroke-width="5"/>
+      <polygon points="476,316 482,332 498,332 485,342 490,358 476,348 462,358 467,342 454,332 470,332" fill="#fef9c3" stroke-width="2.5"/>
+    </g>
+
+    <!-- 10. 오디세우스의 얼굴, 수염, 물결치는 흑갈색 머리카락 (우측 3/4 시선) -->
+    <g id="odysseus-head">
+      <!-- 목과 흰색 속옷 깃 -->
+      <path d="M 355 258 C 365 305, 435 312, 468 278 L 455 245 L 365 245 Z" fill="url(#skinTone)" stroke-width="4.5"/>
+      <path d="M 348 268 C 368 318, 435 322, 472 288" fill="none" stroke="#f5f0e6" stroke-width="14"/>
+
+      <!-- 얼굴 윤곽 (우측 3/4 각도) -->
+      <path d="M 398 195 L 492 198 L 496 238 L 512 258 L 494 268 L 488 302 L 442 308 L 392 275 Z" fill="url(#skinTone)" stroke-width="5"/>
+
+      <!-- 짙은 수염과 콧수염 (Trimmed Dark Beard with subtle highlights) -->
+      <path d="M 402 242 L 425 242 L 440 272 L 492 268 L 496 282 L 478 308 L 438 308 L 402 282 Z" fill="#27272a" stroke-width="4.5"/>
+      <path d="M 465 268 L 495 275" stroke="#52525b" stroke-width="4"/>
+
+      <!-- 짙은 눈썹과 우측을 응시하는 날카로운 눈 -->
+      <path d="M 448 228 L 488 224" stroke="#18181b" stroke-width="7"/>
+      <ellipse cx="468" cy="236" rx="9" ry="5" fill="#ffffff" stroke-width="2.5"/>
+      <circle cx="471" cy="236" r="4" fill="#18181b"/>
+
+      <!-- 귀 -->
+      <path d="M 382 238 C 372 238, 372 268, 392 268" fill="url(#skinTone)" stroke-width="4.5"/>
+
+      <!-- 풍성하게 물결치는 흑갈색 곱슬머리 (Wavy Dark-Brown Locks) -->
+      <path d="M 365 265 C 332 248, 338 195, 368 175 C 388 145, 455 142, 495 165 C 522 178, 522 212, 502 218 C 482 198, 445 198, 415 218 L 398 252 Z" fill="#29201b" stroke-width="5.5"/>
+      <!-- 머리카락 결 하이라이트 -->
+      <path d="M 378 182 C 415 162, 462 165, 488 185 M 358 215 C 385 198, 422 198, 448 208" fill="none" stroke="#6b5344" stroke-width="5"/>
+    </g>
+
+    <!-- 11. 왼팔(화면 오른쪽 팔) & 그리스 뇌문 테두리와 12각 태양 문양의 원형 청동 방패 -->
+    <g id="left-arm-and-shield">
+      <!-- 왼팔 근육 & 가죽 보호대 -->
+      <path d="M 538 415 L 612 418 L 618 558 L 548 558 Z" fill="url(#skinTone)" stroke-width="5"/>
+      <path d="M 542 485 L 615 488 L 612 562 L 548 558 Z" fill="url(#leatherDark)" stroke-width="5"/>
+
+      <!-- 3/4 원근 타원형 그리스 방패 (Round Shield with Meander Rim & 12-Ray Sunburst) -->
+      <g transform="translate(658, 572) rotate(-8)">
+        <!-- 방패 두께 측면 -->
+        <ellipse cx="-10" cy="0" rx="76" ry="138" fill="url(#goldArmor)" stroke-width="5.5"/>
+        <!-- 방패 전면 림 -->
+        <ellipse cx="4" cy="0" rx="72" ry="134" fill="url(#goldBright)" stroke-width="5.5"/>
+        <!-- 그리스 뇌문(Meander) 테두리 링 -->
+        <ellipse cx="6" cy="0" rx="58" ry="112" fill="none" stroke="#78350f" stroke-width="11" stroke-dasharray="14,8"/>
+        <!-- 방패 내부 어두운 청동 필드 -->
+        <ellipse cx="10" cy="0" rx="48" ry="96" fill="url(#shieldField)" stroke-width="4.5"/>
+
+        <!-- 중앙 12각 태양 광선 문양 (12-Pointed Golden Sunburst Boss) -->
+        <polygon points="
+          14,-82 22,-38 45,-62 32,-22 56,-28 36,0
+          56,28 32,22 45,62 22,38 14,82 6,38
+          -18,62 -6,22 -30,28 -10,0 -30,-28 -6,-22
+          -18,-62 6,-38"
+          fill="url(#goldBright)" stroke-width="3.5"/>
+        <!-- 중앙 볼록한 황금 보스(Umbo) -->
+        <ellipse cx="16" cy="0" rx="20" ry="34" fill="url(#goldArmor)" stroke-width="4.5"/>
+        <ellipse cx="20" cy="-6" rx="8" ry="14" fill="#fef9c3" stroke="none"/>
+      </g>
+    </g>
+  </g>
+</svg>
