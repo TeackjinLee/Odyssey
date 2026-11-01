@@ -4,6 +4,7 @@ extends Actor
 
 var talk: Interactable
 var fixed_dir := -1
+var fixed_anim := "idle"
 var weapons: WeaponLayer
 
 
@@ -27,7 +28,7 @@ func _ready() -> void:
 func think(_delta: float) -> void:
 	if fixed_dir >= 0:
 		face(Iso.dir_vector(fixed_dir))
-		play("idle")
+		play(fixed_anim)
 		return
 	var p: Player = Game.player
 	if p and p.global_position.distance_to(global_position) < 90.0:

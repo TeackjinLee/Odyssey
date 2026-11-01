@@ -5,6 +5,7 @@
 
 - `odysseus_reference.png` — 8방향 기준 모습(방향 이름 표시)
 - `layout_example.png` — 프레임 배치 예시(256×256 칸, 발은 같은 기준선)
+- `walk8_layout.png` — 걷기 8방향 한 장 배치(8줄×6칸)
 
 ## 순서 (중요한 것부터)
 
@@ -92,6 +93,69 @@ Animation: DEATH, 5 frames, facing SOUTH (front). Staggers, drops to the knees, 
 ```
 ```
 Animation: INTERACT turning a winch, 4 frames, facing SOUTH (front). Both hands forward at waist height turning a crank in a circle.
+```
+
+## 걷기 8방향 한 장 (위 방식 대신 한 번에)
+
+첨부: `odysseus_reference.png` + `walk8_layout.png`(8줄×6칸, 첫 칸에 방향별 기준 포즈, 흐린 칸은 채울 자리).
+받은 그림 이름: `odysseus_walk_8dir.png`. 다시 만들기: `python3 tools/gen_walk_request.py .`
+
+```
+Pixel art WALK CYCLE sprite sheet of the SAME character as the attached reference "odysseus_reference.png":
+Odysseus, a stocky Greek hero with messy dark-brown hair and a full beard, dark bronze-trimmed muscle cuirass,
+cream pleated skirt, gold bracers, bronze greaves, sandals, and a long red cape.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like the reference.
+
+Layout (very important) - copy the grid of the attached "walk8_layout.png" exactly:
+- ONE image, 8 rows x 6 columns, every cell 256x256, no gaps. Whole image 1536x2048.
+- Each ROW is one facing direction, top to bottom:
+  1 SOUTH (front), 2 SOUTH-EAST (front-right), 3 EAST (right side), 4 NORTH-EAST (back-right),
+  5 NORTH (back), 6 NORTH-WEST (back-left), 7 WEST (left side), 8 SOUTH-WEST (front-left).
+- Each row's first cell already shows the correct standing pose for that direction; keep that facing in the whole row.
+- Each COLUMN is one walk frame, 6 frames left to right, loopable (frame 6 flows back into frame 1):
+  1 right foot forward contact, 2 down (weight on right), 3 passing (left leg passes), 4 left foot forward contact,
+  5 down (weight on left), 6 passing (right leg passes).
+- Natural relaxed walk, arms swing opposite to legs, slight body bob, cape sways a little.
+- Same character size in every cell (about 200px tall), feet on the same baseline near the bottom of every cell,
+  character centered in the cell (in-place animation, does not move across the cell).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), same as the reference.
+- EMPTY HANDS: no sword, no shield, no bow. Right hand a closed fist, left forearm held as if a round shield is strapped on.
+```
+
+## 달리기 8방향 한 장
+
+첨부는 걷기와 같은 두 장(`odysseus_reference.png` + `walk8_layout.png`). 받은 그림 이름: `odysseus_run_8dir.png`.
+
+```
+Pixel art RUN CYCLE sprite sheet of the SAME character as the attached reference "odysseus_reference.png":
+Odysseus, a stocky Greek hero with messy dark-brown hair and a full beard, dark bronze-trimmed muscle cuirass,
+cream pleated skirt, gold bracers, bronze greaves, sandals, and a long red cape.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like the reference.
+
+Layout (very important) - copy the grid of the attached "walk8_layout.png" exactly:
+- ONE image, 8 rows x 6 columns, every cell 256x256, no gaps. Whole image 1536x2048.
+- Each ROW is one facing direction, top to bottom:
+  1 SOUTH (front), 2 SOUTH-EAST (front-right), 3 EAST (right side), 4 NORTH-EAST (back-right),
+  5 NORTH (back), 6 NORTH-WEST (back-left), 7 WEST (left side), 8 SOUTH-WEST (front-left).
+- The first cell of each row in the layout shows the standing facing for that direction; keep that facing in the whole row,
+  but EVERY cell (including the first) must be a running pose.
+- Each COLUMN is one run frame, 6 frames left to right, loopable (frame 6 flows back into frame 1):
+  1 right foot contact, 2 push-off (right leg extended behind), 3 flight (both feet off the ground, left knee driving up high),
+  4 left foot contact, 5 push-off (left leg extended behind), 6 flight (both feet off the ground, right knee driving up high).
+- Athletic run: elbows bent about 90 degrees, fists pumping at chest height opposite to the legs, torso leaning slightly forward,
+  long strides, cape flowing back and lifting behind him.
+- Same character size in every cell (about 200px tall), the lowest foot near the same baseline in every cell
+  (flight frames may lift a few pixels), character centered in the cell (in-place animation, does not move across the cell).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur, no speed lines.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), same as the reference.
+- EMPTY HANDS: no sword, no shield, no bow. Both hands closed fists.
 ```
 
 ## 무기 (따로 요청)

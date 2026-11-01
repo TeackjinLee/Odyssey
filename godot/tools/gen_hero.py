@@ -63,9 +63,9 @@ def cut_cells(src):
     return out
 
 
-def to_pose(cell, foot, height):
+def to_pose(cell, foot, height, k=None):
     """원본 칸 → FRAME 크기 포즈 (발이 ANCHOR). 축소 배율도 돌려준다."""
-    k = TARGET_H / height
+    k = k or TARGET_H / height
     w, h = cell.size
     small = cell.resize((max(1, round(w * k)), max(1, round(h * k))), Image.LANCZOS)
     px = small.load()
@@ -82,6 +82,63 @@ def to_pose(cell, foot, height):
     ox, oy = round(ANCHOR[0] - foot[0] * k), round(ANCHOR[1] - foot[1] * k)
     frame.paste(small, (ox, oy), small)
     return frame, k, (ox, oy)
+
+
+# ── 그려 받은 동작 줄(8방향 한 장) ─────────────────────
+# odysseus_<동작>_8dir.webp: 마젠타 배경, 6열(프레임) × 8줄(방향 남→남동→동→북동→북→북서→서→남서)
+STRIP_ROWS = [2, 1, 0, 7, 6, 5, 4, 3]
+# 첫 프레임의 오른손·왼손 주먹 중심(받은 그림의 칸 안 픽셀). 가려진 손은 몸 쪽으로 어림
+STRIP_HANDS = {
+    "walk": {2: (40, 143, 120, 143), 1: (56, 143, 116, 132), 0: (93, 147, 88, 140), 7: (106, 147, 80, 135),
+             6: (123, 142, 32, 146), 5: (70, 135, 45, 144), 4: (60, 132, 56, 139), 3: (42, 129, 114, 151)},
+    "run": {2: (60, 123, 118, 125), 1: (60, 130, 126, 107), 0: (114, 115, 79, 137), 7: (119, 128, 95, 120),
+            6: (123, 112, 33, 112), 5: (50, 105, 26, 112), 4: (50, 132, 34, 122), 3: (31, 117, 77, 129)},
+}
+STRIP_SWING = {"walk": 3.0, "run": 6.0}   # 팔 흔들림(원본 픽셀): 손 위치를 프레임마다 앞뒤로
+
+
+def strip_frames(root, anim, k=None):
+    """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율. 없으면 None.
+    가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로)."""
+    path = root / f"assets/source/odysseus_{anim}_8dir.webp"
+    if not path.exists():
+        return None, k
+    src = Image.open(path).convert("RGB")
+    cw, ch = src.width / 6, src.height / 8
+    cells = {}
+    for row, d in enumerate(STRIP_ROWS):
+        for col in range(6):
+            cell = src.crop((round(col * cw), round(row * ch), round((col + 1) * cw), round((row + 1) * ch))).convert("RGBA")
+            px = cell.load()
+            for y in range(cell.height):
+                for x in range(cell.width):
+                    if is_bg(px[x, y]):
+                        px[x, y] = (0, 0, 0, 0)
+            cells[d, col] = cell
+    if k is None:
+        hs = sorted(c.getbbox()[3] - c.getbbox()[1] for c in cells.values())
+        k = TARGET_H / hs[len(hs) // 2]
+    out = {}
+    for d in range(8):
+        base = max(cells[d, c].getbbox()[3] for c in range(6))
+        fx, fy = math.cos(math.radians(d * 45)), math.sin(math.radians(d * 45)) * 0.5
+        h0 = STRIP_HANDS[anim][d]
+        frames = []
+        for col in range(6):
+            cell = cells[d, col]
+            bb = cell.getbbox()
+            head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
+            hx = (head[0] + head[2]) / 2
+            if col == 0:
+                hx0 = hx
+            frame, _, (ox, oy) = to_pose(cell, (hx, base), 0, k)
+            sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / 6) - 1)
+            r = (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
+            l = (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
+            hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
+            frames.append((frame, hands))
+        out[d] = frames
+    return out, k
 
 
 # ── 동작 = 포즈 변형 ──────────────────────────────────
@@ -175,6 +232,10 @@ def build(root):
             hands0[d] = [rx * k + ox, ry * k + oy, lx * k + ox, ly * k + oy]
         else:
             hands0[d] = [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
+    strips = {}
+    k = None
+    for anim in ("walk", "run"):
+        strips[anim], k = strip_frames(root, anim, k)
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {}}
@@ -185,6 +246,11 @@ def build(root):
         for i in range(n):
             row_hands = []
             for d in range(8):
+                if strips.get(anim):
+                    img, h = strips[anim][d][i % 6]
+                    sheet.paste(img, (FRAME * (col + i), FRAME * d), img)
+                    row_hands.append(h)
+                    continue
                 p = params(anim, i, n, d)
                 fwd, coeffs = affine(p)
                 img = poses[d].transform((FRAME, FRAME), Image.AFFINE, coeffs, resample=Image.NEAREST)

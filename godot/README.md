@@ -91,18 +91,24 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 - **환경** `assets/env/env.json`의 `props`: 소품마다 `file`·`anchor`(발자국 중심 지점)·`footprint`(칸 수)
 - **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = cobble plaza dirt grass road ash, 열 = 변형 4개
 
-다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py .`
+다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py .`
+
+- 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
+  성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`
+- 불꽃·그림자·화살·권양기·화로는 아직 `gen_environment.py`의 생성 그림
 
 ### 그려 받은 오디세우스와 무기
 
 - 원본 `assets/source/odysseus_8dir.webp`(마젠타 배경, 4×2 칸) → `python3 tools/gen_hero.py .` →
   `assets/sprites/odysseus.png`(128×128 칸, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
-- 포즈가 하나라 동작은 그 포즈를 기울이고 눌렀다 펴서 만든다. 동작 그림을 받으면 그것으로 바꾼다
+- 걷기·달리기는 그려 받은 그림(`assets/source/odysseus_{walk,run}_8dir.webp`, 6열×8줄, 줄 = 남→남동→…→남서)을 쓴다.
+  첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`, 나머지 프레임은 팔 흔들림으로 어림한다
+- 나머지 동작은 아직 기준 포즈를 기울이고 눌렀다 펴서 만든다. 받으면 같은 방식으로 바꾼다
   (요청 프롬프트·참고 그림: `docs/sprite_request/`)
 - 시트 `.json`의 `hands[동작][프레임][방향]`이 오른손·왼손 위치. 원본 손 위치는 `gen_hero.py`의 `HANDS_SRC`
 - 무기는 `assets/weapons/`(`weapons.json`: 그림·`grip`) — `scripts/actors/weapon_layer.gd`가 손에 붙인다.
   검은 날 끝이 위로 서게, 방패는 front·three_quarter·side·back 네 장, 활은 세워서. 임시 무기는 `tools/gen_weapons.py`
-- 8방향 확인: `godot --path . -- --showcase` (무기를 든 오디세우스 8명이 한 줄로 섬)
+- 8방향 확인: `godot --path . -- --showcase` (무기를 든 오디세우스 8명이 한 줄로 섬, `--anim=walk`처럼 동작 지정)
 
 ## 검증용 실행 인자
 
