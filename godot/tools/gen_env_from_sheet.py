@@ -2,7 +2,8 @@
 """그려 받은 환경 그림 한 장(assets/source/troy_env.webp, 어두운 단색 배경) → 게임 환경 그림.
 
 gen_environment.py가 만든 env.json을 읽고, 받은 그림에 있는 것만 덮어쓴다
-(불꽃·연기·그림자·화살·권양기·화로는 생성기 그림 그대로).
+(그림자·화살·권양기·화로는 생성기 그림 그대로).
+- 불꽃·연기는 따로 받은 불 그림(assets/source/troy_fire.webp)이 있으면 그걸 잘라 쓴다
 - 집마다 불탄 모습(<집>_burnt: 지붕 그을림, 지붕 위 불꽃 자리 fire_spots)도 만든다
 - 소품: 칸 범위(SRC_X·SRC_Y)로 잘라 배경을 지우고 K배 축소, 기준점은 발자국 중심
 - 바닥: 4열×6줄 마름모를 64×32로 맞춰 floor_atlas.png로
@@ -202,6 +203,76 @@ def burnt_house(img, anchor):
     return Image.fromarray(a), spots
 
 
+# 불 그림(assets/source/troy_fire.webp, 배경은 환경 그림과 같은 색): 줄 = 큰 불꽃 8 · 작은 불꽃 8 · 연기 6 · 불티와 지붕 조각
+FIRE_ROW = (3, 185)
+SMOKE_ROW = (345, 471)
+FIRE_K = 0.24           # 큰 불꽃 높이 180px → 약 44px
+
+
+def strip_frames(src, yr, gap=30):
+    """한 줄을 빈 틈(gap px 이상)으로 나눈 그림 조각들 (RGB 배열, 마스크)."""
+    band = src[yr[0]:yr[1]]
+    cols = mask_of(band).any(0)
+    segs, start, last = [], None, 0
+    for x, on in enumerate(cols):
+        if on:
+            start = x if start is None else start
+            last = x
+        elif start is not None and x - last > gap:
+            segs.append((start, last + 1))
+            start = None
+    if start is not None:
+        segs.append((start, last + 1))
+    out = []
+    for x0, x1 in segs:
+        c = band[:, x0:x1]
+        m = mask_of(c)
+        ys, xs = np.nonzero(m)
+        out.append((c[ys.min():ys.max() + 1, xs.min():xs.max() + 1], m[ys.min():ys.max() + 1, xs.min():xs.max() + 1]))
+    return out
+
+
+def frame_sheet(frames, k, bottom):
+    """조각들을 같은 크기 칸에 모아 가로 한 줄 시트로. bottom이면 밑동(맨 아래 줄 가운데)을 맞추고, 아니면 가운데를 맞춘다."""
+    def pivot(m):
+        if bottom:
+            xs = np.nonzero(m[-3:].any(0))[0]
+            return (xs.min() + xs.max()) / 2, m.shape[0]
+        return m.shape[1] / 2, m.shape[0] / 2
+    left = max(pivot(m)[0] for _, m in frames)
+    right = max(m.shape[1] - pivot(m)[0] for _, m in frames)
+    up = max(pivot(m)[1] for _, m in frames)
+    down = max(m.shape[0] - pivot(m)[1] for _, m in frames)
+    cw, ch = int(np.ceil(left + right)), int(np.ceil(up + down))
+    big = Image.new("RGBA", (cw * len(frames), ch), (0, 0, 0, 0))
+    for i, (c, m) in enumerate(frames):
+        px, py = pivot(m)
+        rgba = Image.fromarray(np.dstack([c, m * 255]).astype(np.uint8))
+        big.paste(rgba, (round(i * cw + left - px), round(up - py)))
+    fw, fh = max(1, round(cw * k)), max(1, round(ch * k))
+    sheet = Image.new("RGBA", (fw * len(frames), fh), (0, 0, 0, 0))
+    for i in range(len(frames)):   # 칸마다 따로 줄여 옆 칸이 번지지 않게
+        sheet.paste(shrink(big.crop((i * cw, 0, (i + 1) * cw, ch)), k).resize((fw, fh), Image.NEAREST), (i * fw, 0))
+    return sheet, [fw, fh], [round(left * k), round(up * k)]
+
+
+def fire_from_sheet(root, meta):
+    path = root / "assets/source/troy_fire.webp"
+    if not path.exists():
+        return
+    src = np.asarray(Image.open(path).convert("RGB"))
+    out = root / "assets/env"
+    fire = strip_frames(src, FIRE_ROW)
+    sheet, size, anchor = frame_sheet(fire, FIRE_K, True)
+    sheet.save(out / "fire.png")
+    meta["props"]["fire"] = {"file": "fire.png", "frame": size, "frames": len(fire), "anchor": [anchor[0], size[1] - 2]}
+    smoke = strip_frames(src, SMOKE_ROW, gap=60)
+    sheet, size, anchor = frame_sheet(smoke, FIRE_K, False)
+    sheet.save(out / "smoke.png")
+    meta["props"]["smoke"] = {"file": "smoke.png", "frame": size, "frames": len(smoke), "anchor": anchor,
+                              "footprint": [1, 1], "size": size}
+
+
 def floor_atlas(src, rows, variants):
     x0, y0, x1, y1 = FLOOR_BOX
     cw, ch = (x1 - x0) / 4, (y1 - y0) / 6
@@ -244,6 +315,7 @@ def main(root):
             im, spots = burnt_house(img, anchor)
             im.save(out / f"{name}_burnt.png")
             meta["props"][f"{name}_burnt"] = dict(meta["props"][name], file=f"{name}_burnt.png", fire_spots=spots)
+    fire_from_sheet(root, meta)
     fa = meta["floor_atlas"]
     floor_atlas(src, fa["rows"], fa["variants"]).save(out / fa["file"])
     (out / "env.json").write_text(json.dumps(meta, ensure_ascii=False))

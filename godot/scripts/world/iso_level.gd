@@ -180,7 +180,7 @@ func add_smoke(parent: Node2D, local_pos: Vector2, scale_k := 1.0) -> CPUParticl
 	var p := CPUParticles2D.new()
 	p.texture = AssetLibrary.prop_texture("smoke")
 	p.position = local_pos
-	p.amount = 22
+	p.amount = 14
 	p.lifetime = 3.6
 	p.preprocess = 3.6
 	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
@@ -193,8 +193,23 @@ func add_smoke(parent: Node2D, local_pos: Vector2, scale_k := 1.0) -> CPUParticl
 	p.scale_amount_min = 0.7 * scale_k
 	p.scale_amount_max = 1.0 * scale_k
 	var grow := Curve.new()
-	grow.add_point(Vector2(0, 0.6))
-	grow.add_point(Vector2(1, 3.2))
+	var meta: Dictionary = AssetLibrary.prop("smoke")
+	var frames := int(meta.get("frames", 1))
+	if frames > 1:
+		# 받은 연기 그림: 한 입자가 사는 동안 프레임을 한 번 돈다(그림 자체가 커지며 흩어짐)
+		var mat := CanvasItemMaterial.new()
+		mat.particles_animation = true
+		mat.particles_anim_h_frames = frames
+		mat.particles_anim_v_frames = 1
+		mat.particles_anim_loop = false
+		p.material = mat
+		p.anim_speed_min = 1.0
+		p.anim_speed_max = 1.0
+		grow.add_point(Vector2(0, 0.7))
+		grow.add_point(Vector2(1, 1.6))
+	else:
+		grow.add_point(Vector2(0, 0.6))
+		grow.add_point(Vector2(1, 3.2))
 	p.scale_amount_curve = grow
 	var fade := Gradient.new()
 	fade.set_color(0, Color(1, 1, 1, 0.0))
@@ -246,8 +261,8 @@ func add_burning_house(prop_name: String, cell: Vector2i) -> Sprite2D:
 	center /= spots.size()
 	add_smoke(s, center + Vector2(0, -30), 1.2)   # 먼저 넣어 불꽃 뒤에 그려지게
 	for sp in spots:
-		add_fire(s, Vector2(sp[0], sp[1]) + Vector2(randf_range(-3, 3), randf_range(-2, 2)), randf_range(0.75, 1.25), false)
-	add_fire(s, center + Vector2(randf_range(-6, 6), -4), 1.5, false)
+		add_fire(s, Vector2(sp[0], sp[1]) + Vector2(randf_range(-3, 3), randf_range(-2, 2)), randf_range(0.6, 0.95), false)
+	add_fire(s, center + Vector2(randf_range(-6, 6), -4), 1.15, false)
 	add_embers(s, center + Vector2(0, -20))
 	add_light(s.global_position + center + Vector2(0, -10), Color(1.0, 0.5, 0.2), 1.25, 2.2)
 	return s

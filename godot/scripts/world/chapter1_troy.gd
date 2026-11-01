@@ -81,7 +81,7 @@ func build() -> void:
 		add_light(t.global_position + Vector2(1, -20), Color(1.0, 0.55, 0.25), 0.6, 0.85)
 	for c in [Vector2i(15, 4), Vector2i(21, 4)]:
 		var b := add_prop("brazier", c, true, false)
-		add_fire(b, Vector2(0, -16), 0.8)
+		add_fire(b, Vector2(0, -16), 0.6)
 	for c in [Vector2i(13, 4), Vector2i(23, 4), Vector2i(16, 21), Vector2i(21, 21)]:
 		add_prop("banner_troy", c, true, false)
 	for c in [Vector2i(11, 9), Vector2i(10, 14), Vector2i(26, 19), Vector2i(25, 9), Vector2i(7, 25), Vector2i(31, 19), Vector2i(17, 31)]:
