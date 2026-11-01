@@ -3,7 +3,7 @@ extends RefCounted
 ## 몸 그림과 따로 그린 무기를 손 위치(시트 .json의 hands)에 붙여 그린다.
 ## 오른손 = 검(활을 들 땐 숨김), 왼손 = 방패(활을 들 땐 활, 방패는 등에 멘다).
 ## 방향에 따라 무기를 몸 앞/뒤로 보내고, 방패는 보이는 각도에 맞는 그림(정면·비스듬히·옆·뒷면)으로 바꾼다.
-## 공격 중에는 검을 손을 축으로 휘두른다(그려 받은 공격 그림이면 그 프레임의 주먹 위치에서).
+## 공격 중에는 검을 손을 축으로 휘두른다. 그려 받은 공격 그림이면 그 프레임의 주먹에 붙이고 팔 방향으로 세운다.
 
 # 방향: 0 동 1 남동 2 남 3 남서 4 서 5 북서 6 북 7 북동
 const MAIN_FRONT := [0, 1, 2, 3, 6, 7]
@@ -17,6 +17,7 @@ const SWINGS := {
 	"attack1": [-125.0, 75.0], "attack2": [125.0, -75.0], "attack3": [-175.0, 15.0], "heavy": [-170.0, 190.0],
 }
 const SWEEP_TIME := 0.08
+const ARM_FACE_BIAS := 6.0   # 주먹이 가슴 가까이 있을 때 칼끝이 바라보는 쪽으로 기울게
 
 var actor: Actor
 var main: Sprite2D
@@ -93,7 +94,12 @@ func update() -> void:
 		if actor.state == Actor.St.ATTACK and actor.get("current") is Dictionary:
 			var spec: Dictionary = actor.get("current")
 			var anim: String = spec.get("anim", "")
-			if SWINGS.has(anim):
+			if anim in AssetLibrary.character_drawn(actor.sheet):
+				# 그려 받은 공격 그림: 주먹에 붙이고 칼끝은 팔이 뻗은 쪽(가슴 → 주먹)으로 — 팔을 뻗으면 앞을 향한다
+				pos = rh
+				ang = (rh - chest + fv * ARM_FACE_BIAS).angle()
+				front = true
+			elif SWINGS.has(anim):
 				var t := actor.state_time
 				var hit: float = spec["hit"]
 				var a0: float = fa + deg_to_rad(SWINGS[anim][0])
@@ -108,11 +114,7 @@ func update() -> void:
 					reach = sin(k * PI)
 				else:
 					ang = a1
-				# 그려 받은 공격 그림이면 주먹이 이미 휘두르는 자리에 있다 — 손에 그대로 붙인다
-				if anim in AssetLibrary.character_drawn(actor.sheet):
-					pos = rh
-				else:
-					pos = rh.lerp(chest + fv * 6.0, 0.35) + fv * 6.0 * reach
+				pos = rh.lerp(chest + fv * 6.0, 0.35) + fv * 6.0 * reach
 				front = true
 		elif actor.state == Actor.St.BLOCK:
 			ang = Vector2(fv.x * 0.3, -1.0).angle()

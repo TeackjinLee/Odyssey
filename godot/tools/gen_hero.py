@@ -135,6 +135,9 @@ ATTACK_LEFT = {
     "heavy": {2: (125, 100), 1: (125, 105), 0: (115, 120), 7: (85, 120), 6: (45, 100), 5: (45, 115), 4: (115, 120), 3: (110, 120)},
 }
 
+# 그림이 어색한 방향은 다른 방향 줄을 가져다 쓴다: 방향 → (가져올 방향, 좌우 뒤집기)
+STRIP_REUSE = {"heavy": {0: (1, False), 4: (1, True)}}
+
 
 def head_width(cells, cols):
     """첫 프레임들의 머리 폭(가운데값) — 받은 그림마다 다른 캐릭터 크기를 걷기에 맞추는 기준."""
@@ -195,6 +198,9 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
             frames.append((frame, hands))
         out[d] = frames
+    for d, (src_d, flip) in STRIP_REUSE.get(anim, {}).items():
+        out[d] = [(f.transpose(Image.FLIP_LEFT_RIGHT), [FRAME - h[0], h[1], FRAME - h[2], h[3]]) if flip else (f, h)
+                  for f, h in out[src_d]]
     return out, k, head_w
 
 
