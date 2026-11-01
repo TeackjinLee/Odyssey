@@ -96,18 +96,69 @@ STRIP_HANDS = {
 }
 STRIP_SWING = {"walk": 3.0, "run": 6.0}   # 팔 흔들림(원본 픽셀): 손 위치를 프레임마다 앞뒤로
 
+# 공격 줄: 프레임마다 검을 쥔 주먹(휘두르는 손) 위치, 방패 손은 방향마다 하나 (받은 그림의 칸 안 픽셀).
+# 그려 받은 그림이 방향마다 다른 손으로 칠 때가 있어 '오른손'이 아니라 '치는 주먹'을 따라간다
+ATTACK_HANDS = {
+    "attack1": {
+        2: [(50, 127), (103, 130), (148, 113), (93, 138)], 1: [(50, 130), (100, 130), (190, 113), (118, 135)],
+        0: [(68, 130), (155, 113), (180, 103), (120, 133)], 7: [(90, 133), (175, 100), (190, 90), (140, 100)],
+        6: [(150, 115), (165, 90), (175, 72), (155, 118)], 5: [(65, 115), (60, 100), (35, 92), (65, 105)],
+        4: [(68, 105), (75, 100), (35, 98), (75, 110)], 3: [(65, 110), (72, 108), (30, 113), (62, 120)],
+    },
+    "attack2": {
+        2: [(120, 165), (118, 130), (25, 105), (92, 140)], 1: [(115, 160), (115, 130), (40, 105), (88, 140)],
+        0: [(125, 155), (148, 108), (52, 100), (125, 135)], 7: [(135, 145), (175, 95), (185, 72), (155, 130)],
+        6: [(148, 140), (162, 85), (190, 75), (148, 118)], 5: [(150, 140), (150, 80), (180, 72), (150, 122)],
+        4: [(150, 138), (145, 85), (165, 75), (140, 125)], 3: [(95, 138), (65, 105), (30, 98), (55, 122)],
+    },
+    "attack3": {
+        2: [(65, 105), (65, 28), (55, 75), (95, 172), (60, 118)], 1: [(65, 100), (75, 25), (75, 70), (95, 175), (70, 125)],
+        0: [(95, 100), (90, 15), (95, 72), (118, 170), (140, 110)], 7: [(138, 95), (115, 15), (145, 85), (125, 170), (135, 115)],
+        6: [(150, 88), (130, 15), (150, 80), (148, 172), (155, 115)], 5: [(145, 85), (130, 15), (150, 75), (150, 165), (150, 110)],
+        4: [(70, 115), (125, 15), (55, 120), (70, 170), (60, 120)], 3: [(62, 100), (110, 15), (40, 120), (90, 170), (55, 115)],
+    },
+    "heavy": {
+        2: [(45, 100), (55, 112), (25, 85), (150, 72), (115, 105), (145, 100)],
+        1: [(45, 105), (55, 110), (30, 85), (40, 105), (155, 100), (150, 100)],
+        0: [(70, 115), (65, 105), (30, 90), (40, 90), (160, 105), (148, 100)],
+        7: [(120, 100), (90, 120), (40, 85), (55, 90), (155, 100), (120, 115)],
+        6: [(125, 100), (110, 120), (150, 85), (150, 90), (150, 85), (130, 120)],
+        5: [(125, 108), (110, 125), (140, 85), (130, 95), (145, 85), (130, 110)],
+        4: [(55, 95), (40, 100), (25, 95), (25, 95), (140, 85), (40, 110)],
+        3: [(60, 110), (25, 90), (30, 95), (35, 100), (30, 110), (25, 110)],
+    },
+}
+ATTACK_LEFT = {
+    "attack1": {2: (138, 108), 1: (148, 108), 0: (140, 108), 7: (125, 105), 6: (75, 110), 5: (150, 80), 4: (112, 118), 3: (115, 118)},
+    "attack2": {2: (130, 125), 1: (140, 115), 0: (145, 115), 7: (125, 100), 6: (70, 120), 5: (65, 118), 4: (68, 118), 3: (115, 112)},
+    "attack3": {2: (125, 110), 1: (125, 118), 0: (125, 125), 7: (115, 130), 6: (60, 115), 5: (55, 120), 4: (100, 125), 3: (120, 120)},
+    "heavy": {2: (125, 100), 1: (125, 105), 0: (115, 120), 7: (85, 120), 6: (45, 100), 5: (45, 115), 4: (115, 120), 3: (110, 120)},
+}
 
-def strip_frames(root, anim, k=None):
-    """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율. 없으면 None.
-    가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로)."""
+
+def head_width(cells, cols):
+    """첫 프레임들의 머리 폭(가운데값) — 받은 그림마다 다른 캐릭터 크기를 걷기에 맞추는 기준."""
+    ws = []
+    for d in range(8):
+        c = cells[d, 0]
+        bb = c.getbbox()
+        top = c.crop((0, bb[1], c.width, bb[1] + int((bb[3] - bb[1]) * 0.18))).getbbox()
+        ws.append(top[2] - top[0])
+    return sorted(ws)[len(ws) // 2]
+
+
+def strip_frames(root, anim, k=None, cols=6, ref=None):
+    """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율, 머리 폭. 없으면 None.
+    가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로).
+    ref = (걷기 배율, 걷기 머리 폭)을 주면 머리 폭 비율로 배율을 맞춘다(공격 그림)."""
     path = root / f"assets/source/odysseus_{anim}_8dir.webp"
     if not path.exists():
-        return None, k
+        return None, k, None
     src = Image.open(path).convert("RGB")
-    cw, ch = src.width / 6, src.height / 8
+    cw, ch = src.width / cols, src.height / 8
     cells = {}
     for row, d in enumerate(STRIP_ROWS):
-        for col in range(6):
+        for col in range(cols):
             cell = src.crop((round(col * cw), round(row * ch), round((col + 1) * cw), round((row + 1) * ch))).convert("RGBA")
             px = cell.load()
             for y in range(cell.height):
@@ -115,16 +166,18 @@ def strip_frames(root, anim, k=None):
                     if is_bg(px[x, y]):
                         px[x, y] = (0, 0, 0, 0)
             cells[d, col] = cell
-    if k is None:
+    head_w = head_width(cells, cols)
+    if ref is not None:
+        k = ref[0] * ref[1] / head_w
+    elif k is None:
         hs = sorted(c.getbbox()[3] - c.getbbox()[1] for c in cells.values())
         k = TARGET_H / hs[len(hs) // 2]
     out = {}
     for d in range(8):
-        base = max(cells[d, c].getbbox()[3] for c in range(6))
+        base = max(cells[d, c].getbbox()[3] for c in range(cols))
         fx, fy = math.cos(math.radians(d * 45)), math.sin(math.radians(d * 45)) * 0.5
-        h0 = STRIP_HANDS[anim][d]
         frames = []
-        for col in range(6):
+        for col in range(cols):
             cell = cells[d, col]
             bb = cell.getbbox()
             head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
@@ -132,13 +185,17 @@ def strip_frames(root, anim, k=None):
             if col == 0:
                 hx0 = hx
             frame, _, (ox, oy) = to_pose(cell, (hx, base), 0, k)
-            sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / 6) - 1)
-            r = (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
-            l = (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
+            if anim in ATTACK_HANDS:
+                r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
+            else:
+                h0 = STRIP_HANDS[anim][d]
+                sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / 6) - 1)
+                r = (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
+                l = (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
             frames.append((frame, hands))
         out[d] = frames
-    return out, k
+    return out, k, head_w
 
 
 # ── 동작 = 포즈 변형 ──────────────────────────────────
@@ -234,11 +291,16 @@ def build(root):
             hands0[d] = [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
     strips = {}
     k = None
-    for anim in ("walk", "run"):
-        strips[anim], k = strip_frames(root, anim, k)
+    strips["walk"], k, walk_head = strip_frames(root, "walk")
+    strips["run"], k, _ = strip_frames(root, "run", k)
+    n_frames = {a[0]: a[1] for a in ANIMS}
+    for anim in ATTACK_HANDS:
+        if strips["walk"]:
+            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head))
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
-    meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {}}
+    meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
+            "drawn": [a for a, s in strips.items() if s]}
     col = 0
     for anim, n, fps, loop in ANIMS:
         meta["anims"][anim] = {"start": col, "frames": n, "fps": fps, "loop": loop}

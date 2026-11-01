@@ -3,7 +3,7 @@ extends RefCounted
 ## 몸 그림과 따로 그린 무기를 손 위치(시트 .json의 hands)에 붙여 그린다.
 ## 오른손 = 검(활을 들 땐 숨김), 왼손 = 방패(활을 들 땐 활, 방패는 등에 멘다).
 ## 방향에 따라 무기를 몸 앞/뒤로 보내고, 방패는 보이는 각도에 맞는 그림(정면·비스듬히·옆·뒷면)으로 바꾼다.
-## 공격 중에는 검을 손을 축으로 휘두른다(동작 프레임이 없는 그림용).
+## 공격 중에는 검을 손을 축으로 휘두른다(그려 받은 공격 그림이면 그 프레임의 주먹 위치에서).
 
 # 방향: 0 동 1 남동 2 남 3 남서 4 서 5 북서 6 북 7 북동
 const MAIN_FRONT := [0, 1, 2, 3, 6, 7]
@@ -108,7 +108,11 @@ func update() -> void:
 					reach = sin(k * PI)
 				else:
 					ang = a1
-				pos = rh.lerp(chest + fv * 6.0, 0.35) + fv * 6.0 * reach
+				# 그려 받은 공격 그림이면 주먹이 이미 휘두르는 자리에 있다 — 손에 그대로 붙인다
+				if anim in AssetLibrary.character_drawn(actor.sheet):
+					pos = rh
+				else:
+					pos = rh.lerp(chest + fv * 6.0, 0.35) + fv * 6.0 * reach
 				front = true
 		elif actor.state == Actor.St.BLOCK:
 			ang = Vector2(fv.x * 0.3, -1.0).angle()

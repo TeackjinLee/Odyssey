@@ -50,6 +50,12 @@ static func character_hands(sheet: String) -> Dictionary:
 	return _meta[sheet].get("hands", {})
 
 
+## 그려 받은 동작 이름들 (손 위치가 그림의 실제 주먹을 따라감)
+static func character_drawn(sheet: String) -> Array:
+	character_frames(sheet)
+	return _meta[sheet].get("drawn", [])
+
+
 static var _weapons: Dictionary = {}
 
 

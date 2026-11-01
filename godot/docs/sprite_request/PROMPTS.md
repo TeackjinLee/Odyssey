@@ -6,6 +6,7 @@
 - `odysseus_reference.png` — 8방향 기준 모습(방향 이름 표시)
 - `layout_example.png` — 프레임 배치 예시(256×256 칸, 발은 같은 기준선)
 - `walk8_layout.png` — 걷기 8방향 한 장 배치(8줄×6칸)
+- 공격 4종(8방향 한 장)은 `ATTACK_PROMPTS.md` — 배치 그림 `attack8_layout_4.png`·`attack8_layout_5.png`
 
 ## 순서 (중요한 것부터)
 
