@@ -1,21 +1,59 @@
 import * as THREE from 'three';
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { COMBAT_CONFIG } from '../../data/combatConfig';
 import { PlayerEntity } from '../../types/combat';
-import { AVATAR_CONFIG, BoneKey, ClipKey, WeaponKey, WeaponMount } from './avatarConfig';
+import { AVATAR_CONFIG, BoneKey, ClipFile, ClipKey, WeaponKey, WeaponMount } from './avatarConfig';
 import { AvatarMotion, approach, clamp } from './AvatarMotion';
 import { POLE_L, POLE_R } from './OdysseusModel';
 import { PoseDriver, spearProgress } from './PoseDriver';
-import { BOW_TIPS, SPEAR_BUTT, SPEAR_HEAD_LENGTH, SPEAR_TIP, buildBowProp, buildShieldProp, buildSpearProp } from './Props';
+import { BOW_TIPS, SWORD_POMMEL, SWORD_TIP, buildBowProp, buildShieldProp, buildSwordProp } from './Props';
 import { SpearTrail } from './SpearTrail';
 import { ToonMaterialKit } from './ToonMaterials';
 
 /** 도형 모델의 키 (보완 자세의 손 위치가 이 키 기준으로 적혀 있음) */
 const POSE_SPACE_HEIGHT = 2.1;
 const TAG = '[Odysseus GLB]';
+/** 동작 파일에서 읽은 동작의 이름 앞에 붙임 */
+const CLIP_FILE_PREFIX = 'file:';
 
 const normalizeName = (name: string): string =>
   name.toLowerCase().replace(/mixamorig\d*/g, '').replace(/[^a-z0-9]/g, '');
+
+interface LoadedModel {
+  scene: THREE.Object3D;
+  animations: THREE.AnimationClip[];
+}
+
+/** .fbx(Mixamo)와 .glb/.gltf를 같은 모양으로 읽음. 없는 파일은 Vite가 index.html을 돌려줘 파싱에서 실패함 */
+async function loadModelFile(url: string): Promise<LoadedModel> {
+  if (url.toLowerCase().endsWith('.fbx')) {
+    const group = await new FBXLoader().loadAsync(url);
+    return { scene: group, animations: group.animations };
+  }
+  const gltf = await new GLTFLoader().loadAsync(url);
+  return { scene: gltf.scene, animations: gltf.animations };
+}
+
+async function loadFirst(urls: string[]): Promise<LoadedModel & { url: string }> {
+  let lastError: unknown = null;
+  for (const url of urls) {
+    try {
+      return { ...(await loadModelFile(url)), url };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('모델 파일 없음');
+}
+
+/** 동작의 from~to(길이 대비 0~1) 구간만 떼어 0초부터 시작하는 새 동작으로 */
+function cutClip(source: THREE.AnimationClip, from: number, to: number): THREE.AnimationClip {
+  const start = source.duration * from;
+  const end = source.duration * to;
+  const tracks = source.tracks.map((t) => t.clone().trim(start, end).shift(-start));
+  return new THREE.AnimationClip(source.name, end - start, tracks);
+}
 
 interface WeaponNode {
   mount: THREE.Group;
@@ -29,16 +67,44 @@ interface WeaponNode {
  */
 export class GltfOdysseus {
   public static async load(scene: THREE.Scene): Promise<GltfOdysseus> {
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync(AVATAR_CONFIG.modelUrl);
+    const model = await loadFirst(AVATAR_CONFIG.modelUrls);
+    console.info(TAG, `${model.url} 불러옴`);
+    // 동작별 파일 (Mixamo에서 받은 FBX). 파일 이름을 동작 이름으로 써서 clips 후보와 상관없이 그 상태에 연결
+    // 한 파일을 여러 상태가 나눠 쓰면(콤보 하나를 1~3타로) 한 번만 읽고 구간을 잘라 씀
+    const fileCache = new Map<string, Promise<THREE.AnimationClip | null>>();
+    const readClip = (url: string): Promise<THREE.AnimationClip | null> => {
+      if (!fileCache.has(url)) {
+        fileCache.set(
+          url,
+          loadModelFile(url)
+            .then((f) => f.animations.find((c) => c.duration > 0.05) ?? null)
+            .catch(() => null)
+        );
+      }
+      return fileCache.get(url)!;
+    };
+    const files = await Promise.all(
+      (Object.keys(AVATAR_CONFIG.clipFiles) as ClipKey[]).map(async (key) => {
+        const entry: ClipFile = AVATAR_CONFIG.clipFiles[key];
+        const { url, from, to } = typeof entry === 'string' ? { url: entry, from: 0, to: 1 } : entry;
+        const source = await readClip(url);
+        if (!source) return null;
+        const clip = from > 0 || to < 1 ? cutClip(source, from, to) : source;
+        clip.name = `${CLIP_FILE_PREFIX}${key}`;
+        return clip;
+      })
+    );
+    const loaded = files.filter((c): c is THREE.AnimationClip => c !== null);
+    if (loaded.length) console.info(TAG, '동작 파일:', loaded.map((c) => c.name.slice(CLIP_FILE_PREFIX.length)));
+    model.animations.push(...loaded);
+
     const weaponFiles = {} as Record<WeaponKey, THREE.Object3D | null>;
     for (const key of Object.keys(AVATAR_CONFIG.weapons) as WeaponKey[]) {
-      weaponFiles[key] = await loader
-        .loadAsync(AVATAR_CONFIG.weapons[key].url)
+      weaponFiles[key] = await loadModelFile(AVATAR_CONFIG.weapons[key].url)
         .then((g) => g.scene)
         .catch(() => null);
     }
-    return new GltfOdysseus(scene, gltf, weaponFiles);
+    return new GltfOdysseus(scene, model, weaponFiles);
   }
 
   private readonly root = new THREE.Group();
@@ -56,6 +122,16 @@ export class GltfOdysseus {
   private readonly kit = new ToonMaterialKit();
   private bowString: THREE.Line | null = null;
   private lastState = '';
+  /** 걷기·달리기 동작을 1배속으로 틀 때 나아가는 속도 (골반이 앞으로 가는 동작이면 그 거리로 잼) */
+  private readonly clipSpeed = { walk: AVATAR_CONFIG.walkClipSpeed, run: AVATAR_CONFIG.runClipSpeed };
+  /** 공격 디딤 자세: 지금 섞인 정도와 발 위치·골반 높이 (몸 기준, 부드럽게 따라감) */
+  private readonly stance = { weight: 0, front: 0, back: 0, width: 0, drop: 0 };
+  /** 서 있을 때 발목 높이 (게임 단위) */
+  private ankleHeight = 0.1;
+  /** 골반 위치 트랙이 없는 동작에서도 디딤 자세로 낮춘 높이가 쌓이지 않게 매 프레임 되돌릴 위치 */
+  private readonly restHipsPos = new THREE.Vector3();
+  /** 동작 파일을 틀 때 주무기를 대기 방향으로 내려 드는 정도 (0~1) */
+  private spearIdleWeight = 1;
 
   private readonly v1 = new THREE.Vector3();
   private readonly v2 = new THREE.Vector3();
@@ -64,7 +140,7 @@ export class GltfOdysseus {
   private readonly q1 = new THREE.Quaternion();
   private readonly q2 = new THREE.Quaternion();
 
-  private constructor(scene: THREE.Scene, gltf: GLTF, weaponFiles: Record<WeaponKey, THREE.Object3D | null>) {
+  private constructor(scene: THREE.Scene, gltf: LoadedModel, weaponFiles: Record<WeaponKey, THREE.Object3D | null>) {
     const model = gltf.scene;
     this.fit.add(model);
     this.root.add(this.fit);
@@ -75,6 +151,9 @@ export class GltfOdysseus {
 
     this.fitToGame(model);
     this.findBones(model);
+    const foot = this.bones.leftFoot;
+    if (foot) this.ankleHeight = this.root.worldToLocal(foot.getWorldPosition(this.v1)).y;
+    if (this.bones.hips) this.restHipsPos.copy(this.bones.hips.position);
     this.applyShading(model);
     this.mixer = new THREE.AnimationMixer(model);
     this.setupClips(gltf.animations);
@@ -141,9 +220,12 @@ export class GltfOdysseus {
       mesh.frustumCulled = false;
       const convert = (m: THREE.Material): THREE.Material => {
         const src = m as THREE.MeshStandardMaterial;
+        // 비스듬히 내려다보는 카메라라 텍스처가 뭉개지지 않게 이방성 필터 (지원 최대치로 자동 제한됨)
+        if (src.map) src.map.anisotropy = 8;
         const common = {
           map: src.map ?? null,
-          color: src.color ? src.color.clone() : new THREE.Color(1, 1, 1),
+          // FBX는 텍스처가 있어도 색을 0.8 회색으로 두는 경우가 많아, 텍스처가 있으면 흰색으로
+          color: src.map || !src.color ? new THREE.Color(1, 1, 1) : src.color.clone(),
           transparent: src.transparent,
           alphaTest: src.alphaTest,
           side: src.side,
@@ -204,18 +286,27 @@ export class GltfOdysseus {
   private setupClips(clips: THREE.AnimationClip[]): void {
     const hipsName = this.bones.hips?.name;
     for (const clip of clips) {
-      // 제자리 동작으로: 골반의 앞뒤·좌우 이동은 빼고 위아래 출렁임만 남김 (이동 거리는 게임 로직이 정함)
+      // 골반 말고 다른 뼈의 위치·크기 트랙은 버림 (뼈 길이는 모델 그대로 두고 회전만 씀)
+      clip.tracks = clip.tracks.filter((t) => !/\.(position|scale)$/.test(t.name) || t.name === `${hipsName}.position`);
+      for (const key of ['walk', 'run'] as const) {
+        if (clip.name === `${CLIP_FILE_PREFIX}${key}` || clip === this.findClip(clips, AVATAR_CONFIG.clips[key])) {
+          this.measureLocoSpeed(key, clip, hipsName);
+        }
+      }
+      // 제자리 동작으로: 골반의 앞뒤·좌우는 기본 자리에 고정하고 위아래 출렁임만 남김 (이동 거리는 게임 로직이 정함)
+      // 콤보를 잘라 쓴 조각은 시작 위치가 앞으로 가 있으므로 동작 첫 값이 아니라 기본 자리로 맞춤
       for (const track of clip.tracks) {
         if (!hipsName || track.name !== `${hipsName}.position`) continue;
         const v = track.values;
         for (let i = 0; i < v.length; i += 3) {
-          v[i] = v[0];
-          v[i + 2] = v[2];
+          v[i] = this.restHipsPos.x;
+          v[i + 2] = this.restHipsPos.z;
         }
       }
     }
     for (const key of Object.keys(AVATAR_CONFIG.clips) as ClipKey[]) {
-      const clip = this.findClip(clips, AVATAR_CONFIG.clips[key]);
+      const clip =
+        clips.find((c) => c.name === `${CLIP_FILE_PREFIX}${key}`) ?? this.findClip(clips, AVATAR_CONFIG.clips[key]);
       if (!clip) continue;
       const action = this.mixer.clipAction(clip);
       action.play();
@@ -229,6 +320,19 @@ export class GltfOdysseus {
       '연결한 동작:',
       Object.fromEntries((Object.keys(AVATAR_CONFIG.clips) as ClipKey[]).map((k) => [k, this.actions[k]?.getClip().name ?? '(없음 → 보완 자세)']))
     );
+  }
+
+  /** In Place를 끈 걷기·달리기는 골반이 한 바퀴에 간 거리를 게임 단위로 바꿔 재생 속도 기준으로 씀 */
+  private measureLocoSpeed(key: 'walk' | 'run', clip: THREE.AnimationClip, hipsName: string | undefined): void {
+    const track = clip.tracks.find((t) => t.name === `${hipsName}.position`);
+    const hipsParent = this.bones.hips?.parent;
+    if (!track || !hipsParent || clip.duration <= 0) return;
+    const v = track.values;
+    const n = v.length;
+    const distance = Math.hypot(v[n - 3] - v[0], v[n - 1] - v[2]) * hipsParent.getWorldScale(this.v1).x;
+    if (distance < 0.1) return; // 제자리 동작이면 설정값 그대로
+    this.clipSpeed[key] = distance / clip.duration;
+    console.info(TAG, `${key} 동작 속도 ${this.clipSpeed[key].toFixed(2)} (골반 이동으로 잼)`);
   }
 
   private findClip(clips: THREE.AnimationClip[], candidates: string[]): THREE.AnimationClip | null {
@@ -314,10 +418,10 @@ export class GltfOdysseus {
 
   private fallbackWeapon(key: WeaponKey, cfg: WeaponMount, tipOut: THREE.Vector3): THREE.Object3D {
     if (key === 'spear') {
-      const prop = buildSpearProp(this.kit);
-      const length = SPEAR_TIP + SPEAR_HEAD_LENGTH - SPEAR_BUTT;
+      const prop = buildSwordProp(this.kit);
+      const length = SWORD_TIP - SWORD_POMMEL;
       prop.scale.setScalar(cfg.size / length);
-      tipOut.set(0, (SPEAR_TIP + SPEAR_HEAD_LENGTH) * (cfg.size / length), 0);
+      tipOut.set(0, SWORD_TIP * (cfg.size / length), 0);
       return prop;
     }
     if (key === 'shield') {
@@ -348,11 +452,14 @@ export class GltfOdysseus {
 
     this.updateWeights(p, motion, playing, progress, dt);
     for (const [bone, q] of this.restQuats) bone.quaternion.copy(q);
+    this.bones.hips?.position.copy(this.restHipsPos);
     this.mixer.update(dt);
     this.root.updateMatrixWorld(true);
 
     this.applyBodyLean(p, motion, fillIn ? poses : null);
     if (fillIn) this.applyFillInArms(poses);
+    else this.aimSpearWithClip(p, dt);
+    this.applyAttackStance(p, fillIn, dt);
     this.updateGearVisibility(fillIn ? poses.current.stow : p.state.startsWith('bow') ? 1 : 0);
     this.updateBowString(p);
 
@@ -417,7 +524,7 @@ export class GltfOdysseus {
     progress: number | null,
     dt: number
   ): void {
-    const runWeight = THREE.MathUtils.smoothstep(motion.speed, 0.4, 4.5);
+    const speed = motion.speed;
     const targets = new Map<THREE.AnimationAction, number>();
     for (const action of this.weights.keys()) targets.set(action, 0);
 
@@ -428,17 +535,23 @@ export class GltfOdysseus {
         playing.time = clamp(progress, 0, 0.999) * playing.getClip().duration;
       }
     } else {
-      // 이동 동작 (보완 자세를 쓰는 상태도 다리는 이 동작을 따름)
-      const idle = this.actions.idle;
-      const run = this.actions.run;
-      if (run) {
-        targets.set(run, idle ? runWeight : 1);
-        run.paused = false;
-        run.timeScale = Math.max(0.5, motion.speed / AVATAR_CONFIG.runClipSpeed);
-      }
+      // 이동 동작 (보완 자세를 쓰는 상태도 다리는 이 동작을 따름): 대기 → 걷기 → 달리기를 속도로 섞음
+      const { idle, walk, run } = this.actions;
+      const moving = idle ? THREE.MathUtils.smoothstep(speed, 0.3, walk ? 1.2 : 4.5) : 1;
+      const runShare = walk && run ? THREE.MathUtils.smoothstep(speed, this.clipSpeed.walk * 1.1, this.clipSpeed.run * 0.6) : run ? 1 : 0;
       if (idle) {
-        targets.set(idle, run ? 1 - runWeight : 1);
+        targets.set(idle, 1 - moving);
         idle.paused = false;
+      }
+      if (walk) {
+        targets.set(walk, moving * (1 - runShare));
+        walk.paused = false;
+        walk.timeScale = clamp(speed / this.clipSpeed.walk, 0.6, 1.8);
+      }
+      if (run) {
+        targets.set(run, moving * runShare);
+        run.paused = false;
+        run.timeScale = Math.max(0.5, speed / this.clipSpeed.run);
       }
     }
 
@@ -473,6 +586,69 @@ export class GltfOdysseus {
     if (head) {
       const back = fill ? -(fill.current.hipYaw + fill.current.spineYaw) * 0.85 : 0;
       this.rotateBoneWorld(head, this.q1.setFromAxisAngle(up, motion.lookYaw(p) + back));
+    }
+    this.root.updateMatrixWorld(true);
+  }
+
+  /**
+   * 동작 파일을 틀 때 주무기 방향. 공격 중엔 검 동작이 손 방향을 그대로 쓰도록 두고,
+   * 대기·이동(맨손 동작)에선 spearIdleDir 쪽으로 내려 듦. 둘 사이는 섞는 비율로 부드럽게 넘어감
+   */
+  private aimSpearWithClip(p: PlayerEntity, dt: number): void {
+    const spear = this.weapons.spear;
+    const hand = this.bones.rightHand;
+    const c = AVATAR_CONFIG.spearIdleDir;
+    if (!spear || !hand || !c || !spear.mount.visible) return;
+    const idle = !spearProgress(p) && !p.state.startsWith('parry');
+    this.spearIdleWeight += ((idle ? 1 : 0) - this.spearIdleWeight) * approach(idle ? 8 : 25, dt);
+    if (this.spearIdleWeight < 0.01) return;
+    spear.mount.updateWorldMatrix(true, false);
+    const now = this.v1.set(0, 1, 0).transformDirection(spear.mount.matrixWorld);
+    const want = this.v3.set(c[0], c[1], c[2]).applyQuaternion(this.root.quaternion).normalize();
+    this.alignWeaponAxis(hand, spear.mount, new THREE.Vector3(0, 1, 0), now.lerp(want, this.spearIdleWeight).normalize());
+    this.root.updateMatrixWorld(true);
+  }
+
+  /**
+   * 창 공격 동작 파일이 없을 때의 하체: 준비 동안 왼발을 앞·오른발을 뒤로 벌리며 골반을 낮추고,
+   * 휘두를 때 가장 깊게, 회복하며 대기 자세로 돌아옴. 발은 다리 IK로 디딤 자리에 둠
+   */
+  private applyAttackStance(p: PlayerEntity, fillIn: boolean, dt: number): void {
+    const spear = fillIn ? spearProgress(p) : null;
+    const st = this.stance;
+    let want = 0;
+    if (spear) {
+      want = spear.phase === 'windup' ? 0.4 + 0.6 * THREE.MathUtils.smoothstep(spear.t, 0, 1) : spear.phase === 'swing' ? 1 : 1 - THREE.MathUtils.smoothstep(spear.t, 0.35, 1);
+      const cfg = AVATAR_CONFIG.attackStance[spear.step as 1 | 2 | 3];
+      const k = approach(25, dt);
+      st.front += (cfg.front - st.front) * k;
+      st.back += (cfg.back - st.back) * k;
+      st.width += (cfg.width - st.width) * k;
+      st.drop += (cfg.drop - st.drop) * k;
+    }
+    st.weight += (want - st.weight) * approach(spear ? 30 : 14, dt);
+    const w = st.weight;
+    const b = this.bones;
+    if (w < 0.01 || !b.hips || !b.leftUpLeg || !b.leftLeg || !b.leftFoot || !b.rightUpLeg || !b.rightLeg || !b.rightFoot) return;
+
+    // 골반을 낮춤 (부모 공간의 배율을 되돌려 게임 단위로)
+    const parentScale = b.hips.parent!.getWorldScale(this.v1).y;
+    b.hips.position.y -= (st.drop * w) / parentScale;
+    b.hips.updateWorldMatrix(false, true);
+
+    const pole = this.v2.set(0, 0, 1).applyQuaternion(this.root.quaternion);
+    const legs: [THREE.Object3D, THREE.Object3D, THREE.Object3D, number, number][] = [
+      [b.leftUpLeg, b.leftLeg, b.leftFoot, st.width, st.front],
+      [b.rightUpLeg, b.rightLeg, b.rightFoot, -st.width, -st.back],
+    ];
+    for (const [upper, lower, foot, x, z] of legs) {
+      const footQuat = foot.getWorldQuaternion(this.q2);
+      const now = this.root.worldToLocal(foot.getWorldPosition(this.v3));
+      const target = this.root.localToWorld(now.lerp(this.v4.set(x, this.ankleHeight, z), w));
+      this.solveTwoBone(upper, lower, foot, target, pole);
+      // 발바닥은 IK 전 방향 그대로 (땅에 붙어 있게)
+      const after = foot.getWorldQuaternion(new THREE.Quaternion()).invert();
+      this.rotateBoneWorld(foot, footQuat.clone().multiply(after));
     }
     this.root.updateMatrixWorld(true);
   }

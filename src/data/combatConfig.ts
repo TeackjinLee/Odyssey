@@ -20,7 +20,7 @@ export const OLYMPIAN_BOONS: Record<GodId, BoonDefinition> = {
     titleKo: '올림포스의 천둥 벼락',
     emblemDescKo: '짙은 청색과 백색 · 독수리와 번개 문양 · 갈라지는 전류',
     effectDescKo:
-      '청동 창 3타 및 강궁 풀차징 적중 시 주변 적들에게 연쇄 번개(Chain Lightning)가 내리칩니다. (E: 천둥 낙뢰 소환)',
+      '청동 검 3타 및 강궁 풀차징 적중 시 주변 적들에게 연쇄 번개(Chain Lightning)가 내리칩니다. (E: 천둥 낙뢰 소환)',
     primaryColor: '#2563eb',
     secondaryColor: '#e0f2fe',
     glowColor: '#60a5fa',

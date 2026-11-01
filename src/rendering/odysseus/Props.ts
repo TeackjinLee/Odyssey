@@ -2,14 +2,17 @@ import * as THREE from 'three';
 import { ToonMaterialKit } from './ToonMaterials';
 
 /**
- * 도형으로 만든 창·방패·활. 도형 모델이 쓰고, GLB 모델도 무기 파일이 없을 때 대신 쓴다.
- * - 창: 원점이 손잡이 자리, +Y가 창끝 방향
+ * 도형으로 만든 창·검·방패·활. 도형 모델이 쓰고(창), GLB 모델도 무기 파일이 없을 때 대신 쓴다(검).
+ * - 창·검: 원점이 손잡이 자리, +Y가 끝 방향
  * - 방패: 원점이 중심, +Z가 앞면
  * - 활: 원점이 손잡이, 활 몸통은 로컬 +X로 휘고 시위는 -X 쪽, 위아래가 Y
  */
 export const SPEAR_TIP = 1.55;
 export const SPEAR_HEAD_LENGTH = 0.28;
 export const SPEAR_BUTT = -0.85;
+/** 검: 날 끝과 자루 끝 (원점이 손잡이 가운데) */
+export const SWORD_TIP = 1.12;
+export const SWORD_POMMEL = -0.17;
 /** 활 위·아래 끝 (시위가 걸리는 자리, 활 로컬 좌표) */
 export const BOW_TIPS: [THREE.Vector3, THREE.Vector3] = [
   new THREE.Vector3(-0.32, 0.41, 0),
@@ -48,6 +51,35 @@ export function buildSpearProp(kit: ToonMaterialKit): THREE.Group {
   const spike = new THREE.ConeGeometry(0.035, 0.12, 6);
   spike.rotateX(Math.PI);
   toonPart(kit, g, spike, gold, 0, SPEAR_BUTT - 0.05, 0);
+  return g;
+}
+
+/** 청동 잎사귀 날 검 (그리스 크시포스를 길게): 가운데가 조금 넓은 날, 금빛 가드·자루 끝, 붉은 손잡이 끈 */
+export function buildSwordProp(kit: ToonMaterialKit): THREE.Group {
+  const g = new THREE.Group();
+  const bronze = kit.surface('#d9a441', { metal: true });
+  const gold = kit.surface('#e8b84a', { metal: true });
+  const bladeBase = 0.12;
+  const bladeLen = SWORD_TIP - bladeBase;
+  // 날: 아래·가운데·끝 폭을 정해 잎 모양으로 (끝은 뾰족)
+  const shape = new THREE.Shape();
+  const half = [0.045, 0.06, 0.05, 0.0];
+  const ys = [0, bladeLen * 0.45, bladeLen * 0.8, bladeLen];
+  shape.moveTo(-half[0], ys[0]);
+  for (let i = 1; i < 4; i++) shape.lineTo(-half[i], ys[i]);
+  for (let i = 2; i >= 0; i--) shape.lineTo(half[i], ys[i]);
+  shape.closePath();
+  const blade = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1 });
+  blade.translate(0, bladeBase, -0.01);
+  blade.computeVertexNormals();
+  toonPart(kit, g, blade, bronze);
+  // 가운데 등줄기
+  toonPart(kit, g, new THREE.BoxGeometry(0.012, bladeLen * 0.85, 0.045), gold, 0, bladeBase + bladeLen * 0.42, 0, false);
+  // 가드
+  toonPart(kit, g, new THREE.BoxGeometry(0.2, 0.04, 0.06), gold, 0, bladeBase - 0.02, 0);
+  // 손잡이와 자루 끝
+  toonPart(kit, g, new THREE.CylinderGeometry(0.024, 0.026, 0.24, 8), kit.surface('#9b1b22'), 0, -0.02, 0);
+  toonPart(kit, g, new THREE.SphereGeometry(0.04, 10, 8), gold, 0, SWORD_POMMEL + 0.02, 0);
   return g;
 }
 

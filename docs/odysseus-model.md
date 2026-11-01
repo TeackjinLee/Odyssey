@@ -7,8 +7,10 @@ Meshy에서 만든 모델 파일을 정해진 자리에 넣으면 게임이 그 
 
 | 파일 | 내용 | 없으면 |
 | :--- | :--- | :--- |
-| `public/assets/models/odysseus.glb` | 뼈대와 동작이 들어간 캐릭터 (무기 없음, 망토 포함) | 도형 모델 |
-| `public/assets/models/spear.glb` | 창 (뼈대 없음) | 도형 창 |
+| `public/assets/models/odysseus.glb` | 뼈대와 동작이 들어간 캐릭터 (무기 없음, 망토 포함) | 아래 `.fbx` |
+| `public/assets/models/odysseus.fbx` | Mixamo에서 **With Skin**으로 받은 캐릭터 (지금 쓰는 것) | 도형 모델 |
+| `public/assets/models/anims/<동작>.fbx` | Mixamo에서 같은 캐릭터로 **Without Skin** 받은 동작 하나씩 | 보완 자세 |
+| `public/assets/models/sword.glb` | 주무기 검 (뼈대 없음, 설정 키는 `spear`) | 도형 청동 검 |
 | `public/assets/models/shield.glb` | 방패 (뼈대 없음) | 도형 방패 |
 | `public/assets/models/bow.glb` | 활 (뼈대 없음, 휘지 않는 고정 모델) | 도형 활 |
 
@@ -33,6 +35,17 @@ Meshy에서 만든 모델 파일을 정해진 자리에 넣으면 게임이 그 
 4. **Download → GLB**, Animation은 **All Added**(추가한 동작 전부를 한 파일에)로 받는다.
 5. 무기 세 개는 Image to 3D만 하고(리깅 안 함) GLB로 받는다.
 
+## 3-1. Mixamo에서 (무료)
+
+1. 캐릭터 FBX(With Skin)는 `odysseus.fbx`로 넣는다. `.glb`가 있으면 그게 먼저라 지운다.
+2. 같은 캐릭터를 올린 채로 동작을 고르고 **FBX Binary, Without Skin, 30fps**로 받는다.
+   달리기·걷기는 **In Place**를 켠다(꺼도 골반 앞뒤 이동은 게임이 지움).
+3. 받은 파일 이름을 바꿔 `anims/`에 넣으면 그 상태에 바로 연결된다.
+   `idle` 대기, `walk` 걷기, `run` 달리기, `dash` 구르기·회피, `spear1`~`spear3` 창 1~3타,
+   `parry` 방패 막기, `bow` 활 쏘기. 없는 파일은 보완 자세를 쓴다.
+   콤보처럼 한 파일에 여러 타가 있으면 `clipFiles`에 `{ url, from, to }`로 구간을 나눠 적는다(지금 1~3타가 이 방식).
+4. 다른 캐릭터로 받은 동작(예: 기본 캐릭터 Y Bot)은 뼈 방향이 달라 꼬일 수 있다.
+
 ## 4. 넣고 확인하기
 
 `npm run dev`로 띄운 뒤 브라우저 개발자 도구 콘솔에서 `[Odysseus GLB]` 줄을 본다.
@@ -51,7 +64,8 @@ Meshy에서 만든 모델 파일을 정해진 자리에 넣으면 게임이 그 
 | `outline` | 외곽선 두께 |
 | `bones` | 뼈 이름 후보 (대소문자·`mixamorig`·기호 무시) |
 | `clips` | 상태별 동작 이름 후보. 창 1~3타는 비어 있으니 맞는 동작이 있으면 이름을 넣는다 |
-| `runClipSpeed` | 달리기 동작 1배속의 이동 속도. 발이 미끄러져 보이면 조정 |
+| `walkClipSpeed`·`runClipSpeed` | In Place 걷기·달리기 1배속의 이동 속도 (아니면 골반 이동으로 자동). 발이 미끄러지면 조정 |
+| `attackStance` | 창 공격 동작이 없을 때 다리 IK 디딤 자세 (앞발·뒷발 거리, 골반 낮춤) |
 | `attackHitTime` | 공격 동작에서 실제로 맞는 순간(0~1). 게임의 휘두르기 구간이 이 시점에 오게 재생 |
 | `weapons.*` | 붙일 뼈, 크기, 뼈 기준 위치·회전(도), 앞뒤 뒤집기 |
 | `spearGrip` | 창 아래끝에서 손이 쥐는 자리 (0~1) |

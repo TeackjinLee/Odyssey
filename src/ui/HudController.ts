@@ -444,7 +444,7 @@ export class HudController {
 
       const hpDisplay =
         enemy.kind === 'resonance_bell'
-          ? '🔔 창·활로 타격 시 황금 공명 발동'
+          ? '🔔 검·활로 타격 시 황금 공명 발동'
           : `HP ${enemy.hp}/${enemy.maxHp}`;
 
       labelEl.innerHTML = `

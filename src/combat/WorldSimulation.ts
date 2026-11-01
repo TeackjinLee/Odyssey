@@ -529,7 +529,7 @@ export class WorldSimulation {
         kind,
         isBoss: false,
         name: '고대 청동 종',
-        subtitle: '창·활로 타격 시 황금 공명 파동 발생!',
+        subtitle: '검·활로 타격 시 황금 공명 파동 발생!',
         x,
         z,
         homeX: x,
@@ -610,7 +610,7 @@ export class WorldSimulation {
     harpy.shielded = true;
     this.enemies.push(bell, harpy);
 
-    this.showBanner('M1+M2 자유 훈련장: 창 3단 콤보, 강궁 풀차징 관통·약점 저격, Q 방패 패링을 시험하세요!');
+    this.showBanner('M1+M2 자유 훈련장: 검 3단 콤보, 강궁 풀차징 관통·약점 저격, Q 방패 패링을 시험하세요!');
   }
 
   /**
@@ -1756,8 +1756,9 @@ export class WorldSimulation {
     const hasApollo = p.activeBoons.has('apollo');
     const hasZeus = p.activeBoons.has('zeus');
 
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const proj = this.projectiles[i];
+    const list = this.projectiles;
+    for (let i = list.length - 1; i >= 0; i--) {
+      const proj = list[i];
       proj.life += dt;
       if (proj.life >= proj.maxLife) {
         this.projectiles.splice(i, 1);
@@ -1824,6 +1825,8 @@ export class WorldSimulation {
             this.addFloatingText(p.x, p.z, '대시 회피!', '#67e8f9', 2.0);
           } else {
             this.damagePlayer(proj.damage);
+            // 이 피해로 쓰러지면 귀환 씬을 불러 투사체 목록이 새로 바뀌므로 여기서 멈춤
+            if (this.projectiles !== list) return;
           }
           this.projectiles.splice(i, 1);
           continue;
