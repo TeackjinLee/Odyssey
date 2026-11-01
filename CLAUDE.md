@@ -8,6 +8,8 @@ ODYSSEY: 귀환의 항해 — TypeScript + Three.js + Vite로 만든 브라우�
 
 이 폴더는 자체 git 저장소다(상위 `~/study` 저장소 안에 있지만 따로 관리).
 
+**새 버전(Godot 4)은 `godot/`에 있다** — 2D 픽셀아트 쿼터뷰 액션 RPG로 다시 만드는 중(챕터 1 플레이 가능). 실행·구조·그림 규칙은 `godot/README.md`, 6챕터 기획은 `godot/docs/GAME_DESIGN.md`. 확인은 `godot --headless --path godot -- --auto --quit-after=170`(봇이 챕터 1 끝까지 진행). 아래 내용은 기존 웹(Three.js) 버전 설명이다.
+
 ## 명령
 
 ```bash
@@ -35,7 +37,7 @@ npx tsc           # 타입 검사만 (noEmit, strict)
 - `src/data/combatConfig.ts` — 수치 조정은 `COMBAT_CONFIG`, 4신 가호 정의는 `OLYMPIAN_BOONS`.
 - `WorldSimulation.loadScene(sceneId)` — 씬별 적·지형(pillars, hubInteractables) 배치. 흐름: title → hub → cyclops_cave → polyphemus_boss → (가호 선택 `openBoonSelection`/`selectBoon`) → siren_reef → parthenope_boss → return. `training_grounds`는 별도 훈련장.
 - `src/rendering/SceneRenderer25D.ts` — 씬이 바뀌면(`renderedSceneId` 비교) 바이옴 지형·조명·수면을 다시 짓고, 엔티티는 빌보드 스프라이트로 그림. Bloom 후처리(EffectComposer + UnrealBloomPass).
-- `src/rendering/odysseus/` — 오디세우스 3D 모델(적·보스는 스프라이트). 렌더러는 `OdysseusAvatar` 하나만 쓴다: `public/assets/models/odysseus.glb`가 있으면 `GltfOdysseus`(Meshy 모델, 설정은 `avatarConfig.ts`, 안내는 `docs/odysseus-model.md`), 없으면 도형 모델 `OdysseusModel`. 둘 다 `AvatarMotion`(몸 방향: 걸을 땐 가는 쪽, 공격 땐 조준 `facingAngle` 쪽·기울기·발 디딤)과 `PoseDriver`(상태별 `OdysseusPoses` 자세 섞기)를 공유한다. GLB는 상태에 맞는 동작이 없으면 이 자세로 상체·팔(IK)을 보완한다. `CapeCloth`는 도형 모델의 Verlet 망토, `SpearTrail`은 창끝 궤적, `Props`는 도형 무기, `ToonMaterials`는 고정 빛 툰 셰이더+외곽선. 모델은 +Z가 앞, -X가 오른쪽.
+- `src/rendering/odysseus/` — 오디세우스 3D 모델(적·보스는 스프라이트). 렌더러는 `OdysseusAvatar` 하나만 쓴다: `public/assets/models/odysseus.glb`나 Mixamo `odysseus.fbx`(+`anims/<동작>.fbx`)가 있으면 `GltfOdysseus`(뼈대 모델, 설정은 `avatarConfig.ts`, 안내는 `docs/odysseus-model.md`), 없으면 도형 모델 `OdysseusModel`. 둘 다 `AvatarMotion`(몸 방향: 걸을 땐 가는 쪽, 공격 땐 조준 `facingAngle` 쪽·기울기·발 디딤)과 `PoseDriver`(상태별 `OdysseusPoses` 자세 섞기)를 공유한다. GLB는 상태에 맞는 동작이 없으면 이 자세로 상체·팔(IK)을 보완한다. `CapeCloth`는 도형 모델의 Verlet 망토, `SpearTrail`은 창끝 궤적, `Props`는 도형 무기(GLB 모델의 주무기는 청동 검, 도형 모델은 창), `ToonMaterials`는 고정 빛 툰 셰이더+외곽선. 모델은 +Z가 앞, -X가 오른쪽.
 - 창 공격 타이밍·내딛는 거리·히트스톱·입력 버퍼는 `COMBAT_CONFIG.player.spear`에 있고, 애니메이션은 `stateTimer`로 그 구간 진행도를 계산해 따라간다. 히트스톱 중엔 렌더러가 모델에 dt=0을 넘겨 동작도 멈춘다.
 - `src/rendering/ProceduralSprites.ts` — 적·보스 스프라이트를 캔버스로 절차 생성한 텍스처 아틀라스. `public/assets/`의 보스 이미지(polyphemus.svg, parthenope.svg)가 있으면 그걸 우선 쓴다.
 - `src/rendering/KeyArtRenderer.ts` — 타이틀 키아트(`#keyart-canvas`), `/assets/storyboard.png` 사용.

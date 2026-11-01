@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .DS_Store
+
+# Godot 프로젝트
+godot/.godot/
