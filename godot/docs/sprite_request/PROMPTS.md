@@ -168,3 +168,18 @@ Pixel art game item sprites matching the style, outline and pixel density of the
    edge-on side view; back side showing the wooden inside and arm strap.
 3) Greek recurve bow, standing vertical, string on the left, about 170px tall, plus the same bow fully drawn.
 ```
+
+## 불 효과 (따로 요청)
+
+첨부: 환경 그림 `assets/source/troy_env.webp`(화풍 참고). 받은 그림 이름: `troy_fire.png`.
+
+```
+Pixel art fire effect sprite sheet matching the style, outline and pixel density of the attached reference image
+(isometric Greek city of Troy at night). Solid flat dark background #282B35, no text, no grid lines.
+Row 1: LARGE roof fire loop, 8 frames, each in a 64x96 cell, flame base on the cell bottom, ragged asymmetric flame tongues,
+       dark red outer edge, orange body, small yellow core (not a white blob), loopable.
+Row 2: SMALL fire loop, 8 frames, each in a 32x48 cell, same style.
+Row 3: SMOKE puff, 6 frames, each 48x48, dark grey-brown puff growing and fading (last frame sparse pixels).
+Row 4: 6 single ember sparks (2-4px) and a charred/burnt roof-tile overlay patch about 96x48 (black-brown scorched tiles with glowing cracks).
+2D pixel art, crisp 1px dark outline on flames, no anti-aliasing blur, no glow halo baked in.
+```

@@ -67,17 +67,18 @@ func build() -> void:
 		["house_b", Vector2i(20, 33), false], ["house_a", Vector2i(25, 33), true], ["house_d", Vector2i(28, 33), false],
 	]
 	for h in houses:
-		var s := add_prop(h[0], h[1])
 		if h[2]:
-			add_fire(s, Vector2(randf_range(-14, 14), -46), 1.4)
-			add_fire(s, Vector2(randf_range(-26, 26), -34), 1.0, false)
+			add_burning_house(h[0], h[1])
+		else:
+			add_prop(h[0], h[1])
 	add_prop("horse", Vector2i(23, 26))
 	for c in [Vector2i(20, 22), Vector2i(30, 22), Vector2i(20, 31), Vector2i(30, 31)]:
 		add_prop("column", c)
 	# 소품
 	for c in [Vector2i(16, 12), Vector2i(21, 12), Vector2i(16, 17), Vector2i(21, 17), Vector2i(12, 8), Vector2i(23, 8)]:
+		# 횃불대 그림에 불이 그려져 있으니 빛만 더한다
 		var t := add_prop("torch_post", c, true, false)
-		add_fire(t, Vector2(0, -36), 0.55)
+		add_light(t.global_position + Vector2(1, -20), Color(1.0, 0.55, 0.25), 0.6, 0.85)
 	for c in [Vector2i(15, 4), Vector2i(21, 4)]:
 		var b := add_prop("brazier", c, true, false)
 		add_fire(b, Vector2(0, -16), 0.8)

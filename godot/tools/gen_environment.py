@@ -432,26 +432,52 @@ def make_props(out, meta):
     sh.finish((0.7, 0.5, 0), [1, 1], "cart", out, meta)
 
 
+FIRE_COLORS = ((110, 22, 14), (200, 52, 22), (240, 118, 30), (255, 196, 70), (255, 240, 170))
+
+
 def make_fx(out, meta):
-    frames = 8
-    w, h = 22, 30
+    # 불꽃: 아래가 넓고 위로 갈수록 좁아지는 몸통에 위로 흐르는 물결(혀)을 깎아 넣고,
+    # 세기를 5단계 색으로 나눠 칠한다(바깥 어두운 빨강 테두리, 노란 심지는 작게). 8프레임에 한 바퀴 돈다.
+    frames, w, h = 8, 24, 36
     fire = Image.new("RGBA", (w * frames, h), (0, 0, 0, 0))
-    dr = ImageDraw.Draw(fire)
+    px = fire.load()
     for f in range(frames):
-        rnd = random.Random(f * 13 + 1)
-        ox = f * w
-        for layer, (c, sc) in enumerate((((200, 50, 20), 1.0), ((246, 128, 30), 0.72), ((255, 214, 90), 0.45), ((255, 248, 210), 0.22))):
-            for k in range(7):
-                t = k / 6
-                cy = h - 4 - t * (h - 8) * sc - rnd.uniform(0, 2)
-                cx = w / 2 + math.sin(f * 0.8 + k * 1.3) * 2.2 * t + rnd.uniform(-1, 1)
-                r = (7.5 * (1 - t * 0.85)) * sc + 1
-                dr.ellipse([ox + cx - r, cy - r, ox + cx + r, cy + r], fill=c + (255,))
-        for _ in range(2):
-            ex, ey = rnd.uniform(4, w - 4), rnd.uniform(1, 9)
-            dr.point((ox + ex, ey), fill=(255, 200, 80, 255))
+        ph = f / frames * math.tau
+        for y in range(h):
+            t = (h - 3 - y) / (h - 6)            # 0 = 밑동, 1 = 꼭대기
+            if t < -0.08 or t > 1:
+                continue
+            tc = min(max(t, 0.0), 1.0)
+            half = 9.5 * (1 - tc) ** 0.7 + 0.6
+            sway = math.sin(tc * 4.2 - ph) * 2.6 * tc + math.sin(tc * 9 - ph * 2) * 0.8 * tc
+            for x in range(w):
+                dx = x + 0.5 - (w / 2 + sway)
+                # 위로 흘러가는 물결이 가장자리를 깎아 혀 모양을 만든다
+                wave = (math.sin(dx * 0.9 + tc * 11 - ph * 2) + math.sin(-dx * 1.7 + tc * 17 - ph * 3)) * 0.5
+                v = 1 - abs(dx) / half - wave * (0.15 + 0.55 * tc) - max(0.0, -t) * 6
+                if v <= 0:
+                    continue
+                v *= 1.15 - tc * 0.55
+                lv = 0 if v < 0.16 else 1 if v < 0.38 else 2 if v < 0.62 else 3 if v < 0.86 else 4
+                px[f * w + x, y] = FIRE_COLORS[lv] + (255,)
+        rnd = random.Random(f * 7 + 3)
+        for _ in range(2):                       # 위로 떨어져 나간 불똥
+            ex, ey = rnd.randint(6, w - 7), rnd.randint(0, 7)
+            px[f * w + ex, ey] = FIRE_COLORS[3] + (255,)
     fire.save(out / "fire.png")
     meta["fire"] = {"file": "fire.png", "frame": [w, h], "frames": frames, "anchor": [w // 2, h - 3]}
+
+    # 연기 한 덩이(입자로 띄워 커지며 흐려짐): 둥근 덩이, 위쪽이 조금 밝다
+    sm = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    sp = sm.load()
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - 7.5, y - 7.5)
+            if d < 7.6:
+                g = 78 if math.hypot(x - 6, y - 5.5) < 4.5 else 60
+                sp[x, y] = (g, g - 4, g - 8, 255)
+    sm.save(out / "smoke.png")
+    meta["smoke"] = {"file": "smoke.png", "anchor": [8, 8], "footprint": [1, 1], "size": [16, 16]}
 
     sh = Image.new("RGBA", (24, 10), (0, 0, 0, 0))
     ImageDraw.Draw(sh).ellipse([0, 0, 23, 9], fill=(0, 0, 0, 110))

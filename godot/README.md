@@ -95,7 +95,8 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
   성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`
-- 불꽃·그림자·화살·권양기·화로는 아직 `gen_environment.py`의 생성 그림
+- 불타는 집은 `<집>_burnt`(지붕 그을림, `fire_spots` = 지붕 위 불꽃 자리)에 불꽃 여러 개·연기·불티를 얹는다(`iso_level.gd`의 `add_burning_house`)
+- 불꽃·연기·그림자·화살·권양기·화로는 아직 `gen_environment.py`의 생성 그림. 불 그림 요청 프롬프트는 `docs/sprite_request/PROMPTS.md`
 
 ### 그려 받은 오디세우스와 무기
 

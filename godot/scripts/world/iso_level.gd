@@ -165,12 +165,92 @@ func add_fire(parent: Node2D, local_pos: Vector2, scale_k := 1.0, with_light := 
 	var mat := CanvasItemMaterial.new()
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	f.material = mat
+	f.flip_h = randf() < 0.5
+	f.speed_scale = randf_range(0.8, 1.25)
 	f.play("default")
 	f.frame = randi() % 8
 	parent.add_child(f)
 	if with_light:
 		add_light(parent.global_position + local_pos + Vector2(0, -8), Color(1.0, 0.55, 0.25), 1.1 * scale_k, 0.9 + 0.5 * scale_k)
 	return f
+
+
+## 위로 피어오르며 커지고 흐려지는 연기 (불 위에 둔다)
+func add_smoke(parent: Node2D, local_pos: Vector2, scale_k := 1.0) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.texture = AssetLibrary.prop_texture("smoke")
+	p.position = local_pos
+	p.amount = 22
+	p.lifetime = 3.6
+	p.preprocess = 3.6
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(10, 2) * scale_k
+	p.direction = Vector2(0.25, -1)
+	p.spread = 12.0
+	p.gravity = Vector2(4, 0)
+	p.initial_velocity_min = 10.0 * scale_k
+	p.initial_velocity_max = 16.0 * scale_k
+	p.scale_amount_min = 0.7 * scale_k
+	p.scale_amount_max = 1.0 * scale_k
+	var grow := Curve.new()
+	grow.add_point(Vector2(0, 0.6))
+	grow.add_point(Vector2(1, 3.2))
+	p.scale_amount_curve = grow
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 0.0))
+	fade.set_color(1, Color(1, 1, 1, 0.0))
+	fade.add_point(0.12, Color(1, 1, 1, 0.6))
+	fade.add_point(0.6, Color(1, 1, 1, 0.35))
+	p.color_ramp = fade
+	parent.add_child(p)
+	return p
+
+
+## 불 위로 튀어 오르다 식는 불티
+func add_embers(parent: Node2D, local_pos: Vector2, scale_k := 1.0) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.position = local_pos
+	p.amount = 8
+	p.lifetime = 1.4
+	p.preprocess = 1.4
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(14, 4) * scale_k
+	p.direction = Vector2(0, -1)
+	p.spread = 25.0
+	p.gravity = Vector2(0, -6)
+	p.initial_velocity_min = 14.0
+	p.initial_velocity_max = 30.0
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.0
+	var cool := Gradient.new()
+	cool.set_color(0, Color(1.0, 0.9, 0.5))
+	cool.set_color(1, Color(0.8, 0.2, 0.05, 0.0))
+	p.color_ramp = cool
+	var mat := CanvasItemMaterial.new()
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	p.material = mat
+	parent.add_child(p)
+	return p
+
+
+## 불타는 집: 그을린 지붕 그림에 불꽃 여러 개(자리는 env.json의 fire_spots)와 연기·불티, 큰 불빛 하나
+func add_burning_house(prop_name: String, cell: Vector2i) -> Sprite2D:
+	var burnt := prop_name + "_burnt"
+	var s := add_prop(burnt, cell)
+	var spots: Array = AssetLibrary.prop(burnt).get("fire_spots", [])
+	if spots.is_empty():
+		return s
+	var center := Vector2.ZERO
+	for sp in spots:
+		center += Vector2(sp[0], sp[1])
+	center /= spots.size()
+	add_smoke(s, center + Vector2(0, -30), 1.2)   # 먼저 넣어 불꽃 뒤에 그려지게
+	for sp in spots:
+		add_fire(s, Vector2(sp[0], sp[1]) + Vector2(randf_range(-3, 3), randf_range(-2, 2)), randf_range(0.75, 1.25), false)
+	add_fire(s, center + Vector2(randf_range(-6, 6), -4), 1.5, false)
+	add_embers(s, center + Vector2(0, -20))
+	add_light(s.global_position + center + Vector2(0, -10), Color(1.0, 0.5, 0.2), 1.25, 2.2)
+	return s
 
 
 func add_light(pos: Vector2, color: Color, energy: float, size_k: float, flicker := true) -> PointLight2D:

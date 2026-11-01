@@ -2,7 +2,8 @@
 """그려 받은 환경 그림 한 장(assets/source/troy_env.webp, 어두운 단색 배경) → 게임 환경 그림.
 
 gen_environment.py가 만든 env.json을 읽고, 받은 그림에 있는 것만 덮어쓴다
-(불꽃·그림자·화살·권양기·화로는 생성기 그림 그대로).
+(불꽃·연기·그림자·화살·권양기·화로는 생성기 그림 그대로).
+- 집마다 불탄 모습(<집>_burnt: 지붕 그을림, 지붕 위 불꽃 자리 fire_spots)도 만든다
 - 소품: 칸 범위(SRC_X·SRC_Y)로 잘라 배경을 지우고 K배 축소, 기준점은 발자국 중심
 - 바닥: 4열×6줄 마름모를 64×32로 맞춰 floor_atlas.png로
 
@@ -131,6 +132,76 @@ def greek_banner(img):
     return Image.fromarray(a)
 
 
+def shift_or(m, n):
+    """m을 상하좌우 n px 넓힌다."""
+    out = m.copy()
+    for _ in range(n):
+        g = out.copy()
+        g[1:] |= out[:-1]
+        g[:-1] |= out[1:]
+        g[:, 1:] |= out[:, :-1]
+        g[:, :-1] |= out[:, 1:]
+        out = g
+    return out
+
+
+def roof_mask(a):
+    """지붕 기와(R이 G보다 훨씬 큰 붉은 색)의 큰 덩어리들 중 그림 위쪽 절반에 있는 것(양쪽 지붕면).
+    벽에 걸린 깃발은 아래쪽이라 빠진다."""
+    r, g, b = a[..., 0].astype(int), a[..., 1].astype(int), a[..., 2].astype(int)
+    tile = (a[..., 3] > 0) & (r > g + 50) & (r > b + 70)
+    # 기와 사이 어두운 줄눈으로 끊긴 기와를 한 덩어리로: 2px 넓혔다 줄인다
+    tile = ~shift_or(~shift_or(tile, 2), 2)
+    h, w = tile.shape
+    seen = np.zeros_like(tile)
+    m = np.zeros_like(tile)
+    for sy, sx in zip(*np.nonzero(tile)):
+        if seen[sy, sx]:
+            continue
+        stack, comp = [(sy, sx)], []
+        seen[sy, sx] = True
+        while stack:
+            y, x = stack.pop()
+            comp.append((y, x))
+            for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+                if 0 <= ny < h and 0 <= nx < w and tile[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    stack.append((ny, nx))
+        ys, xs = zip(*comp)
+        if len(comp) >= 300 and np.mean(ys) < h * 0.5:
+            m[list(ys), list(xs)] = True
+    stone = (r - g < 45) & (g > 60)    # 돌벽(횃불에 비쳐 누렇게 보이는 것 포함)
+    return m & ~stone & (a[..., 3] > 0)
+
+
+def burnt_house(img, anchor):
+    """불타는 집: 지붕을 그을린 색으로, 군데군데 달아오른 틈. 지붕 위 불꽃 자리(기준점 기준)도 돌려준다."""
+    a = np.asarray(img).copy()
+    roof = roof_mask(a)
+    rnd = np.random.default_rng(7)
+    h, w = roof.shape
+    # 큰 얼룩(4px 칸) 단위로 그을림 정도를 달리한다
+    blot = rnd.random((h // 4 + 1, w // 4 + 1)).repeat(4, 0).repeat(4, 1)[:h, :w]
+    k = np.where(blot > 0.35, 0.32, 0.55)[..., None]
+    rgb = a[..., :3].astype(float)
+    char = rgb * k * np.array([1.0, 0.8, 0.75])
+    a[roof, :3] = char[roof].astype(np.uint8)
+    # 달아오른 틈: 기와 줄을 따라 2~3px 가로 줄
+    for _ in range(int(roof.sum() * 0.004)):
+        y, x = rnd.integers(0, h), rnd.integers(0, w - 3)
+        if roof[y, x:x + 3].all():
+            a[y, x:x + rnd.integers(2, 4), :3] = (236, 104, 30)
+    # 불꽃 자리: 지붕을 x로 다섯 등분한 칸마다 그 칸 지붕의 위쪽 1/3 지점
+    ys, xs = np.nonzero(roof)
+    spots = []
+    for q in (0.15, 0.38, 0.62, 0.85):
+        x = int(np.quantile(xs, q))
+        col = ys[np.abs(xs - x) <= 2]
+        y = int(col.min() + (col.max() - col.min()) * 0.35)
+        spots.append([x - anchor[0], y - anchor[1]])
+    return Image.fromarray(a), spots
+
+
 def floor_atlas(src, rows, variants):
     x0, y0, x1, y1 = FLOOR_BOX
     cw, ch = (x1 - x0) / 4, (y1 - y0) / 6
@@ -168,6 +239,11 @@ def main(root):
             im.save(out / f"{n}.png")
             meta["props"][n] = {"file": f"{n}.png", "anchor": anchor_of(im, fp, n), "footprint": list(fp),
                                 "size": [im.width, im.height]}
+        if name.startswith("house_"):
+            anchor = meta["props"][name]["anchor"]
+            im, spots = burnt_house(img, anchor)
+            im.save(out / f"{name}_burnt.png")
+            meta["props"][f"{name}_burnt"] = dict(meta["props"][name], file=f"{name}_burnt.png", fire_spots=spots)
     fa = meta["floor_atlas"]
     floor_atlas(src, fa["rows"], fa["variants"]).save(out / fa["file"])
     (out / "env.json").write_text(json.dumps(meta, ensure_ascii=False))
