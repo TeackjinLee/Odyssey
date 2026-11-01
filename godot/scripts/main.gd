@@ -5,6 +5,7 @@ extends Node
 ##   --auto         자동 플레이(봇이 퀘스트를 끝까지 진행)
 ##   --shot=경로     몇 초 뒤 화면을 PNG로 저장하고 종료 (--shot-at=초, 기본 3)
 ##   --start=gate   성문 경비대 앞에서 시작
+##   --showcase     오디세우스 8방향(무기 장착)을 한 줄로 세워 보여 줌
 ##   --god          오디세우스가 죽지 않음(흐름 확인용)
 
 const CHAPTERS := [
@@ -26,12 +27,12 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
-	if args.has("play") or args.has("auto") or args.has("start"):
+	if args.has("play") or args.has("auto") or args.has("start") or args.has("showcase"):
 		start_chapter()
 	else:
 		_show_menu()
 	if args.has("shot"):
-		_take_shot(String(args["shot"]), float(args.get("shot-at", "3")))
+		_take_shot(String(args["shot"]), float(args.get("shot-at", "3")), int(args.get("shots", "1")))
 	if args.has("quit-after"):
 		await get_tree().create_timer(float(args["quit-after"]), true, false, true).timeout
 		_report_and_quit()
@@ -52,6 +53,8 @@ func start_chapter() -> void:
 	if args.has("god"):
 		level.player.max_hp = 99999.0
 		level.player.hp = 99999.0
+	if args.has("showcase"):
+		_showcase()
 	if args.get("start", "") == "gate":
 		var lv: Chapter1Troy = level
 		for e in lv.patrol_group:
@@ -62,6 +65,31 @@ func start_chapter() -> void:
 		for m in lv.squad.members:
 			m.position = lv.player.position + Vector2(randf_range(-20, 20), 20)
 		lv._set_step(2)
+
+
+func _showcase() -> void:
+	var lv: Chapter1Troy = level
+	lv.sinon.talk.enabled = false
+	for e in lv.enemies():
+		e.queue_free()
+	var base := lv.player.position + Vector2(-150, -40)
+	for d in 8:
+		var n := Npc.new()
+		n.setup("odysseus", "오디세우스", func(_b): pass)
+		n.fixed_dir = d
+		n.position = base + Vector2(d * 38, (d % 2) * 6)
+		lv.world.add_child(n)
+		n.talk.enabled = false
+		n.weapons = WeaponLayer.new()
+		n.weapons.attach(n)
+	lv.player.position = base + Vector2(140, 60)
+	if Game.autoplay:
+		var dummy := Enemy.new()
+		dummy.setup("trojan_sword")
+		dummy.max_hp = 99999.0
+		dummy.position = lv.player.position + Vector2(26, 6)
+		lv.world.add_child(dummy)
+		dummy.attack_cd = 9999.0
 
 
 func _clear() -> void:
@@ -99,8 +127,8 @@ func _show_menu() -> void:
 		var b := Button.new()
 		b.text = "%s  %s%s" % [c[0], c[1], "" if c[3] else "  (준비 중)"]
 		b.disabled = not c[3]
-		b.position = Vector2(200, 126 + i * 26)
-		b.size = Vector2(240, 22)
+		b.position = Vector2(190, 122 + i * 29)
+		b.size = Vector2(260, 25)
 		b.add_theme_font_size_override("font_size", 9)
 		if c[3]:
 			b.pressed.connect(start_chapter)
@@ -122,12 +150,16 @@ func _label(parent: Control, s: String, pos: Vector2, size: int, color: Color) -
 	parent.add_child(l)
 
 
-func _take_shot(path: String, delay: float) -> void:
+func _take_shot(path: String, delay: float, count := 1) -> void:
 	await get_tree().create_timer(delay, true, false, true).timeout
-	await RenderingServer.frame_post_draw
-	var img := get_viewport().get_texture().get_image()
-	img.save_png(path)
-	print("SHOT ", path)
+	for i in count:
+		await RenderingServer.frame_post_draw
+		var img := get_viewport().get_texture().get_image()
+		var p := path if count == 1 else path.replace(".png", "_%02d.png" % i)
+		img.save_png(p)
+		print("SHOT ", p)
+		if count > 1:
+			await get_tree().create_timer(0.04, true, false, true).timeout
 	if not args.has("quit-after"):
 		_report_and_quit()
 

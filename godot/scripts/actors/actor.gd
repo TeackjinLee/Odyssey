@@ -20,6 +20,7 @@ var walk_speed := 58.0
 var run_speed := 100.0
 var has_shield := true
 var poise := false
+var can_parry := false
 var damage_mult := 1.0
 var show_health_bar := true
 var head_height := 46.0
@@ -72,6 +73,8 @@ func set_sheet(s: String) -> void:
 		return
 	body.sprite_frames = AssetLibrary.character_frames(s)
 	body.offset = -AssetLibrary.character_anchor(s)
+	var k := AssetLibrary.character_scale(s)
+	body.scale = Vector2(k, k)
 	if anim_base != "":
 		var a := anim_base
 		anim_base = ""
@@ -211,7 +214,7 @@ func take_hit(dmg: float, src: Node2D, kb := 60.0, heavy := false, ranged := fal
 	if src:
 		from_dir = (src.global_position - global_position).normalized()
 	if state == St.BLOCK and has_shield and facing.dot(from_dir) > 0.15:
-		if block_time < 0.2 and not ranged and not heavy and src is Actor:
+		if can_parry and block_time < 0.2 and not ranged and not heavy and src is Actor:
 			(src as Actor).stagger(0.9)
 			Fx.spark(global_position + from_dir * 8 + Vector2(0, -16), Color(1, 0.85, 0.3), 12)
 			Fx.text(global_position + Vector2(0, -head_height), "패링!", Color(1, 0.85, 0.3))

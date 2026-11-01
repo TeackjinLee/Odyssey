@@ -3,6 +3,8 @@ extends Actor
 ## 말을 걸 수 있는 인물. 오디세우스가 가까이 오면 그쪽을 본다. 싸움에는 끼지 않는다.
 
 var talk: Interactable
+var fixed_dir := -1
+var weapons: WeaponLayer
 
 
 func setup(sheet_name: String, who: String, on_talk: Callable) -> void:
@@ -23,10 +25,20 @@ func _ready() -> void:
 
 
 func think(_delta: float) -> void:
+	if fixed_dir >= 0:
+		face(Iso.dir_vector(fixed_dir))
+		play("idle")
+		return
 	var p: Player = Game.player
 	if p and p.global_position.distance_to(global_position) < 90.0:
 		face(p.global_position - global_position)
 	play("idle")
+
+
+func _update_visual() -> void:
+	super._update_visual()
+	if weapons:
+		weapons.update()
 
 
 func _separation() -> Vector2:

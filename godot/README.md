@@ -93,6 +93,17 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 
 다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py .`
 
+### 그려 받은 오디세우스와 무기
+
+- 원본 `assets/source/odysseus_8dir.webp`(마젠타 배경, 4×2 칸) → `python3 tools/gen_hero.py .` →
+  `assets/sprites/odysseus.png`(128×128 칸, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
+- 포즈가 하나라 동작은 그 포즈를 기울이고 눌렀다 펴서 만든다. 동작 그림을 받으면 그것으로 바꾼다
+  (요청 프롬프트·참고 그림: `docs/sprite_request/`)
+- 시트 `.json`의 `hands[동작][프레임][방향]`이 오른손·왼손 위치. 원본 손 위치는 `gen_hero.py`의 `HANDS_SRC`
+- 무기는 `assets/weapons/`(`weapons.json`: 그림·`grip`) — `scripts/actors/weapon_layer.gd`가 손에 붙인다.
+  검은 날 끝이 위로 서게, 방패는 front·three_quarter·side·back 네 장, 활은 세워서. 임시 무기는 `tools/gen_weapons.py`
+- 8방향 확인: `godot --path . -- --showcase` (무기를 든 오디세우스 8명이 한 줄로 섬)
+
 ## 검증용 실행 인자
 
 ```bash

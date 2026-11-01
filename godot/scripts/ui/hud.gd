@@ -163,7 +163,9 @@ func _draw_hud() -> void:
 
 func _draw_player(p: Player) -> void:
 	_panel(Rect2(6, 6, 178, 48))
-	var tex := _portrait("res://assets/ui/portrait_odysseus_sword.png")
+	var tex := _portrait("res://assets/ui/portrait_odysseus.png")
+	if tex == null:
+		tex = _portrait("res://assets/ui/portrait_odysseus_sword.png")
 	canvas.draw_rect(Rect2(9, 9, 42, 42), Color(0.2, 0.15, 0.12))
 	if tex:
 		canvas.draw_texture_rect(tex, Rect2(10, 10, 40, 40), false)

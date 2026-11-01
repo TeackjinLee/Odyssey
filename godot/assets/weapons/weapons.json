@@ -1,0 +1,29 @@
+{
+ "scale": 0.5,
+ "sword": {
+  "file": "sword.png",
+  "grip": [
+   6,
+   42
+  ]
+ },
+ "shield": {
+  "views": {
+   "front": "shield_front.png",
+   "three_quarter": "shield_three_quarter.png",
+   "side": "shield_side.png",
+   "back": "shield_back.png"
+  },
+  "grip": [
+   19,
+   19
+  ]
+ },
+ "bow": {
+  "file": "bow.png",
+  "grip": [
+   10,
+   27
+  ]
+ }
+}

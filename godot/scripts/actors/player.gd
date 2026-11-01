@@ -28,18 +28,24 @@ var interact_progress := 0.0
 var move_vel := Vector2.ZERO
 var inp := {}
 var _bot_attack_toggle := false
+var weapons: WeaponLayer
 
 
 func _ready() -> void:
-	sheet = "odysseus_sword"
+	sheet = "odysseus" if ResourceLoader.exists("res://assets/sprites/odysseus.png") else "odysseus_sword"
 	team = Team.GREEK
 	display_name = "오디세우스"
 	max_hp = 140.0
 	walk_speed = 72.0
 	run_speed = 118.0
 	show_health_bar = false
-	head_height = 50.0
+	can_parry = true
+	head_height = 58.0
 	super._ready()
+	shadow.scale = Vector2(1.3, 1.3)
+	if not AssetLibrary.character_hands(sheet).is_empty():
+		weapons = WeaponLayer.new()
+		weapons.attach(self)
 	add_to_group("player")
 	Game.player = self
 	var light := PointLight2D.new()
@@ -266,7 +272,8 @@ func _interact_update(delta: float) -> void:
 
 func _switch_weapon() -> void:
 	weapon = "bow" if weapon == "sword" else "sword"
-	set_sheet("odysseus_bow" if weapon == "bow" else "odysseus_sword")
+	if weapons == null:
+		set_sheet("odysseus_bow" if weapon == "bow" else "odysseus_sword")
 	Fx.text(global_position + Vector2(0, -head_height), "활" if weapon == "bow" else "검", Color(1, 0.9, 0.6))
 	Sfx.play("ui")
 
@@ -284,6 +291,12 @@ func _war_cry() -> void:
 	for e in Game.level.enemies():
 		if e.global_position.distance_to(global_position) < 70.0:
 			e.stagger(0.6)
+
+
+func _update_visual() -> void:
+	super._update_visual()
+	if weapons:
+		weapons.update()
 
 
 func _draw() -> void:

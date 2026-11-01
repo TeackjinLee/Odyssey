@@ -5,6 +5,7 @@ class_name AssetLibrary
 
 static var _frames := {}
 static var _anchors := {}
+static var _meta := {}
 static var _env: Dictionary = {}
 static var _tex := {}
 
@@ -33,7 +34,33 @@ static func character_frames(sheet: String) -> SpriteFrames:
 				sf.add_frame(key, at)
 	_frames[sheet] = sf
 	_anchors[sheet] = Vector2(meta["anchor"][0], meta["anchor"][1])
+	_meta[sheet] = meta
 	return sf
+
+
+## 시트를 몇 배로 그릴지 (그려 받은 고해상도 시트는 0.5 등)
+static func character_scale(sheet: String) -> float:
+	character_frames(sheet)
+	return float(_meta[sheet].get("scale", 1.0))
+
+
+## 손 위치 표: hands[동작][프레임][방향] = [오른손 x, y, 왼손 x, y] (없으면 빈 사전)
+static func character_hands(sheet: String) -> Dictionary:
+	character_frames(sheet)
+	return _meta[sheet].get("hands", {})
+
+
+static var _weapons: Dictionary = {}
+
+
+static func weapons() -> Dictionary:
+	if _weapons.is_empty():
+		_weapons = JSON.parse_string(FileAccess.get_file_as_string("res://assets/weapons/weapons.json"))
+	return _weapons
+
+
+static func weapon_texture(file: String) -> Texture2D:
+	return texture("res://assets/weapons/" + file)
 
 
 static func character_anchor(sheet: String) -> Vector2:
