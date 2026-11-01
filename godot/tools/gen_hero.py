@@ -264,14 +264,43 @@ def build(root):
     out = root / "assets/sprites"
     sheet.save(out / "odysseus.png")
     (out / "odysseus.json").write_text(json.dumps(meta, ensure_ascii=False))
-    # 초상화: 남쪽 포즈 머리
-    cell, foot, height = cells[2]
-    bb = cell.getbbox()
-    head_w = int(height * 0.36)
-    cx = (bb[0] + bb[2]) // 2
-    crop = cell.crop((cx - head_w // 2, bb[1] - 4, cx + head_w // 2, bb[1] - 4 + head_w))
-    crop.resize((40, 40), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
+    if (root / PORTRAIT_SRC).exists():
+        make_portrait(root)
+    else:
+        # 초상화: 남쪽 포즈 머리
+        cell, foot, height = cells[2]
+        bb = cell.getbbox()
+        head_w = int(height * 0.36)
+        cx = (bb[0] + bb[2]) // 2
+        crop = cell.crop((cx - head_w // 2, bb[1] - 4, cx + head_w // 2, bb[1] - 4 + head_w))
+        crop.resize((40, 40), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
     return poses
+
+
+# 그려 받은 오디세우스 일러스트(흰 배경)에서 얼굴만 잘라 초상화로 쓴다
+PORTRAIT_SRC = "assets/source/odysseus_portrait.jpg"
+PORTRAIT_BOX = (345, 180, 585, 420)   # 원본 픽셀, 정사각형
+PORTRAIT_SIZE = 80                    # HUD는 40×40 칸 — 1280×720 창에서 1:1
+
+
+def make_portrait(root):
+    crop = Image.open(root / PORTRAIT_SRC).convert("RGBA").crop(PORTRAIT_BOX)
+    w, h = crop.size
+    px = crop.load()
+    # 테두리에서 이어진 흰 바탕만 투명하게 (얼굴 안의 밝은 부분은 남김)
+    stack = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for x in (0, w - 1) for y in range(h)]
+    seen = set()
+    while stack:
+        x, y = stack.pop()
+        if (x, y) in seen or not (0 <= x < w and 0 <= y < h):
+            continue
+        seen.add((x, y))
+        r, g, b, _ = px[x, y]
+        if min(r, g, b) < 225:
+            continue
+        px[x, y] = (0, 0, 0, 0)
+        stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    crop.resize((PORTRAIT_SIZE, PORTRAIT_SIZE), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
 
 
 if __name__ == "__main__":
