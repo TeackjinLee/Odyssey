@@ -398,7 +398,20 @@ func _update_occlusion(delta: float) -> void:
 	for s in occluders:
 		var target := 1.0
 		if s.position.y > pp.y + 2.0 and absf(s.position.x - pp.x) < 140.0:
-			var rect := Rect2(s.position + s.offset, s.texture.get_size()).grow(-4)
-			if rect.has_point(probe) or rect.has_point(pp):
+			# 그림 사각형이 아니라 실제로 칠해진 픽셀이 몸을 덮을 때만 (목마처럼 빈 곳이 많은 그림)
+			if _covers(s, probe) or _covers(s, pp + Vector2(0, -4)) or _covers(s, pp + Vector2(0, -26)):
 				target = 0.42
 		s.modulate.a = move_toward(s.modulate.a, target, delta * 4.0)
+
+
+var _alpha_images := {}
+
+
+func _covers(s: Sprite2D, p: Vector2) -> bool:
+	var local := (p - s.position - s.offset).floor()
+	var size := s.texture.get_size()
+	if local.x < 0 or local.y < 0 or local.x >= size.x or local.y >= size.y:
+		return false
+	if not _alpha_images.has(s.texture):
+		_alpha_images[s.texture] = s.texture.get_image()
+	return _alpha_images[s.texture].get_pixel(int(local.x), int(local.y)).a > 0.5

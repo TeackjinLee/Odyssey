@@ -39,24 +39,26 @@ ITEMS = {
     "spear_rack": ((211, 278), (200, 360), (1, 1), K),
     "cart": ((289, 392), (200, 360), (1, 1), K),
 }
+# 그늘진 어두운 갈색이 배경과 가까운 그림: 붉은빛 어두운 색을 남기는 기준을 낮춘다(목마 뒷다리)
+DARK_KEEP = {"horse": 16}
 # 바닥 그림 줄 → 게임 바닥 이름 (env.json floor_atlas.rows 순서로 다시 쌓는다)
 FLOOR_SRC = {"cobble": 0, "plaza": 1, "dirt": 2, "road": 3, "grass": 4, "ash": 5}
 FLOOR_BOX = (8, 369, 376, 650)
 TILE = (64, 32)
 
 
-def mask_of(a):
+def mask_of(a, dark_keep=30):
     a = a.astype(int)
     d = np.abs(a - BG).sum(2)
     # 배경과 조금 다른 어두운 푸른빛(그림자·압축 잡음)은 배경으로, 어두운 나무(붉은빛)는 남긴다
     bluish_dark = (a[..., 2] >= a[..., 0]) & (a.max(2) < 90)
-    return (d > 48) | ((d > 30) & ~bluish_dark)
+    return (d > 48) | ((d > dark_keep) & ~bluish_dark)
 
 
-def cut(src, xr, yr):
+def cut(src, xr, yr, dark_keep=30):
     """범위 안 그림을 배경 없는 RGBA로 (남는 여백은 잘라냄)."""
     a = src[yr[0]:yr[1], xr[0]:xr[1]]
-    m = mask_of(a)
+    m = mask_of(a, dark_keep)
     ys, xs = np.nonzero(m)
     a, m = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], m[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
     rgba = np.dstack([a, (m * 255)]).astype(np.uint8)
@@ -300,7 +302,7 @@ def main(root):
     meta = json.loads((out / "env.json").read_text())
     src = np.asarray(Image.open(root / "assets/source/troy_env.webp").convert("RGB"))
     for name, (xr, yr, fp, k) in ITEMS.items():
-        img = shrink(cut(src, xr, yr), k)
+        img = shrink(cut(src, xr, yr, DARK_KEEP.get(name, 30)), k)
         variants = [(name, img)]
         if name == "gate_closed":
             variants.append(("gate_open", open_gate(img)))
