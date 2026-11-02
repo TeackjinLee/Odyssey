@@ -46,7 +46,9 @@ godot -e --path .             # 에디터로 열기
 1. 목마 옆 첩자 **시논**과 대화 — 오디세우스 혼자 나와 잠입 규칙을 듣는다(부하는 목마 안에 대기)
 2. 세 갈래 중 하나로 **몰래** 북쪽 가로까지 가서, 갈래 끝의 꺼진 횃불에 불을 붙여 **신호** → 부하 셋 합류.
    들키면 경보병이 갈래마다 하나 있는 **경보 종**으로 뛰고, 치기 전에 쓰러뜨리면 그만, 울리면 주변이 모두 알아채고 성문 경비가 2명 는다
-3. 성문 앞 광장의 **경비대** 6명(+경보마다 2명) 처치 — 수비대장 아게노르(보스 체력바)
+3. 성문 앞 광장의 **경비대** 6명(+경보마다 2명) 처치 — 수비대장 아게노르(보스 체력바).
+   1페이즈는 3연타 → 내려찍기(크게 붉게 깜빡임, 막는 순간 패링하면 2초 무방비). 체력 절반 이하면 뿔나팔로 검병 둘을 부르고
+   방패 돌진(바닥의 붉은 띠로 예고, 옆으로 피함 — 벽에 박히면 2초 무방비)을 섞는다
 4. **권양기**를 E를 누르고 있는 동안만 돌려(12초) 성문 개방. 손을 떼면 다시 내려가고(초당 4%), 15%·55%에서 트로이군이
    몰려오므로 2(위치 사수)로 부하를 곁에 세워 둔다 → 아카이아 증원군 4명 입장
 5. 붉은 원(성문 거점)을 **사수** — 원 안에 적이 있으면 점령 정지. 반격 3파:
@@ -133,7 +135,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 ## 검증용 실행 인자
 
 ```bash
-godot --headless --path . -- --auto --quit-after=200   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
+godot --headless --path . -- --auto --quit-after=220   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
 godot --headless --path . -- --auto=stealth --quit-after=240   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장
 godot --headless --path . -- --start=winch --auto --quit-after=150   # 권양기 앞에서 시작해 사수까지
@@ -145,5 +147,6 @@ godot --headless --path . -- --start=winch --auto --quit-after=150   # 권양기
 
 - 오디세우스 공격·스태미나: `player.gd`의 `SWORD_COMBO`·`HEAVY`·`SKILL_CD`
 - 부하: `companion.gd`의 `ROLES` / 트로이 병사: `enemy.gd`의 `KINDS`, 동시에 근접 공격하는 적 수 `MAX_ATTACKERS`
+- 아게노르: `enemy.gd`의 `COMBO_WINDUP`·`OPEN_TIME`·`CHARGE_*`
 - 거점 점령 속도·반격 시점: `chapter1_troy.gd`의 `_update_capture()`·`_send_wave()`
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`

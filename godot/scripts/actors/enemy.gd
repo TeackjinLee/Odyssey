@@ -2,7 +2,8 @@ class_name Enemy
 extends Actor
 ## 트로이 병사. 순찰/대기 → 발견(주변 동료에게 알림) → 추적 → 공격 예고(붉게 깜빡임) → 공격 → 회복.
 ## 방패병은 상대가 휘두르는 걸 보면 막고, 궁수는 거리를 벌려 쏘며, 체력이 낮으면 잠깐 물러난다.
-## 수비대장은 경직 저항(강공격·패링에만 경직)이 있고 세 번째 공격마다 내려찍어 주변을 친다.
+## 수비대장 아게노르는 경직 저항(강공격·패링에만 경직)이 있다. 1페이즈: 3연타 → 내려찍기(막는 순간 패링하면 2초 무방비).
+## 2페이즈(체력 절반 이하): 뿔나팔로 검병 둘을 부르고, 방패 돌진(붉은 길로 예고, 옆으로 피함 — 벽에 박히면 2초 무방비)을 섞는다.
 ## 잠입: 알아채기 전에는 앞쪽 부채꼴(VIEW_ARC)로 오디세우스만 본다. 보이는 거리는 그 자리의 밝기에 따라
 ## SIGHT_DARK~vision. 보이거나 소리가 나면 의심("?")이 차고, 다 차면 알아챈다. 뒤에서는 E로 조용히 처치되고,
 ## 알아채기 전에 화살을 맞으면 한 발에 쓰러진다. 꺼진 횃불을 보면 가서 다시 켠다.
@@ -48,6 +49,12 @@ var perch := false
 var crank_pos := Vector2.INF
 var hit_done := false
 var slam := false
+var horn_done := false
+var _horn_blown := false
+var charge_cd := 0.0
+var charge_dir := Vector2.ZERO
+var _charge_from := Vector2.ZERO
+var _charge_hit: Array = []
 var _seen_attack := -1.0
 
 ## 한 대상을 동시에 노리는 근접 공격 수 상한 (나머지는 둘레를 돌며 기회를 본다)
@@ -57,6 +64,14 @@ const VIEW_ARC := 70.0
 const SIGHT_DARK := 55.0
 ## 높은 곳 궁수가 쏘는 거리
 const PERCH_REACH := 250.0
+## 수비대장: 연타 사이 예고 시간, 패링·벽 충돌 뒤 무방비 시간, 방패 돌진(예고·빠르기·거리·쿨타임·피해)
+const COMBO_WINDUP := 0.26
+const OPEN_TIME := 2.0
+const CHARGE_WINDUP := 0.8
+const CHARGE_SPEED := 240.0
+const CHARGE_LEN := 210.0
+const CHARGE_CD := 7.0
+const CHARGE_DMG := 16.0
 
 
 func _attackers_on(t: Actor) -> int:
@@ -121,6 +136,7 @@ func alert(t: Actor) -> void:
 
 func think(delta: float) -> void:
 	attack_cd -= delta
+	charge_cd -= delta
 	phase_time += delta
 	scan -= delta
 	if not alerted:
@@ -136,6 +152,15 @@ func think(delta: float) -> void:
 			return
 		"crank":
 			_run_crank(delta)
+			return
+		"horn":
+			_horn()
+			return
+		"charge_windup":
+			_charge_windup()
+			return
+		"charge":
+			_charge()
 			return
 		"windup":
 			_windup(delta)
@@ -180,6 +205,14 @@ func think(delta: float) -> void:
 	if hp < max_hp * 0.28 and not retreated and not poise and not perch and not shield_wall and randf() < 0.5:
 		retreated = true
 		_set_phase("retreat")
+		return
+	if poise and not horn_done and hp <= max_hp * 0.5:
+		horn_done = true
+		_set_phase("horn")
+		return
+	if poise and horn_done and charge_cd <= 0.0 and d > 45.0 and d < 190.0 and phase == "chase" \
+			and Game.level.line_clear(global_position, target.global_position, 4.0):
+		_start_charge()
 		return
 	if perch:
 		# 높은 곳: 움직이지 않고 보이면 쏜다
@@ -488,7 +521,7 @@ func _set_phase(p: String) -> void:
 
 func _start_windup() -> void:
 	_set_phase("windup")
-	slam = poise and strikes % 3 == 2
+	slam = poise and strikes % 4 == 3
 	var anim := "heavy" if slam else ("bow" if cfg.get("ranged", false) else "attack1")
 	set_state(St.ATTACK)
 	play(anim, true)
@@ -498,6 +531,8 @@ func _start_windup() -> void:
 
 func _windup(_delta: float) -> void:
 	var w: float = cfg["windup"] * (1.3 if slam else 1.0)
+	if poise and strikes % 4 in [1, 2]:
+		w = COMBO_WINDUP   # 3연타의 둘째·셋째 타는 짧게 이어 친다
 	telegraph = clamp(phase_time / w, 0.0, 1.0)
 	if target and phase_time < w * 0.6:
 		face(target.global_position - global_position)
@@ -509,7 +544,7 @@ func _windup(_delta: float) -> void:
 		if cfg.get("ranged", false):
 			body.frame = 2
 		else:
-			play_timed("heavy" if slam else ["attack1", "attack2", "attack3"][strikes % 3 if poise else randi() % 2], cfg["dur"] * (1.4 if slam else 1.0))
+			play_timed("heavy" if slam else ["attack1", "attack2", "attack3"][strikes % 4 if poise else randi() % 2], cfg["dur"] * (1.4 if slam else 1.0))
 			Sfx.play("swing", -14.0)
 
 
@@ -525,21 +560,109 @@ func _strike() -> void:
 			body.frame = 3
 		elif slam:
 			var c := global_position + facing * 14.0
+			# 막기 시작 직후(패링 타이밍)에 정면으로 받으면 오디세우스는 다치지 않고 아게노르가 무방비가 된다
+			var p: Actor = Game.player
+			if p and p.is_alive() and p.state == St.BLOCK and p.block_time < 0.3 and Combat.ground_dist(c, p.global_position) <= 46.0 \
+					and p.facing.dot((global_position - p.global_position).normalized()) > 0.15:
+				p.invuln = 0.05
+				Fx.spark(p.global_position + Vector2(0, -20), Color(1, 0.85, 0.3), 16)
+				Fx.text(p.global_position + Vector2(0, -p.head_height), "패링!", Color(1, 0.85, 0.3))
+				Sfx.play("parry")
+				Combat.area(self, c, 46.0, cfg["dmg"] * 1.3, 200.0)
+				_open_up()
+				return
 			Combat.area(self, c, 46.0, cfg["dmg"] * 1.3, 200.0)
 			Fx.ring(c, 46.0, Color(1, 0.6, 0.3), 0.4)
 			Game.shake(5.0)
 		else:
 			Combat.melee(self, cfg["reach"], cfg["arc"], cfg["dmg"], 80.0)
 			Fx.slash(self, cfg["reach"], cfg["arc"], Color(1, 0.45, 0.35), strikes % 2 == 1, 4.0)
-	if phase_time >= dur + 0.3:
+	var chain := poise and not slam and strikes % 4 in [0, 1]   # 3연타 중간은 거의 쉬지 않고 다음 타로
+	if phase_time >= dur + (0.05 if chain else 0.3):
 		strikes += 1
 		attack_cd = cfg["cd"] * randf_range(0.8, 1.3)
+		if poise and strikes % 4 in [1, 2]:
+			attack_cd = 0.05
+		_set_phase("chase")
+
+
+# ── 수비대장 ────────────────────────────────────────
+## 무방비: 오래 비틀거린다(패링한 내려찍기, 벽에 박힌 돌진)
+func _open_up() -> void:
+	strikes = 0
+	Fx.text(global_position + Vector2(0, -head_height - 6), "무방비!", Color(1, 0.85, 0.3))
+	Game.shake(4.0)
+	_set_phase("chase")
+	stagger(OPEN_TIME)
+
+
+## 뿔나팔: 멈춰 서서 불고, 레벨이 검병을 부른다(on_boss_horn).
+func _horn() -> void:
+	play("interact")
+	if target:
+		face(target.global_position - global_position)
+	if phase_time >= 0.5 and not _horn_blown:
+		_horn_blown = true
+		Fx.text(global_position + Vector2(0, -head_height - 6), "뿔나팔!", Color(1, 0.55, 0.3))
+		Fx.ring(global_position, 60.0, Color(1, 0.55, 0.3), 0.6)
+		Sfx.play("bell", -6.0)
+		Game.shake(3.0)
+		if Game.level.has_method("on_boss_horn"):
+			Game.level.on_boss_horn(self)
+	if phase_time >= 1.3:
+		charge_cd = 1.5
+		_set_phase("chase")
+
+
+func _start_charge() -> void:
+	charge_dir = (target.global_position - global_position).normalized()
+	_set_phase("charge_windup")
+	set_state(St.ATTACK)
+	play("block")
+	face(charge_dir)
+
+
+## 돌진 예고: 처음 절반은 목표 쪽으로 방향을 맞추고, 그 뒤로는 고정(옆으로 피할 틈)
+func _charge_windup() -> void:
+	telegraph = clamp(phase_time / CHARGE_WINDUP, 0.0, 1.0)
+	if target and phase_time < CHARGE_WINDUP * 0.5:
+		charge_dir = (target.global_position - global_position).normalized()
+		face(charge_dir)
+	if phase_time >= CHARGE_WINDUP:
+		telegraph = 0.0
+		_charge_from = global_position
+		_charge_hit = []
+		_set_phase("charge")
+		set_state(St.ATTACK)
+		Sfx.play("swing", -6.0)
+
+
+func _charge() -> void:
+	play("run")
+	face(charge_dir)
+	desired_velocity = charge_dir * CHARGE_SPEED
+	var stuck := phase_time > 0.12 and get_real_velocity().length() < CHARGE_SPEED * 0.3
+	if Game.level.is_blocked_world(global_position + charge_dir * 12.0) or stuck:
+		desired_velocity = Vector2.ZERO
+		knock = -charge_dir * 60.0
+		charge_cd = CHARGE_CD
+		Fx.spark(global_position + charge_dir * 10.0 + Vector2(0, -20), Color(1, 0.9, 0.6), 14)
+		Sfx.play("hit_heavy")
+		_open_up()
+		return
+	for a in Game.level.greeks():
+		if a not in _charge_hit and Combat.ground_dist(global_position, a.global_position) < 18.0:
+			_charge_hit.append(a)
+			a.take_hit(CHARGE_DMG, self, 240.0, true)
+	if global_position.distance_to(_charge_from) >= CHARGE_LEN:
+		charge_cd = CHARGE_CD
+		attack_cd = 0.6
 		_set_phase("chase")
 
 
 func on_interrupted() -> void:
 	telegraph = 0.0
-	if phase == "windup" or phase == "strike" or phase == "block":
+	if phase in ["windup", "strike", "block", "charge_windup", "charge"]:
 		phase = "chase"
 		phase_time = 0.0
 		attack_cd = max(attack_cd, 0.5)
@@ -563,6 +686,15 @@ func _draw() -> void:
 	super._draw()
 	if not is_alive():
 		return
+	if phase == "charge_windup":
+		# 돌진 길 예고(땅 위 띠)
+		var side := charge_dir.orthogonal() * 9.0
+		var reach := 8.0
+		while reach < CHARGE_LEN and not Game.level.is_blocked_world(global_position + charge_dir * reach):
+			reach += 6.0   # 벽에 닿는 데까지만 그린다(거기 박히면 무방비)
+		var end := charge_dir * minf(reach, CHARGE_LEN)
+		var a := 0.12 + 0.25 * telegraph
+		draw_colored_polygon(PackedVector2Array([side, end + side, end - side, -side]), Color(1, 0.25, 0.15, a))
 	if phase == "alarm" or phase == "crank":
 		var ya := -head_height - 8.0
 		var tag := "! 경보" if phase == "alarm" else "! 권양기"

@@ -58,6 +58,8 @@ var close_progress := 0.0
 var _cranked := false
 var _crank_frame := -1
 var _winch_attacks := 0
+var captain: Enemy
+var _boss_hint := false
 
 
 func build() -> void:
@@ -194,6 +196,7 @@ func start() -> void:
 		_spawn("trojan_archer", Vector2(23.5, 6.0)),
 		_spawn("trojan_captain", Vector2(18.0, 5.2)),
 	]
+	captain = guard_group[5]
 	for g in guard_group:
 		g.vision = 130.0
 		g.raises_alarm = false
@@ -464,6 +467,16 @@ func crank_gate(delta: float) -> void:
 				e.target = player
 
 
+## 아게노르 2페이즈: 뿔나팔 소리에 북쪽 가로 양쪽에서 검병 둘이 뛰어온다(경비대 수에 더함).
+func on_boss_horn(_boss: Enemy) -> void:
+	for g in [Vector2(11.0, 10.5), Vector2(25.5, 10.5)]:
+		var e := _spawn("trojan_sword", g)
+		e.raises_alarm = false
+		e.alert(player)
+		guard_group.append(e)
+	Game.show_hint("아게노르가 뿔나팔로 검병을 불렀다! 방패 돌진(붉은 길)은 옆으로 피하라 — 벽에 박히면 2초 무방비")
+
+
 func _on_alarm(_bell: Dictionary) -> void:
 	if step > 2:
 		return
@@ -484,6 +497,9 @@ func _process(delta: float) -> void:
 		Game.show_hint("들켰다! 좌클릭 검 3연타 · F 강공격 · 우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
 	match step:
 		2:
+			if not _boss_hint and is_instance_valid(captain) and captain.alerted:
+				_boss_hint = true
+				Game.show_hint("아게노르: 3연타 뒤 크게 붉게 깜빡이면 내려찍기 — 막는 순간(K/우클릭) 패링하면 2초 무방비")
 			var n := _dead_count(guard_group)
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (%d/%d)" % [n, guard_group.size()] + _side_text())
 			if n >= guard_group.size():
