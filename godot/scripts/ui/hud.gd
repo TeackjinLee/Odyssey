@@ -6,6 +6,7 @@ extends CanvasLayer
 
 signal restart_requested
 signal menu_requested
+signal checkpoint_requested
 
 const GOLD := Color(0.95, 0.78, 0.38)
 const PANEL := Color(0.06, 0.05, 0.07, 0.72)
@@ -101,14 +102,16 @@ func _show_overlay(kind: String, st: Dictionary) -> void:
 	for b in _buttons:
 		b.queue_free()
 	_buttons.clear()
-	var labels := [["다시 도전", func(): restart_requested.emit()], ["타이틀로", func(): menu_requested.emit()]]
+	var labels := [["처음부터", func(): restart_requested.emit()], ["타이틀로", func(): menu_requested.emit()]]
 	if kind == "clear":
 		labels[0][0] = "챕터 다시 하기"
+	elif not Game.checkpoint.is_empty():
+		labels.push_front(["체크포인트에서 다시", func(): checkpoint_requested.emit()])
 	for i in labels.size():
 		var b := Button.new()
 		b.text = labels[i][0]
-		b.position = Vector2(214 + i * 112, 236)
-		b.size = Vector2(100, 20)
+		b.position = Vector2(320 - (labels.size() * 140 - 12) / 2.0 + i * 140, 262 if kind == "clear" else 238)
+		b.size = Vector2(128, 20)
 		b.add_theme_font_size_override("font_size", 8)
 		b.pressed.connect(labels[i][1])
 		canvas.add_child(b)
@@ -351,13 +354,41 @@ func _draw_help() -> void:
 		_text(Vector2(r.position.x + 90, y), rows[i][1], 8)
 
 
+const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞"}
+
+
+## 클리어 결과: 시간·처치·들킨 횟수·경보·골라서 하는 목표, 경보 없이 끝내면 칭호
+func _draw_clear_result() -> void:
+	var st := overlay_stats
+	_text(Vector2(0, 92), "CHAPTER 1 클리어", 12, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 120), "트로이의 성문을 열었다", 18, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	var title := ""
+	if st.get("alarms", 0) == 0 and st.get("detected", 0) == 0:
+		title = "칭호 「보이지 않는 자」 — 한 번도 들키지 않고 성문까지"
+	elif st.get("alarms", 0) == 0:
+		title = "칭호 「밤의 그림자」 — 경보 종 한 번 울리지 않고 성문까지"
+	if title != "":
+		_text(Vector2(0, 148), title, 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	else:
+		_text(Vector2(0, 148), "경보 종을 한 번도 울리지 않고 끝내면 칭호를 얻는다", 8, Color(0.7, 0.7, 0.7), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	var t: float = st.get("time", 0.0)
+	var rows := [
+		"시간 %d분 %02d초   ·   처치 %d (조용히 %d)" % [int(t) / 60, int(t) % 60, st.get("kills", 0), st.get("silent", 0)],
+		"들킨 횟수 %d   ·   경보 %d   ·   부하가 쓰러진 횟수 %d   ·   체크포인트에서 다시 %d" % [st.get("detected", 0), st.get("alarms", 0), st.get("downs", 0), st.get("retries", 0)],
+		"골라서 하는 목표   %s 정찰병 구출   ·   %s 무기고 불태우기" % ["●" if st.get("scout", false) else "○", "●" if st.get("armory", false) else "○"],
+	]
+	for i in rows.size():
+		_text(Vector2(0, 178 + i * 16), rows[i], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 240), "다음: CHAPTER 2 — 귀환의 시작 (준비 중)", 7, Color(0.65, 0.65, 0.65), HORIZONTAL_ALIGNMENT_CENTER, 640)
+
+
 func _draw_overlay() -> void:
 	canvas.draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, 0.7))
 	if overlay == "clear":
-		_text(Vector2(0, 130), "CHAPTER 1 클리어", 12, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
-		_text(Vector2(0, 160), "트로이의 성문을 열었다", 18, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 640)
-		_text(Vector2(0, 185), "다음: CHAPTER 2 — 귀환의 시작 (준비 중)", 8, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 640)
-	else:
-		_text(Vector2(0, 150), "오디세우스가 쓰러졌다", 18, Color(1, 0.5, 0.45), HORIZONTAL_ALIGNMENT_CENTER, 640)
+		_draw_clear_result()
+		return
+	_text(Vector2(0, 150), "오디세우스가 쓰러졌다", 18, Color(1, 0.5, 0.45), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	if not Game.checkpoint.is_empty():
+		_text(Vector2(0, 228), "체크포인트: " + CHECKPOINT_NAMES.get(Game.checkpoint["id"], "") + "  (골라서 하는 목표는 그대로)", 7, Color(0.55, 0.85, 1.0), HORIZONTAL_ALIGNMENT_CENTER, 640)
 	var t: float = overlay_stats.get("time", 0.0)
 	_text(Vector2(0, 212), "처치 %d   ·   부하가 쓰러진 횟수 %d   ·   %d분 %02d초" % [overlay_stats.get("kills", 0), overlay_stats.get("downs", 0), int(t) / 60, int(t) % 60], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)

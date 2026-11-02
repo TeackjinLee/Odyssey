@@ -19,7 +19,9 @@ var side_markers: Array = []
 var autoplay := false
 ## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
 var stealth_bot := false
-var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0}
+var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
+## 마지막 체크포인트: {"id", "stats", "scout", "armory", "guards"} — 챕터를 처음 시작하면 비운다(레벨이 채움)
+var checkpoint: Dictionary = {}
 
 var ui_font: SystemFont
 
@@ -81,7 +83,7 @@ func _register_input() -> void:
 
 
 func reset_run() -> void:
-	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0}
+	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	side_markers = []

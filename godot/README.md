@@ -54,7 +54,11 @@ godot -e --path .             # 에디터로 열기
 5. 붉은 원(성문 거점)을 **사수** — 원 안에 적이 있으면 점령 정지. 반격 3파:
    방패벽(정면은 늘 막음, F 강공격에 방패가 부서짐) → 짐더미 위 궁수(제자리에서 멀리 쏨) →
    권양기 돌격병(권양기 앞에 4초 붙어 있으면 성문이 닫혀 점령이 멈추고, 5초 돌려 다시 열어야 함)
-6. 클리어 화면
+6. 클리어 화면 — 시간·처치(조용히)·들킨 횟수·경보·부하가 쓰러진 횟수·체크포인트에서 다시 한 횟수·골라서 하는 목표.
+   경보 0이면 칭호 「밤의 그림자」, 한 번도 안 들키면 「보이지 않는 자」
+
+**체크포인트**: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 쓰러지면 "체크포인트에서 다시"로 그 단계부터 하고,
+골라서 하는 목표(정찰병·무기고)와 경보로 는 경비는 그대로, 기록은 체크포인트 때 값으로 돌아간다(`chapter1_troy.gd`의 `restore_checkpoint`).
 
 ## 구조
 
@@ -136,7 +140,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 
 ```bash
 godot --headless --path . -- --auto --quit-after=220   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
-godot --headless --path . -- --auto=stealth --quit-after=240   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
+godot --headless --path . -- --auto=stealth --quit-after=300   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장
 godot --headless --path . -- --start=winch --auto --quit-after=150   # 권양기 앞에서 시작해 사수까지
 ```

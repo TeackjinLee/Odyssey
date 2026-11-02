@@ -307,6 +307,7 @@ func _perceive(delta: float) -> void:
 	if not stim and calm_delay <= 0.0:
 		suspicion = max(0.0, suspicion - 0.4 * delta)
 	if suspicion >= 1.0 and p:
+		Game.stats["detected"] = Game.stats.get("detected", 0) + 1
 		alert(p)
 		call_alarm()
 	takedown.enabled = not poise and p != null and p.is_alive() \

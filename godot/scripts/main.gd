@@ -40,16 +40,26 @@ func _ready() -> void:
 		_report_and_quit()
 
 
-func start_chapter() -> void:
+## from_checkpoint면 마지막 체크포인트(Game.checkpoint)의 기록·골라서 하는 목표로 그 자리부터 다시 시작한다.
+func start_chapter(from_checkpoint := false) -> void:
 	_clear()
 	get_tree().paused = false
+	var cp: Dictionary = Game.checkpoint if from_checkpoint else {}
 	Game.reset_run()
+	Game.checkpoint = {}
+	if not cp.is_empty():
+		Game.stats = cp["stats"].duplicate()
+		Game.stats["retries"] = Game.stats.get("retries", 0) + 1
 	level = Chapter1Troy.new()
 	add_child(level)
 	hud = Hud.new()
 	add_child(hud)
 	hud.restart_requested.connect(start_chapter)
 	hud.menu_requested.connect(_show_menu)
+	hud.checkpoint_requested.connect(func(): start_chapter(true))
+	if not cp.is_empty():
+		(level as Chapter1Troy).restore_checkpoint(cp)
+		return
 	var c: Array = CHAPTERS[0]
 	hud.show_title([c[0], c[1], c[2]])
 	if args.has("god"):

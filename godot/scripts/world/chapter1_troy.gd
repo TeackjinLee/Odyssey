@@ -9,6 +9,7 @@ extends IsoLevel
 ## 골라서 하는 목표: 시장 동쪽 막다른 골목의 묶인 정찰병 구출(부하 +1), 뒷골목 성벽 밑 무기고 불태우기(마지막 반격에 궁수 없음).
 ## 권양기는 E를 누르고 있는 동안만 돌아가고 손을 떼면 성문이 다시 내려간다(부하를 2 위치 사수로 곁에 세워 지킴).
 ## 사수 반격 3파: 방패벽 → 높은 곳 궁수 → 권양기 돌격(트로이군이 권양기를 돌려 성문을 닫으면 다시 열어야 함).
+## 체크포인트: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 죽으면 그 자리부터 다시 하고, 골라서 하는 목표는 이룬 그대로 둔다.
 ##
 ## 격자: x는 화면 오른쪽 아래, y는 왼쪽 아래로 늘어난다. 바깥 성벽은 y=3 줄과 x=2 열(화면 위쪽 두 변).
 ## 위(북)부터: 성문 광장 y4~9 · 북쪽 가로 y10~12 · 세 갈래 y13~37(뒷골목 x3~6, 대로 x16~20, 시장 x27~33,
@@ -225,7 +226,7 @@ func start() -> void:
 	armory_point.hold_time = 1.5
 	armory_point.radius = 26.0
 	armory_point.position = Iso.grid_to_world(Vector2(4.6, 23.5))
-	armory_point.on_use = func(_by): _burn_armory()
+	armory_point.on_use = func(_by): _burn_armory(false)
 	world.add_child(armory_point)
 	Game.side_markers = [scout.global_position, armory_point.global_position]
 	winch_point = Interactable.new()
@@ -267,6 +268,38 @@ func _spawn_crew(at: Vector2) -> void:
 		squad.add_member(c)
 
 
+# ── 체크포인트 ──────────────────────────────────────
+func _save_checkpoint(id: String) -> void:
+	Game.checkpoint = {"id": id, "stats": Game.stats.duplicate(), "scout": scout_freed, "armory": armory_burned,
+		"guards": guard_group.size()}
+	if id != "stealth":
+		Fx.text(player.global_position + Vector2(0, -64), "체크포인트", Color(0.55, 0.85, 1.0))
+
+
+## 체크포인트에서 다시: 그 단계의 시작으로 옮기고, 그 뒤에 이룬 골라서 하는 목표·경보로 는 경비도 되살린다.
+func restore_checkpoint(cp: Dictionary) -> void:
+	sinon.talk.enabled = false
+	if cp.get("armory", false):
+		_burn_armory(true)
+	match cp["id"]:
+		"stealth":
+			_set_step(1)
+		"merge":
+			skip_to_gate()
+			for i in (int(cp.get("guards", 6)) - 6) / 2:
+				_on_alarm({})
+			Game.checkpoint["guards"] = guard_group.size()
+		"winch":
+			skip_to_winch()
+	if cp.get("scout", false) and not scout_freed:
+		scout_freed = true
+		Game.side_markers.erase(scout.global_position)
+		scout.queue_free()
+		_add_scout(player.global_position + Vector2(-20, 24))
+		_refresh_side()
+	Game.show_hint("체크포인트에서 다시 시작")
+
+
 ## 검증용(--start=gate): 잠입을 건너뛰고 부하와 함께 성문 경비대 앞에서 시작
 func skip_to_gate() -> void:
 	for e in stealth_group:
@@ -295,6 +328,8 @@ func skip_to_winch() -> void:
 # ── 퀘스트 ────────────────────────────────────────────
 func _set_step(s: int) -> void:
 	step = s
+	if s in [1, 2, 3]:
+		_save_checkpoint(["stealth", "merge", "winch"][s - 1])
 	match s:
 		0:
 			Game.set_objective(chapter_title, "목마 옆의 첩자 시논에게 말을 걸어라  [E]")
@@ -363,28 +398,38 @@ func _free_scout(_by) -> void:
 	var at := scout.global_position
 	scout.queue_free()
 	Game.side_markers.erase(at)
+	_add_scout(at)
+	Sfx.play("ui")
+	Game.say([["테르산드로스", "장군! 살았습니다. 이 칼로 은혜를 갚겠습니다."]])
+	_refresh_side()
+
+
+func _add_scout(at: Vector2) -> void:
 	var c := Companion.new()
 	c.setup("sword", "테르산드로스")
 	c.position = at
 	world.add_child(c)
 	squad.add_member(c)
 	c.face(player.global_position - at)
-	Sfx.play("ui")
-	Game.say([["테르산드로스", "장군! 살았습니다. 이 칼로 은혜를 갚겠습니다."]])
-	_refresh_side()
+	if not Game.checkpoint.is_empty():
+		Game.checkpoint["scout"] = true
 
 
-## 무기고에 불을 지르면 불빛이 퍼지고 타는 소리에 가까운 적이 의심한다.
-func _burn_armory() -> void:
+## 무기고에 불을 지르면 불빛이 퍼지고 타는 소리에 가까운 적이 의심한다(quiet: 체크포인트에서 되살릴 때).
+func _burn_armory(quiet := false) -> void:
 	if armory_burned:
 		return
 	armory_burned = true
 	armory_point.enabled = false
 	Game.side_markers.erase(armory_point.global_position)
+	if not Game.checkpoint.is_empty():
+		Game.checkpoint["armory"] = true
 	for i in armory_sprites.size():
 		var sp: Sprite2D = armory_sprites[i]
 		add_fire(sp, Vector2(randf_range(-3, 3), -10), 0.7 + 0.15 * i, i == 1)
 	add_smoke(armory_sprites[1], Vector2(0, -40), 1.0)
+	if quiet:
+		return
 	Sfx.play("cry", -14.0)
 	noise(armory_point.global_position, 130.0, 0.6)
 	Fx.text(armory_point.global_position + Vector2(0, -40), "무기고가 탄다", Color(1, 0.7, 0.3))
