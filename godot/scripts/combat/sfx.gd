@@ -38,6 +38,7 @@ static func _make(name: String) -> AudioStreamWAV:
 		"ui": [0.06, 660.0, 0.05, 2000.0],
 		"death": [0.4, 90.0, 0.5, 400.0],
 		"step": [0.05, 0.0, 1.0, 400.0],
+		"bell": [1.6, 620.0, 0.03, 3000.0],
 	}
 	var s: Array = spec.get(name, spec["ui"])
 	var length: float = s[0]
@@ -61,6 +62,8 @@ static func _make(name: String) -> AudioStreamWAV:
 			f = tone * (1.0 - t * 1.5)
 		phase += TAU * f / RATE
 		var v: float = (lp * noise_amt + sin(phase) * (1.0 - noise_amt)) * env
+		if name == "bell":
+			v += sin(phase * 2.76) * 0.35 * env  # 종소리 배음
 		var iv := int(clamp(v, -1.0, 1.0) * 26000.0)
 		data.encode_s16(i * 2, iv)
 	var w := AudioStreamWAV.new()

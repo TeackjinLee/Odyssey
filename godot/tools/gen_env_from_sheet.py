@@ -150,6 +150,30 @@ def torch_off(img):
     return Image.fromarray(a)
 
 
+def alarm_bell():
+    """경보 종(임시 그림): 나무 기둥 둘·가로대에 청동 종, 돌 받침. 받은 그림이 없어 직접 칠한다."""
+    from PIL import ImageDraw
+    w, h = 30, 58
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    out, wood, wood_hi, wood_dk = (28, 18, 14, 255), (112, 74, 42, 255), (150, 104, 62, 255), (74, 46, 26, 255)
+    d.rectangle((3, 52, 26, 57), fill=(92, 88, 84, 255), outline=out)                 # 돌 받침
+    for x in (5, 22):                                                                 # 기둥
+        d.rectangle((x, 6, x + 3, 53), fill=wood, outline=out)
+        d.line((x + 1, 8, x + 1, 51), fill=wood_hi)
+    d.rectangle((2, 4, 27, 8), fill=wood_dk, outline=out)                             # 가로대
+    d.line((3, 5, 26, 5), fill=wood_hi)
+    d.line((14, 9, 14, 12), fill=out)                                                 # 고리
+    bronze, bronze_hi, bronze_dk = (176, 122, 44, 255), (232, 186, 96, 255), (110, 70, 26, 255)
+    d.polygon([(11, 13), (18, 13), (20, 20), (23, 27), (6, 27), (9, 20)], fill=bronze, outline=out)  # 종
+    d.line((11, 15, 9, 25), fill=bronze_hi)
+    d.line((19, 16, 21, 25), fill=bronze_dk)
+    d.rectangle((6, 27, 23, 28), fill=bronze_dk, outline=out)
+    d.rectangle((13, 29, 15, 31), fill=(60, 44, 30, 255), outline=out)               # 추
+    d.line((15, 31, 22, 44), fill=(170, 150, 110, 255))                              # 줄
+    return im
+
+
 def shift_or(m, n):
     """m을 상하좌우 n px 넓힌다."""
     out = m.copy()
@@ -335,6 +359,10 @@ def main(root):
             im.save(out / f"{name}_burnt.png")
             meta["props"][f"{name}_burnt"] = dict(meta["props"][name], file=f"{name}_burnt.png", fire_spots=spots)
     fire_from_sheet(root, meta)
+    bell = alarm_bell()
+    bell.save(out / "alarm_bell.png")
+    meta["props"]["alarm_bell"] = {"file": "alarm_bell.png", "anchor": anchor_of(bell, (1, 1), "alarm_bell"),
+                                   "footprint": [1, 1], "size": [bell.width, bell.height]}
     fa = meta["floor_atlas"]
     floor_atlas(src, fa["rows"], fa["variants"]).save(out / fa["file"])
     (out / "env.json").write_text(json.dumps(meta, ensure_ascii=False))

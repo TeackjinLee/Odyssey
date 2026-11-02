@@ -6,6 +6,7 @@ extends Actor
 ## 잠입: 알아채기 전에는 앞쪽 부채꼴(VIEW_ARC)로 오디세우스만 본다. 보이는 거리는 그 자리의 밝기에 따라
 ## SIGHT_DARK~vision. 보이거나 소리가 나면 의심("?")이 차고, 다 차면 알아챈다. 뒤에서는 E로 조용히 처치되고,
 ## 알아채기 전에 화살을 맞으면 한 발에 쓰러진다. 꺼진 횃불을 보면 가서 다시 켠다.
+## 직접 알아채면 주변의 알아챈 동료 중 오디세우스에게서 가장 먼 하나가 경보병이 되어 가까운 경보 종으로 뛴다.
 
 const KINDS := {
 	"trojan_sword": {"name": "트로이 검병", "hp": 42.0, "speed": 54.0, "reach": 21.0, "dmg": 8.0, "windup": 0.45, "dur": 0.36, "arc": 120.0, "shield": true, "cd": 1.3},
@@ -38,6 +39,8 @@ var errand: Dictionary = {}
 var errand_time := 0.0
 var takedown: Interactable
 var _quiet := false
+var raises_alarm := true
+var bell: Dictionary = {}
 var hit_done := false
 var slam := false
 var _seen_attack := -1.0
@@ -121,6 +124,9 @@ func think(delta: float) -> void:
 		if not alerted and errand.is_empty() and suspicion <= 0.0:
 			_look_for_torch()
 	match phase:
+		"alarm":
+			_run_alarm(delta)
+			return
 		"windup":
 			_windup(delta)
 			return
@@ -244,9 +250,66 @@ func _perceive(delta: float) -> void:
 		suspicion = max(0.0, suspicion - 0.4 * delta)
 	if suspicion >= 1.0 and p:
 		alert(p)
+		call_alarm()
 	takedown.enabled = not poise and p != null and p.is_alive() \
 			and Combat.ground_dist(global_position, p.global_position) < 24.0 \
 			and facing.dot((p.global_position - global_position).normalized()) < -0.2
+
+
+# ── 경보 ──────────────────────────────────────────────
+## 직접 알아챘을 때: 주변(160px)의 알아챈 동료 중 오디세우스에게서 가장 먼 하나가 가까운 빈 종으로 뛴다.
+func call_alarm() -> void:
+	if not raises_alarm or Game.player == null:
+		return
+	var b: Dictionary = Game.level.free_bell(global_position)
+	if b.is_empty():
+		return
+	var runner: Enemy = null
+	var best := -1.0
+	for e in Game.level.enemies():
+		if e.alerted and e.raises_alarm and e.bell.is_empty() and e.global_position.distance_to(global_position) < 160.0:
+			var d: float = e.global_position.distance_to(Game.player.global_position)
+			if d > best:
+				best = d
+				runner = e
+	if runner:
+		runner.start_alarm(b)
+
+
+func start_alarm(b: Dictionary) -> void:
+	bell = b
+	b["runner"] = self
+	telegraph = 0.0
+	_set_phase("alarm")
+	Fx.text(global_position + Vector2(0, -head_height - 4), "경보다!", Color(1, 0.35, 0.25))
+	Game.show_hint("경보병이 종으로 달려간다! 종을 치기 전에 쓰러뜨려라")
+
+
+## 종까지 뛰어가 0.8초 동안 쳐서 울린다. 그 사이에 쓰러지면 아무 일도 없다.
+func _run_alarm(delta: float) -> void:
+	if bell.is_empty() or bell["rung"]:
+		_drop_bell()
+		_set_phase("chase")
+		return
+	var pos: Vector2 = bell["sprite"].global_position
+	if global_position.distance_to(pos) > 26.0:
+		desired_velocity = nav_velocity(pos, run_speed, delta, 22.0)
+		face(desired_velocity)
+		play("run")
+		phase_time = 0.0
+		return
+	face(pos - global_position)
+	play("interact")
+	if phase_time > 0.8:
+		Game.level.ring_bell(bell)
+		bell = {}
+		_set_phase("chase")
+
+
+func _drop_bell() -> void:
+	if not bell.is_empty() and bell["runner"] == self:
+		bell["runner"] = null
+	bell = {}
 
 
 ## 소리를 들으면 의심이 차고 그쪽을 본다.
@@ -333,6 +396,7 @@ func take_hit(dmg: float, src: Node2D, kb := 60.0, heavy := false, ranged := fal
 	if r != "miss" and is_alive() and not alerted:
 		if by is Actor:
 			alert(by)
+			call_alarm()
 	return r
 
 
@@ -434,6 +498,7 @@ func on_interrupted() -> void:
 func _die() -> void:
 	super._die()
 	_drop_errand()
+	_drop_bell()
 	takedown.enabled = false
 	if not _quiet:
 		Sfx.play("death", -10.0)
@@ -446,7 +511,14 @@ func _die() -> void:
 
 func _draw() -> void:
 	super._draw()
-	if alerted or not is_alive() or suspicion <= 0.02:
+	if not is_alive():
+		return
+	if phase == "alarm":
+		var ya := -head_height - 8.0
+		draw_string_outline(Game.ui_font, Vector2(-20, ya), "! 경보", HORIZONTAL_ALIGNMENT_CENTER, 40, 10, 4, Color(0, 0, 0, 0.85))
+		draw_string(Game.ui_font, Vector2(-20, ya), "! 경보", HORIZONTAL_ALIGNMENT_CENTER, 40, 10, Color(1, 0.35, 0.25))
+		return
+	if alerted or suspicion <= 0.02:
 		return
 	var y := -head_height - 8.0
 	var col := Color(1, 0.95, 0.6).lerp(Color(1, 0.3, 0.2), suspicion)

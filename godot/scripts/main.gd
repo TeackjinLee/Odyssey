@@ -2,7 +2,8 @@ extends Node
 ## 타이틀 메뉴 → 챕터 시작 → 클리어/사망 화면 → 다시 하기·타이틀.
 ## 검증용 인자(godot --path . -- <인자>):
 ##   --play         타이틀을 건너뛰고 바로 챕터 1
-##   --auto         자동 플레이(봇이 퀘스트를 끝까지 진행)
+##   --auto         자동 플레이(봇이 퀘스트를 끝까지 진행, 들키면 싸워서 지나감)
+##   --auto=stealth 잠입 봇: 알아채지 못한 적은 활·뒤 처치로 조용히 쓰러뜨리며 지나감(경보 0이 목표)
 ##   --shot=경로     몇 초 뒤 화면을 PNG로 저장하고 종료 (--shot-at=초, 기본 3)
 ##   --start=gate   성문 경비대 앞에서 시작
 ##   --showcase     오디세우스 8방향(무기 장착)을 한 줄로 세워 보여 줌
@@ -56,15 +57,7 @@ func start_chapter() -> void:
 	if args.has("showcase"):
 		_showcase()
 	if args.get("start", "") == "gate":
-		var lv: Chapter1Troy = level
-		for e in lv.patrol_group:
-			e.queue_free()
-		lv.patrol_group.clear()
-		lv.sinon.talk.enabled = false
-		lv.player.position = Iso.grid_to_world(Vector2(18.5, 12.5))
-		for m in lv.squad.members:
-			m.position = lv.player.position + Vector2(randf_range(-20, 20), 20)
-		lv._set_step(2)
+		(level as Chapter1Troy).skip_to_gate()
 
 
 func _showcase() -> void:

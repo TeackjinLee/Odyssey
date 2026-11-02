@@ -5,6 +5,8 @@ extends Node2D
 
 const FLOOR_ROWS := {"cobble": 0, "plaza": 1, "dirt": 2, "grass": 3, "road": 4, "ash": 5}
 
+signal alarm_rung(bell: Dictionary)
+
 var W := 36
 var H := 36
 var floor_kind: Dictionary = {}
@@ -21,6 +23,7 @@ var solids_body: StaticBody2D
 var occluders: Array = []
 var lights: Array = []
 var torches: Array = []
+var bells: Array = []
 var sight_layer: Node2D
 var player: Player
 var squad: Squad
@@ -312,6 +315,42 @@ func set_torch(t: Dictionary, lit: bool) -> void:
 	t["point"].enabled = lit
 	t["sprite"].texture = AssetLibrary.prop_texture("torch_post" if lit else "torch_post_off")
 	Sfx.play("ui", -8.0)
+
+
+## 경보 종: 알아챈 적 하나가 경보병이 되어 달려와 치면, 주변 적이 모두 알아채고 alarm_rung이 나간다.
+func add_bell(cell: Vector2i) -> Dictionary:
+	var b := {"sprite": add_prop("alarm_bell", cell, true, false), "rung": false, "runner": null}
+	bells.append(b)
+	return b
+
+
+## pos에서 max_dist 안의, 아직 안 울렸고 달려가는 경보병도 없는 가장 가까운 종 (없으면 빈 사전)
+func free_bell(pos: Vector2, max_dist := 420.0) -> Dictionary:
+	var best: Dictionary = {}
+	var best_d := max_dist
+	for b in bells:
+		var d: float = b["sprite"].global_position.distance_to(pos)
+		if not b["rung"] and b["runner"] == null and d < best_d:
+			best = b
+			best_d = d
+	return best
+
+
+func ring_bell(b: Dictionary) -> void:
+	if b["rung"]:
+		return
+	b["rung"] = true
+	b["runner"] = null
+	Game.stats["alarms"] += 1
+	var s: Sprite2D = b["sprite"]
+	Sfx.play("bell", -2.0)
+	Game.shake(3.0)
+	Fx.ring(s.global_position, 140.0, Color(1, 0.75, 0.3), 0.8)
+	Fx.text(s.global_position + Vector2(0, -62), "경보!", Color(1, 0.4, 0.25))
+	for e in enemies():
+		if e.global_position.distance_to(s.global_position) < 340.0:
+			e.alert(player)
+	alarm_rung.emit(b)
 
 
 ## 소리: radius(땅 거리) 안의 알아채지 못한 적이 그만큼 의심한다.

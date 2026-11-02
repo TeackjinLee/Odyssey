@@ -15,7 +15,9 @@ var hud: Node = null
 var shake_amount := 0.0
 var quest_marker := Vector2.INF
 var autoplay := false
-var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0}
+## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
+var stealth_bot := false
+var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0}
 
 var ui_font: SystemFont
 
@@ -49,7 +51,9 @@ func _ready() -> void:
 	theme.default_font = ui_font
 	theme.default_font_size = 9
 	get_tree().root.theme = theme
-	autoplay = "--auto" in OS.get_cmdline_user_args()
+	var cmd := OS.get_cmdline_user_args()
+	autoplay = "--auto" in cmd or "--auto=stealth" in cmd
+	stealth_bot = "--auto=stealth" in cmd
 
 
 func _register_input() -> void:
@@ -75,7 +79,7 @@ func _register_input() -> void:
 
 
 func reset_run() -> void:
-	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0}
+	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	Engine.time_scale = 1.0

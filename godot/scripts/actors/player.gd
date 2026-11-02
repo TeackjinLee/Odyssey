@@ -340,12 +340,19 @@ func _bot_input() -> Dictionary:
 	var out := {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
 		"dodge": false, "heavy": false, "switch": false, "interact": false, "interact_held": false, "skill": false,
 		"aim": global_position + facing * 20.0}
+	if Game.stealth_bot:
+		var sneak := _bot_sneak(out)
+		if not sneak.is_empty():
+			return sneak
 	if weapon != "sword":
 		out["switch"] = true
 	var foe: Actor = null
 	var best := 230.0
 	for e in Game.level.enemies():
 		var d := global_position.distance_to(e.global_position)
+		# 알아채지 못한 적에게는 먼저 덤비지 않는다(지나가다 들키면 싸움)
+		if not e.alerted and d > 50.0:
+			continue
 		if d < best and Game.level.line_clear(global_position, e.global_position):
 			best = d
 			foe = e
@@ -367,5 +374,41 @@ func _bot_input() -> Dictionary:
 	if Game.quest_marker != Vector2.INF:
 		var v := nav_velocity(Game.quest_marker, 1.0, get_physics_process_delta_time(), 10.0)
 		out["move"] = v.normalized() if v.length() > 0.01 else Vector2.ZERO
-		out["run"] = true
+		out["run"] = not Game.stealth_bot
+	return out
+
+
+## 잠입 봇(--auto=stealth): 알아채지 못한 적(보스 제외)이 보이면 뒤에서 E, 아니면 시야 밖에서 활로 쏜다.
+## 시야 안 보이는 거리에 들면 물러난다. 할 일이 없으면 빈 사전(기본 봇이 이어서 움직임).
+func _bot_sneak(out: Dictionary) -> Dictionary:
+	var foe: Enemy = null
+	var best := 420.0
+	for e in Game.level.enemies():
+		if e.alerted or e.poise:
+			continue
+		var d := global_position.distance_to(e.global_position)
+		if d < best and Game.level.line_clear(global_position, e.global_position, 2.0):
+			best = d
+			foe = e
+	if foe == null:
+		return {}
+	var it: Interactable = Game.level.find_interactable(global_position)
+	if it and it.get_parent() is Enemy:
+		out["interact"] = true
+		return out
+	if weapon != "bow":
+		out["switch"] = true
+		return out
+	out["aim"] = foe.global_position + foe.velocity * (best / 380.0)
+	if state == St.BOW:
+		out["attack_held"] = bow_draw < 0.95
+		return out
+	var to_me := global_position - foe.global_position
+	var seen_zone: bool = absf(rad_to_deg(foe.facing.angle_to(to_me))) < Enemy.VIEW_ARC * 0.5 + 10.0 \
+			and Combat.ground_dist(foe.global_position, global_position) < foe.sight_range(global_position) + 15.0
+	if seen_zone:
+		out["move"] = to_me.normalized()
+		return out
+	out["attack"] = true
+	out["attack_held"] = true
 	return out
