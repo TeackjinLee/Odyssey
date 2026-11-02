@@ -27,12 +27,12 @@ CELL_DIR = {(0, 0): 6, (0, 1): 7, (0, 2): 0, (0, 3): 1, (1, 0): 2, (1, 1): 3, (1
 
 # 원본 칸 안에서 오른손·왼손 주먹 중심 (원본 픽셀, 칸 왼쪽 위 기준). 손을 찾아 눈으로 찍은 값
 HANDS_SRC = {
-    6: (300, 312, 112, 312), 7: (256, 322, 130, 300), 0: (187, 332, 215, 315), 1: (125, 305, 250, 275),
-    2: (120, 286, 290, 286), 3: (121, 282, 251, 292), 4: (150, 305, 172, 322), 5: (250, 290, 110, 288),
+    6: (305, 310, 108, 310), 7: (276, 318, 113, 310), 0: (167, 328, 195, 312), 1: (88, 318, 280, 318),
+    2: (100, 288, 312, 288), 3: (98, 283, 271, 293), 4: (158, 284, 182, 296), 5: (268, 283, 78, 293),
 }
 
 ANIMS = [
-    ("idle", 4, 5, True), ("walk", 6, 10, True), ("run", 12, 26, True),
+    ("idle", 4, 5, True), ("walk", 12, 18, True), ("run", 12, 26, True),
     ("attack1", 4, 16, False), ("attack2", 4, 16, False), ("attack3", 5, 14, False), ("heavy", 6, 12, False),
     ("block", 2, 6, True), ("bow", 4, 10, False), ("hit", 2, 10, False), ("dodge", 4, 14, False),
     ("death", 5, 9, False), ("interact", 4, 8, True), ("downed", 1, 1, True),
@@ -85,18 +85,22 @@ def to_pose(cell, foot, height, k=None):
 
 
 # ── 그려 받은 동작 줄(8방향 한 장) ─────────────────────
-# odysseus_<동작>_8dir.webp: 마젠타 배경, 6열(프레임) × 8줄(방향 남→남동→동→북동→북→북서→서→남서)
+# odysseus_<동작>_8dir.webp: 마젠타 배경, 열 = 프레임 × 8줄(방향 남→남동→동→북동→북→북서→서→남서)
+# 걷기 18fps = 한 주기(두 걸음) 0.67초 — 옆모습 보폭(한 걸음 약 24px) × 2 ÷ 걷는 속도 72와 맞춰 발이 미끄러지지 않게
 STRIP_ROWS = [2, 1, 0, 7, 6, 5, 4, 3]
 # 첫 프레임의 오른손·왼손 주먹 중심(받은 그림의 칸 안 픽셀). 가려진 손은 몸 쪽으로 어림
 STRIP_HANDS = {
-    "walk": {2: (40, 143, 120, 143), 1: (56, 143, 116, 132), 0: (93, 147, 88, 140), 7: (106, 147, 80, 135),
-             6: (123, 142, 32, 146), 5: (70, 135, 45, 144), 4: (60, 132, 56, 139), 3: (42, 129, 114, 151)},
+    "walk": {2: (72, 163, 187, 163), 1: (85, 165, 180, 152), 0: (84, 157, 169, 145), 7: (167, 152, 84, 148),
+             6: (176, 156, 84, 139)},
     "run": {2: (35, 70, 82, 70), 1: (52, 72, 83, 72), 0: (78, 72, 68, 70), 7: (85, 70, 70, 65),
             6: (88, 72, 25, 82), 5: (90, 65, 28, 62), 4: (55, 70, 30, 82), 3: (25, 72, 68, 78)},
 }
+# 좌우를 뒤집어 만든 줄(pack_strip.py): 방향 → 뒤집은 원래 방향. 손은 원래 줄의 손을 뒤집고 오른손·왼손을 바꾼다
+STRIP_MIRROR = {"walk": {5: 7, 4: 0, 3: 1}}
 STRIP_SWING = {"walk": 3.0, "run": 3.5}   # 팔 흔들림(원본 픽셀): 손 위치를 한 주기 동안 앞뒤로
 # 보이는 주먹은 첫 프레임에서부터 프레임마다 그림 조각을 맞춰 따라간다: 방향 → (오른손, 왼손)
-STRIP_TRACK = {"run": {2: (True, True), 1: (True, True), 0: (True, False), 7: (True, False),
+STRIP_TRACK = {"walk": {d: (True, True) for d in range(8)},
+               "run": {2: (True, True), 1: (True, True), 0: (True, False), 7: (True, False),
                        6: (True, True), 5: (False, True), 4: (False, True), 3: (True, True)}}
 TRACK_R, TRACK_SEARCH = 5, 7   # 맞출 조각 반지름, 다음 프레임에서 찾는 범위(원본 픽셀)
 
@@ -167,6 +171,15 @@ ATTACK_LEFT = {
 STRIP_REUSE = {"heavy": {0: (1, False), 4: (1, True)}}
 
 
+def strip_hand0(anim, d, cw):
+    """첫 프레임 손 위치. 뒤집어 만든 줄은 원래 줄의 손을 칸 폭 cw 기준으로 뒤집고 좌우를 바꾼다."""
+    src = STRIP_MIRROR.get(anim, {}).get(d)
+    if src is None:
+        return STRIP_HANDS[anim][d]
+    rx, ry, lx, ly = STRIP_HANDS[anim][src]
+    return (cw - lx, ly, cw - rx, ry)
+
+
 def head_width(cells, cols):
     """첫 프레임들의 머리 폭(가운데값) — 받은 그림마다 다른 캐릭터 크기를 걷기에 맞추는 기준."""
     ws = []
@@ -210,7 +223,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
         frames = []
         tracked = [None, None]
         if anim in STRIP_TRACK:
-            h0 = STRIP_HANDS[anim][d]
+            h0 = strip_hand0(anim, d, cw)
             row = [cells[d, c] for c in range(cols)]
             for j, on in enumerate(STRIP_TRACK[anim][d]):
                 if on:
@@ -226,7 +239,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
             if anim in ATTACK_HANDS:
                 r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
             else:
-                h0 = STRIP_HANDS[anim][d]
+                h0 = strip_hand0(anim, d, cw)
                 sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)
                 r = tracked[0][col] if tracked[0] else (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
                 l = tracked[1][col] if tracked[1] else (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
@@ -332,8 +345,8 @@ def build(root):
             hands0[d] = [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
     strips = {}
     k = None
-    strips["walk"], k, walk_head = strip_frames(root, "walk")
     n_frames = {a[0]: a[1] for a in ANIMS}
+    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"])
     strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head))
     for anim in ATTACK_HANDS:
         if strips["walk"]:
