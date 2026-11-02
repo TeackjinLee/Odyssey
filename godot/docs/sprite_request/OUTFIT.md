@@ -21,7 +21,7 @@
 
 1. 전투 갑옷 기본 8방향(맨머리·망토 없음) → `assets/source/odysseus_8dir.webp`
 2. 같은 차림 걷기 12프레임, 다섯 방향을 따로 받아 묶기(아래 2)
-3. 달리기·공격 4종 (`ATTACK_PROMPTS.md`의 인물 설명 두 줄을 아래 [인물]로 바꿔서)
+3. 달리기 12프레임(아래 3), 공격 4종 (`ATTACK_PROMPTS.md`의 인물 설명 두 줄을 아래 [인물]로 바꿔서)
 4. 투구·망토 레이어, 코드 작업
 5. 항해복·거지 변장은 챕터 2·6을 만들 때
 
@@ -30,7 +30,8 @@
 동·남동·북동·북은 처음 받은 그림이 다리를 늘 벌리거나 거의 안 움직여 땅 위에서 발이 미끄러지고 팔도 가슴 앞에 굳어 있어,
 움직임 안내 그림(`outfit/walk12_guide_<방향>.png`, `tools/walk_guide.py`: 디딘 발이 한 장마다 같은 만큼 뒤로, 팔은 다리와 반대로)을 붙여 다시 받았다.
 남동·북동은 몸 돌림이 장마다 달라져 "12장 모두 같은 만큼 돌린 채"를 덧붙여 한 번 더 받았다.
-달리기·공격은 아직 옛 그림(망토 있음)이라 달리거나 칠 때 옛 모습이 섞여 나온다.
+남·북도 안내 그림을 붙여 다시 받았다(북은 "발을 크게 벌리고 든 발바닥이 보이게"를 덧붙임).
+달리기도 같은 방식(아래 3)으로 다섯 방향을 받아 바꿨다. 공격은 아직 옛 그림(망토 있음)이라 칠 때 옛 모습이 섞여 나온다.
 
 ## [인물] — 다른 요청 프롬프트의 인물 설명 대신 쓰기
 
@@ -76,7 +77,7 @@ Style rules:
 
 남(S)·남동(SE)·동(E)·북동(NE)·북(N)을 따로 받고, 서쪽 셋은 뒤집어 만든다.
 첨부: 1의 기본 8방향에서 그 방향 칸을 잘라 낸 그림(`pose.png`), 움직임 참고 `outfit/walk12_motion_ref.webp`.
-동·남동·북동·북은 움직임 안내 `outfit/walk12_guide_<방향>.png`도 `guide.png`로 붙이고, Motion 대신 아래를 넣는다:
+다섯 방향 모두 움직임 안내 `outfit/walk12_guide_<방향>.png`도 `guide.png`로 붙이고, Motion 대신 아래를 넣는다:
 "MOTION: put his legs, feet, arms and fists where guide.png shows them. The standing foot slides steadily BACKWARD every frame,
 legs pass each other in frames 3-4 and 9-10. Arms hang down and swing like a pendulum OPPOSITE to the legs, never held up at the chest."
 받은 그림: `assets/source/odysseus_walk_<방향>.webp` → `python3 tools/pack_strip.py . walk 4 3` → `python3 tools/gen_hero.py .`
@@ -113,3 +114,21 @@ Style rules:
 - Isometric 3/4 top-down game view (camera looks down about 30 degrees).
 - EMPTY HANDS: no sword, no shield. Both hands closed fists.
 ```
+
+## 3. 달리기 12프레임 (방향마다 한 장, 다섯 방향)
+
+걷기(2)와 같은 첨부·배치·뒷손질에 안내 그림만 `python3 tools/walk_guide.py <출력> <방향 값> run`
+(`outfit/run12_guide_<방향>.png`: 디딤 3장 + 두 발이 다 뜬 3장, 뒷발 차올림, 무릎 높이, 팔꿈치 직각으로 크게 젓기).
+받은 그림: `assets/source/odysseus_run_<방향>.webp` → `python3 tools/pack_strip.py . run 4 3` → `python3 tools/gen_hero.py .`
+걷기 프롬프트에서 바꾸는 곳: 첫 줄 `12-frame RUN CYCLE (fast sprint)`, `__FACING__`의 walking → running, MOTION을 아래로.
+```
+- RUNNING, not walking: the upper body leans a little forward, the hair bounces.
+- LEGS: only ONE foot touches the ground in frames 1-3 and 7-9 and it slides BACKWARD fast like on a treadmill.
+  In frames 4-6 and 10-12 BOTH feet are OFF the ground (flight): the back foot kicks up behind toward the backside,
+  the other knee drives up high in front.
+- ARMS: elbows bent about 90 degrees, fists pumping hard forward and back OPPOSITE to the legs
+  (right knee up in front = right fist back by the hip, left fist forward at chin height). Never stiff, never both fists in front.
+- The ground line is at the same height near the bottom of every cell: the standing foot touches it,
+  in flight frames the whole body is a few pixels higher.
+```
+Style에 `no dust, no speed lines`를 더한다.

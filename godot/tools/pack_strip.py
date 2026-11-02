@@ -6,6 +6,8 @@
 서·북서·남서는 동·북동·남동 줄을 좌우로 뒤집어 만든다(손 위치는 gen_hero.py의 STRIP_MIRROR).
 방향마다 따로 그려 받아 크기가 조금씩 다르므로, 방향마다 키(가운데값)를 CHAR_H로 맞추고
 프레임마다 발을 같은 기준선에 둔다(걷기는 늘 한 발이 땅에 닿아 있다).
+달리기(FLIGHT)는 두 발이 다 뜨는 장면이 있으므로 받은 칸에서 그 방향의 가장 낮은 발보다 떠 있는 만큼을 살리고,
+다리를 접고 펴는 만큼 키가 달라지므로 키는 맞추지 않는다.
 
 출력: assets/source/odysseus_<동작>_8dir.webp (줄 = 남→남동→동→북동→북→북서→서→남서, 칸 CELL×CELL)
 사용: python3 tools/pack_strip.py <godot 프로젝트 폴더> <동작> [격자 열 수] [격자 줄 수]
@@ -23,6 +25,7 @@ CHAR_H = 216
 BASE_Y = 244
 FIT_TOL = 0.01
 DRAWN = ["S", "SE", "E", "NE", "N"]
+FLIGHT = {"run"}
 # 8방향 한 장의 줄 순서 → (받은 방향, 좌우 뒤집기)
 ROWS = [("S", False), ("SE", False), ("E", False), ("NE", False), ("N", False),
         ("NE", True), ("E", True), ("SE", True)]
@@ -38,7 +41,7 @@ def load(root, anim, d):
 
 
 def frames(src, cols, rows):
-    """격자 칸마다 배경을 지운 인물만 잘라 낸 RGBA 목록(읽는 순서)."""
+    """격자 칸마다 배경을 지운 인물만 잘라 낸 (RGBA, 칸 안 발끝 y) 목록(읽는 순서)."""
     cw, ch = src.width / cols, src.height / rows
     out = []
     for r in range(rows):
@@ -50,7 +53,8 @@ def frames(src, cols, rows):
                     if is_bg(px[x, y]):
                         px[x, y] = (0, 0, 0, 0)
             # 칸 테두리에 걸친 이웃 칸 조각을 빼려고 가장 큰 덩어리 둘레만 쓴다
-            out.append(cell.crop(main_box(cell)))
+            box = main_box(cell)
+            out.append((cell.crop(box), box[3]))
     return out
 
 
@@ -77,10 +81,10 @@ def main_box(cell):
     return (x0, y0, x1, y1)
 
 
-def fit(f, k):
+def fit(f, k, tol=FIT_TOL):
     """방향 배율 k로 줄이되, 키가 CHAR_H에서 FIT_TOL 넘게 벗어난 장면(그려 받을 때 칸마다 키가 들쭉날쭉한 것)만
     그 경계로 맞춘다. 발을 기준선에 두므로 키가 튀면 머리가 그만큼 깡충거린다."""
-    h = min(max(f.height * k, CHAR_H * (1 - FIT_TOL)), CHAR_H * (1 + FIT_TOL))
+    h = min(max(f.height * k, CHAR_H * (1 - tol)), CHAR_H * (1 + tol))
     k = h / f.height
     return f.resize((max(1, round(f.width * k)), max(1, round(f.height * k))), Image.LANCZOS)
 
@@ -94,19 +98,22 @@ def head_cx(f):
 
 
 def main(root, anim, cols=4, rows=3):
-    drawn = {}
+    drawn, lift = {}, {}
+    flight = anim in FLIGHT
     for d in DRAWN:
         fr = frames(load(root, anim, d), cols, rows)
-        hs = sorted(f.height for f in fr)
+        hs = sorted(f.height for f, _ in fr)
         k = CHAR_H / hs[len(hs) // 2]
-        drawn[d] = [fit(f, k) for f in fr]
+        drawn[d] = [fit(f, k, 1.0 if flight else FIT_TOL) for f, _ in fr]
+        base = max(b for _, b in fr)
+        lift[d] = [round((base - b) * k) if flight else 0 for _, b in fr]
     n = cols * rows
     sheet = Image.new("RGB", (CELL * n, CELL * len(ROWS)), MAGENTA)
     for row, (d, flip) in enumerate(ROWS):
         for i, f in enumerate(drawn[d]):
             if flip:
                 f = f.transpose(Image.FLIP_LEFT_RIGHT)
-            sheet.paste(f, (i * CELL + CELL // 2 - round(head_cx(f)), row * CELL + BASE_Y - f.height), f)
+            sheet.paste(f, (i * CELL + CELL // 2 - round(head_cx(f)), row * CELL + BASE_Y - lift[d][i] - f.height), f)
     out = root / f"assets/source/odysseus_{anim}_8dir.webp"
     sheet.save(out, lossless=True)
     print(out.relative_to(root), sheet.size)
