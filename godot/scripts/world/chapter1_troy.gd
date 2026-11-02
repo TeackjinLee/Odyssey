@@ -32,6 +32,9 @@ const CLOSE_TIME := 4.0
 const WINCH_DROP := 0.04
 ## 트로이 돌격병이 서서 권양기를 돌리는 자리(권양기 칸 바로 앞)
 const WINCH_STAND := Vector2(20.5, 6.6)
+## 거점 점령 속도(초당 %): 싸우는 동안 / 알아챈 적이 없을 때(파 사이에 오래 서 있지 않게)
+const CAPTURE_RATE := 1.9
+const CAPTURE_CALM := 3.2
 ## 경보 종이 울릴 때마다 성문 경비대에 붙는 병사
 const ALARM_GUARDS := [["trojan_sword", Vector2(17.5, 7.5)], ["trojan_spear", Vector2(18.5, 8.0)]]
 
@@ -484,9 +487,10 @@ func _update_winch(delta: float) -> void:
 func _send_winch_attack(i: int) -> void:
 	var groups := [
 		[["trojan_sword", Vector2(30.0, 11.0)], ["trojan_spear", Vector2(31.0, 11.5)], ["trojan_sword", Vector2(29.0, 10.5)]],
-		[["trojan_sword", Vector2(6.0, 11.0)], ["trojan_spear", Vector2(7.0, 11.5)], ["trojan_sword", Vector2(18.5, 15.0)]],
+		[["trojan_sword", Vector2(6.0, 11.0)], ["trojan_spear", Vector2(7.0, 11.5)], ["trojan_sword", Vector2(18.5, 15.0)], ["trojan_archer", Vector2(18.0, 16.0)]],
 	]
-	Game.show_hint("권양기 소리에 트로이군이 몰려온다! 부하를 곁에 세워 막게 하라")
+	Game.show_hint(["권양기 소리에 트로이군이 몰려온다! 부하를 곁에 세워 막게 하라",
+		"또 몰려온다 — 궁수도 있다! 손을 떼고 쏘거나 3(집중 공격)으로 부하를 보내라"][i])
 	for g in groups[i]:
 		var e := _spawn(g[0], g[1])
 		e.alert(player)
@@ -596,8 +600,9 @@ func _update_capture(delta: float) -> void:
 		if Combat.ground_dist(e.global_position, zone_pos) < ZONE_RADIUS:
 			contested = true
 			break
+	var calm := not enemies().any(func(e): return e.alerted)
 	if p_in and not contested and gate_open:
-		capture = min(100.0, capture + delta * 1.9)
+		capture = min(100.0, capture + delta * (CAPTURE_CALM if calm else CAPTURE_RATE))
 	var wave_at := [0.0, 30.0, 62.0]
 	if waves_sent < wave_at.size() and capture >= wave_at[waves_sent]:
 		_send_wave(waves_sent)

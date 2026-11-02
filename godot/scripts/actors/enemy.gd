@@ -3,7 +3,7 @@ extends Actor
 ## 트로이 병사. 순찰/대기 → 발견(주변 동료에게 알림) → 추적 → 공격 예고(붉게 깜빡임) → 공격 → 회복.
 ## 방패병은 상대가 휘두르는 걸 보면 막고, 궁수는 거리를 벌려 쏘며, 체력이 낮으면 잠깐 물러난다.
 ## 수비대장 아게노르는 경직 저항(강공격·패링에만 경직)이 있다. 1페이즈: 3연타 → 내려찍기(막는 순간 패링하면 2초 무방비).
-## 2페이즈(체력 절반 이하): 뿔나팔로 검병 둘을 부르고, 방패 돌진(붉은 길로 예고, 옆으로 피함 — 벽에 박히면 2초 무방비)을 섞는다.
+## 2페이즈(체력 절반 이하): 둘레를 방패로 밀쳐낸 뒤 뿔나팔로 검병 둘을 부르고, 방패 돌진(붉은 길로 예고, 옆으로 피함 — 벽에 박히면 2초 무방비)을 섞는다.
 ## 잠입: 알아채기 전에는 앞쪽 부채꼴(VIEW_ARC)로 오디세우스만 본다. 보이는 거리는 그 자리의 밝기에 따라
 ## SIGHT_DARK~vision. 보이거나 소리가 나면 의심("?")이 차고, 다 차면 알아챈다. 뒤에서는 E로 조용히 처치되고,
 ## 알아채기 전에 화살을 맞으면 한 발에 쓰러진다. 꺼진 횃불을 보면 가서 다시 켠다.
@@ -70,8 +70,12 @@ const OPEN_TIME := 2.0
 const CHARGE_WINDUP := 0.8
 const CHARGE_SPEED := 240.0
 const CHARGE_LEN := 210.0
-const CHARGE_CD := 7.0
+const CHARGE_CD := 5.5
 const CHARGE_DMG := 16.0
+const CHARGE_MIN := 32.0
+## 뿔나팔을 불기 직전 방패로 밀쳐내는 거리·세기 (둘러싼 그리스인을 떼어 내 돌진할 틈을 만든다)
+const SHOVE_RADIUS := 80.0
+const SHOVE_KB := 300.0
 
 
 func _attackers_on(t: Actor) -> int:
@@ -209,8 +213,9 @@ func think(delta: float) -> void:
 	if poise and not horn_done and hp <= max_hp * 0.5:
 		horn_done = true
 		_set_phase("horn")
+		_shove()
 		return
-	if poise and horn_done and charge_cd <= 0.0 and d > 45.0 and d < 190.0 and phase == "chase" \
+	if poise and horn_done and charge_cd <= 0.0 and d > CHARGE_MIN and d < 190.0 and phase == "chase" \
 			and Game.level.line_clear(global_position, target.global_position, 4.0):
 		_start_charge()
 		return
@@ -597,6 +602,19 @@ func _open_up() -> void:
 	stagger(OPEN_TIME)
 
 
+## 방패로 둘레를 밀쳐냄: 가까운 그리스인을 크게 밀고 잠깐 비틀거리게 한다(피해는 없음)
+func _shove() -> void:
+	Fx.text(global_position + Vector2(0, -head_height - 6), "밀쳐내기!", Color(1, 0.7, 0.35))
+	Fx.ring(global_position, SHOVE_RADIUS, Color(1, 0.8, 0.5), 0.4)
+	Sfx.play("hit_heavy", -4.0)
+	Game.shake(4.0)
+	for a in Game.level.greeks():
+		var to: Vector2 = a.global_position - global_position
+		if Combat.ground_dist(global_position, a.global_position) < SHOVE_RADIUS:
+			a.stagger(0.5)
+			a.knock = to.normalized() * SHOVE_KB
+
+
 ## 뿔나팔: 멈춰 서서 불고, 레벨이 검병을 부른다(on_boss_horn).
 func _horn() -> void:
 	play("interact")
@@ -611,7 +629,7 @@ func _horn() -> void:
 		if Game.level.has_method("on_boss_horn"):
 			Game.level.on_boss_horn(self)
 	if phase_time >= 1.3:
-		charge_cd = 1.5
+		charge_cd = 0.3
 		_set_phase("chase")
 
 
