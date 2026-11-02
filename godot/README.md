@@ -103,8 +103,9 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 
 - 원본 `assets/source/odysseus_8dir.webp`(마젠타 배경, 4×2 칸) → `python3 tools/gen_hero.py .` →
   `assets/sprites/odysseus.png`(128×128 칸, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
-- 걷기·달리기는 그려 받은 그림(`assets/source/odysseus_{walk,run}_8dir.webp`, 6열×8줄, 줄 = 남→남동→…→남서)을 쓴다.
-  첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`, 나머지 프레임은 팔 흔들림으로 어림한다
+- 걷기·달리기는 그려 받은 그림(`assets/source/odysseus_{walk,run}_8dir.webp`, 줄 = 남→남동→…→남서)을 쓴다.
+  걷기 6열, 달리기 12열(한 주기 = 두 걸음, 26fps). 첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`.
+  달리기의 보이는 주먹은 그림 조각을 프레임마다 맞춰 따라가고(`STRIP_TRACK`), 가려진 손과 걷기는 팔 흔들림으로 어림한다
 - 공격 4종(attack1·2·3·heavy)도 그려 받은 8방향 한 장(`odysseus_<동작>_8dir.webp`, 열 = 프레임 수)을 쓴다.
   크기는 머리 폭을 걷기에 맞춰 줄이고, 검을 쥔 주먹은 프레임마다 `ATTACK_HANDS`, 방패 손은 `ATTACK_LEFT`.
   `.json`의 `drawn`에 든 공격은 검을 그 주먹에 붙이고 칼끝을 팔 방향(가슴 → 주먹)으로 세운다(`weapon_layer.gd`).

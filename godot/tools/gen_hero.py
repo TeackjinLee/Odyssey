@@ -32,7 +32,7 @@ HANDS_SRC = {
 }
 
 ANIMS = [
-    ("idle", 4, 5, True), ("walk", 6, 10, True), ("run", 6, 13, True),
+    ("idle", 4, 5, True), ("walk", 6, 10, True), ("run", 12, 26, True),
     ("attack1", 4, 16, False), ("attack2", 4, 16, False), ("attack3", 5, 14, False), ("heavy", 6, 12, False),
     ("block", 2, 6, True), ("bow", 4, 10, False), ("hit", 2, 10, False), ("dodge", 4, 14, False),
     ("death", 5, 9, False), ("interact", 4, 8, True), ("downed", 1, 1, True),
@@ -91,10 +91,38 @@ STRIP_ROWS = [2, 1, 0, 7, 6, 5, 4, 3]
 STRIP_HANDS = {
     "walk": {2: (40, 143, 120, 143), 1: (56, 143, 116, 132), 0: (93, 147, 88, 140), 7: (106, 147, 80, 135),
              6: (123, 142, 32, 146), 5: (70, 135, 45, 144), 4: (60, 132, 56, 139), 3: (42, 129, 114, 151)},
-    "run": {2: (60, 123, 118, 125), 1: (60, 130, 126, 107), 0: (114, 115, 79, 137), 7: (119, 128, 95, 120),
-            6: (123, 112, 33, 112), 5: (50, 105, 26, 112), 4: (50, 132, 34, 122), 3: (31, 117, 77, 129)},
+    "run": {2: (35, 70, 82, 70), 1: (52, 72, 83, 72), 0: (78, 72, 68, 70), 7: (85, 70, 70, 65),
+            6: (88, 72, 25, 82), 5: (90, 65, 28, 62), 4: (55, 70, 30, 82), 3: (25, 72, 68, 78)},
 }
-STRIP_SWING = {"walk": 3.0, "run": 6.0}   # 팔 흔들림(원본 픽셀): 손 위치를 프레임마다 앞뒤로
+STRIP_SWING = {"walk": 3.0, "run": 3.5}   # 팔 흔들림(원본 픽셀): 손 위치를 한 주기 동안 앞뒤로
+# 보이는 주먹은 첫 프레임에서부터 프레임마다 그림 조각을 맞춰 따라간다: 방향 → (오른손, 왼손)
+STRIP_TRACK = {"run": {2: (True, True), 1: (True, True), 0: (True, False), 7: (True, False),
+                       6: (True, True), 5: (False, True), 4: (False, True), 3: (True, True)}}
+TRACK_R, TRACK_SEARCH = 5, 7   # 맞출 조각 반지름, 다음 프레임에서 찾는 범위(원본 픽셀)
+
+
+def track_hand(cells, start):
+    """칸들(같은 방향, 프레임 순)에서 start 점의 그림 조각을 앞 프레임 → 다음 프레임으로 따라간 위치들."""
+    import numpy as np
+    arr = [np.asarray(c, dtype=float) for c in cells]
+    pts = [start]
+    r = TRACK_R
+    for i in range(1, len(arr)):
+        x, y = (round(v) for v in pts[-1])
+        a, b = arr[i - 1], arr[i]
+        tpl = a[y - r:y + r + 1, x - r:x + r + 1]
+        best, bp = None, (x, y)
+        for dy in range(-TRACK_SEARCH, TRACK_SEARCH + 1):
+            for dx in range(-TRACK_SEARCH, TRACK_SEARCH + 1):
+                cx, cy = x + dx, y + dy
+                win = b[cy - r:cy + r + 1, cx - r:cx + r + 1]
+                if win.shape != tpl.shape:
+                    continue
+                err = np.abs(win - tpl).mean() + 0.4 * (dx * dx + dy * dy) ** 0.5
+                if best is None or err < best:
+                    best, bp = err, (cx, cy)
+        pts.append(bp)
+    return pts
 
 # 공격 줄: 프레임마다 검을 쥔 주먹(휘두르는 손) 위치, 방패 손은 방향마다 하나 (받은 그림의 칸 안 픽셀).
 # 그려 받은 그림이 방향마다 다른 손으로 칠 때가 있어 '오른손'이 아니라 '치는 주먹'을 따라간다
@@ -180,6 +208,13 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
         base = max(cells[d, c].getbbox()[3] for c in range(cols))
         fx, fy = math.cos(math.radians(d * 45)), math.sin(math.radians(d * 45)) * 0.5
         frames = []
+        tracked = [None, None]
+        if anim in STRIP_TRACK:
+            h0 = STRIP_HANDS[anim][d]
+            row = [cells[d, c] for c in range(cols)]
+            for j, on in enumerate(STRIP_TRACK[anim][d]):
+                if on:
+                    tracked[j] = track_hand(row, (h0[2 * j], h0[2 * j + 1]))
         for col in range(cols):
             cell = cells[d, col]
             bb = cell.getbbox()
@@ -192,9 +227,9 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
                 r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
             else:
                 h0 = STRIP_HANDS[anim][d]
-                sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / 6) - 1)
-                r = (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
-                l = (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
+                sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)
+                r = tracked[0][col] if tracked[0] else (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
+                l = tracked[1][col] if tracked[1] else (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
             frames.append((frame, hands))
         out[d] = frames
@@ -298,8 +333,8 @@ def build(root):
     strips = {}
     k = None
     strips["walk"], k, walk_head = strip_frames(root, "walk")
-    strips["run"], k, _ = strip_frames(root, "run", k)
     n_frames = {a[0]: a[1] for a in ANIMS}
+    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head))
     for anim in ATTACK_HANDS:
         if strips["walk"]:
             strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head))
@@ -315,7 +350,7 @@ def build(root):
             row_hands = []
             for d in range(8):
                 if strips.get(anim):
-                    img, h = strips[anim][d][i % 6]
+                    img, h = strips[anim][d][i]
                     sheet.paste(img, (FRAME * (col + i), FRAME * d), img)
                     row_hands.append(h)
                     continue
