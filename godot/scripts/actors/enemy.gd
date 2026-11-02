@@ -7,6 +7,8 @@ extends Actor
 ## SIGHT_DARK~vision. 보이거나 소리가 나면 의심("?")이 차고, 다 차면 알아챈다. 뒤에서는 E로 조용히 처치되고,
 ## 알아채기 전에 화살을 맞으면 한 발에 쓰러진다. 꺼진 횃불을 보면 가서 다시 켠다.
 ## 직접 알아채면 주변의 알아챈 동료 중 오디세우스에게서 가장 먼 하나가 경보병이 되어 가까운 경보 종으로 뛴다.
+## 성문 사수 반격: 방패벽(정면은 늘 막으며 밀고 옴, 강공격에 방패가 부서짐) · 높은 곳 궁수(제자리에서 멀리 쏨, 밀리지 않음)
+## · 권양기 돌격병(권양기로 뛰어가 돌려 성문을 닫음, 맞아 비틀거려도 다시 뜀).
 
 const KINDS := {
 	"trojan_sword": {"name": "트로이 검병", "hp": 42.0, "speed": 54.0, "reach": 21.0, "dmg": 8.0, "windup": 0.45, "dur": 0.36, "arc": 120.0, "shield": true, "cd": 1.3},
@@ -41,6 +43,9 @@ var takedown: Interactable
 var _quiet := false
 var raises_alarm := true
 var bell: Dictionary = {}
+var shield_wall := false
+var perch := false
+var crank_pos := Vector2.INF
 var hit_done := false
 var slam := false
 var _seen_attack := -1.0
@@ -50,6 +55,8 @@ const MAX_ATTACKERS := 2
 ## 시야 부채꼴 각도, 어두운 곳에서 보이는 거리
 const VIEW_ARC := 70.0
 const SIGHT_DARK := 55.0
+## 높은 곳 궁수가 쏘는 거리
+const PERCH_REACH := 250.0
 
 
 func _attackers_on(t: Actor) -> int:
@@ -127,6 +134,9 @@ func think(delta: float) -> void:
 		"alarm":
 			_run_alarm(delta)
 			return
+		"crank":
+			_run_crank(delta)
+			return
 		"windup":
 			_windup(delta)
 			return
@@ -167,11 +177,16 @@ func think(delta: float) -> void:
 			_set_phase("block")
 			set_state(St.BLOCK)
 			return
-	if hp < max_hp * 0.28 and not retreated and not poise and randf() < 0.5:
+	if hp < max_hp * 0.28 and not retreated and not poise and not perch and not shield_wall and randf() < 0.5:
 		retreated = true
 		_set_phase("retreat")
 		return
-	if cfg.get("ranged", false):
+	if perch:
+		# 높은 곳: 움직이지 않고 보이면 쏜다
+		if attack_cd <= 0.0 and d < PERCH_REACH and Game.level.line_clear(global_position, target.global_position, 1.0):
+			_start_windup()
+			return
+	elif cfg.get("ranged", false):
 		var los: bool = Game.level.line_clear(global_position, target.global_position, 1.0)
 		var back := global_position - to.normalized() * 50.0
 		var cornered: bool = Game.level.is_blocked_world(back) or not Game.level.line_clear(global_position, back, 3.0)
@@ -188,6 +203,16 @@ func think(delta: float) -> void:
 		else:
 			desired_velocity = Vector2(-to.y, to.x).normalized() * 22.0 * strafe_sign
 	else:
+		if shield_wall and d < 110.0 and not (d <= cfg["reach"] + 2.0 and attack_cd <= 0.0):
+			# 방패벽: 방패를 든 채 천천히 밀고 들어온다
+			face(to)
+			set_state(St.BLOCK)
+			play("block")
+			if d > cfg["reach"]:
+				desired_velocity = nav_velocity(target.global_position, walk_speed * 0.5, delta, cfg["reach"] * 0.7)
+			return
+		if shield_wall and state == St.BLOCK:
+			set_state(St.IDLE)
 		if d > cfg["reach"] + 2.0:
 			var speed: float = run_speed if d > 90.0 else walk_speed
 			desired_velocity = nav_velocity(target.global_position, speed, delta, cfg["reach"] * 0.7)
@@ -306,6 +331,27 @@ func _run_alarm(delta: float) -> void:
 		_set_phase("chase")
 
 
+## 권양기 돌격병이 된다: 싸우지 않고 권양기로 뛰어가 돌린다(Game.level.crank_gate).
+func start_crank(pos: Vector2) -> void:
+	crank_pos = pos
+	alerted = true
+	suspicion = 1.0
+	takedown.enabled = false
+	_set_phase("crank")
+
+
+func _run_crank(delta: float) -> void:
+	if global_position.distance_to(crank_pos) > 12.0:
+		desired_velocity = nav_velocity(crank_pos, run_speed, delta, 8.0)
+		face(desired_velocity)
+		play("run")
+		return
+	face(crank_pos + Vector2(8, -12) - global_position)
+	play("interact")
+	if Game.level.has_method("crank_gate"):
+		Game.level.crank_gate(delta)
+
+
 func _drop_bell() -> void:
 	if not bell.is_empty() and bell["runner"] == self:
 		bell["runner"] = null
@@ -392,7 +438,11 @@ func take_hit(dmg: float, src: Node2D, kb := 60.0, heavy := false, ranged := fal
 	if not alerted and is_alive() and ranged and not poise and src is Projectile and by is Player:
 		silent_kill(false)
 		return "killed"
+	if shield_wall and heavy and state == St.BLOCK and src and facing.dot((src.global_position - global_position).normalized()) > 0.15:
+		stamina = min(stamina, 30.0)   # 강공격(막기 비용 45)이면 방패가 부서진다
 	var r := super.take_hit(dmg, src, kb, heavy, ranged)
+	if perch:
+		knock = Vector2.ZERO
 	if r != "miss" and is_alive() and not alerted:
 		if by is Actor:
 			alert(by)
@@ -513,10 +563,11 @@ func _draw() -> void:
 	super._draw()
 	if not is_alive():
 		return
-	if phase == "alarm":
+	if phase == "alarm" or phase == "crank":
 		var ya := -head_height - 8.0
-		draw_string_outline(Game.ui_font, Vector2(-20, ya), "! 경보", HORIZONTAL_ALIGNMENT_CENTER, 40, 10, 4, Color(0, 0, 0, 0.85))
-		draw_string(Game.ui_font, Vector2(-20, ya), "! 경보", HORIZONTAL_ALIGNMENT_CENTER, 40, 10, Color(1, 0.35, 0.25))
+		var tag := "! 경보" if phase == "alarm" else "! 권양기"
+		draw_string_outline(Game.ui_font, Vector2(-24, ya), tag, HORIZONTAL_ALIGNMENT_CENTER, 48, 10, 4, Color(0, 0, 0, 0.85))
+		draw_string(Game.ui_font, Vector2(-24, ya), tag, HORIZONTAL_ALIGNMENT_CENTER, 48, 10, Color(1, 0.35, 0.25))
 		return
 	if alerted or suspicion <= 0.02:
 		return

@@ -8,7 +8,7 @@ ODYSSEY: 귀환의 항해 — TypeScript + Three.js + Vite로 만든 브라우�
 
 이 폴더는 자체 git 저장소다(상위 `~/study` 저장소 안에 있지만 따로 관리).
 
-**새 버전(Godot 4)은 `godot/`에 있다** — 2D 픽셀아트 쿼터뷰 액션 RPG로 다시 만드는 중(챕터 1 플레이 가능). 실행·구조·그림 규칙은 `godot/README.md`, 6챕터 기획은 `godot/docs/GAME_DESIGN.md`. 확인은 `godot --headless --path godot -- --auto --quit-after=170`(봇이 챕터 1 끝까지 진행). 아래 내용은 기존 웹(Three.js) 버전 설명이다.
+**새 버전(Godot 4)은 `godot/`에 있다** — 2D 픽셀아트 쿼터뷰 액션 RPG로 다시 만드는 중(챕터 1 플레이 가능). 실행·구조·그림 규칙은 `godot/README.md`, 6챕터 기획은 `godot/docs/GAME_DESIGN.md`. 확인은 `godot --headless --path godot -- --auto --quit-after=200`(봇이 챕터 1 끝까지 진행). 아래 내용은 기존 웹(Three.js) 버전 설명이다.
 
 ## 명령
 

@@ -6,6 +6,8 @@ var label := "조사하기"
 var hold_time := 0.0
 var radius := 28.0
 var enabled := true
+## 0~1이면 길게 누르기가 끝나지 않고, 누르고 있는 동안 레벨이 올리는 이 값을 막대로 보여 준다(권양기)
+var progress := -1.0
 var on_use: Callable
 
 

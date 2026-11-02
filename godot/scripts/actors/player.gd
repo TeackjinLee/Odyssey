@@ -350,8 +350,8 @@ func _bot_input() -> Dictionary:
 	var best := 230.0
 	for e in Game.level.enemies():
 		var d := global_position.distance_to(e.global_position)
-		# 알아채지 못한 적에게는 먼저 덤비지 않는다(지나가다 들키면 싸움)
-		if not e.alerted and d > 50.0:
+		# 알아채지 못한 적에게는 먼저 덤비지 않는다(지나가다 들키면 싸움). 부하가 모이면 보스(조용히 처치 불가)에게는 덤빈다
+		if not e.alerted and d > 50.0 and not (e.poise and Game.squad.members.size() > 0):
 			continue
 		if d < best and Game.level.line_clear(global_position, e.global_position):
 			best = d

@@ -213,9 +213,9 @@ func _draw_quest() -> void:
 	if objective_text == "":
 		return
 	var y: float = 72.0 + Game.squad.members.size() * 27 + 12
-	_panel(Rect2(6, y, 200, 36))
+	_panel(Rect2(6, y, 200, 36 + objective_text.count("\n") * 10))
 	_text(Vector2(11, y + 11), objective_title, 8, GOLD)
-	canvas.draw_multiline_string(Game.ui_font, Vector2(11, y + 23), "▸ " + objective_text, HORIZONTAL_ALIGNMENT_LEFT, 192, 8, 2, Color(1, 1, 1))
+	canvas.draw_multiline_string(Game.ui_font, Vector2(11, y + 23), "▸ " + objective_text, HORIZONTAL_ALIGNMENT_LEFT, 192, 8, 2 + objective_text.count("\n"), Color(1, 1, 1))
 
 
 func _draw_minimap(p: Player) -> void:
@@ -238,6 +238,11 @@ func _draw_minimap(p: Player) -> void:
 		var m := center + Vector2((g.x - g.y) * k, (g.x + g.y) * k * 0.5)
 		if m.distance_to(center) < radius - 2:
 			canvas.draw_circle(m, 1.6, Color(1, 0.3, 0.25) if a.team == Actor.Team.TROJAN else Color(0.4, 0.75, 1))
+	for sm in Game.side_markers:
+		var g := Iso.world_to_grid(sm) - pg
+		var m := center + Vector2((g.x - g.y) * k, (g.x + g.y) * k * 0.5)
+		if m.distance_to(center) < radius - 3:
+			canvas.draw_arc(m, 2.6, 0, TAU, 12, Color(0.55, 0.85, 1.0, 0.9), 1.0)
 	if Game.quest_marker != Vector2.INF:
 		var g := Iso.world_to_grid(Game.quest_marker) - pg
 		var m := center + Vector2((g.x - g.y) * k, (g.x + g.y) * k * 0.5)
@@ -287,13 +292,15 @@ func _draw_interact(p: Player) -> void:
 	if it == null or dialogue.size() > 0:
 		return
 	var sp: Vector2 = get_viewport().get_canvas_transform() * (it.global_position + Vector2(0, -56))
-	var label := "[E] " + it.label + ("  (길게)" if it.hold_time > 0.0 else "")
+	var label := "[E] " + it.label + ("  (누르고 있기)" if it.progress >= 0.0 else "  (길게)" if it.hold_time > 0.0 else "")
 	var f: Font = Game.ui_font
 	var tw := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 10
 	var r := Rect2(sp.x - tw / 2, sp.y - 10, tw, 13)
 	_panel(r)
 	_text(Vector2(r.position.x, sp.y), label, 8, Color(1, 0.95, 0.8), HORIZONTAL_ALIGNMENT_CENTER, tw)
-	if p.state == Actor.St.INTERACT and p.interact_target == it and it.hold_time > 0.0:
+	if it.progress >= 0.0:
+		_bar(Rect2(r.position.x + 2, r.end.y + 2, tw - 4, 3), it.progress, Color(0.45, 0.75, 1.0))
+	elif p.state == Actor.St.INTERACT and p.interact_target == it and it.hold_time > 0.0:
 		_bar(Rect2(r.position.x + 2, r.end.y + 2, tw - 4, 3), p.interact_progress / it.hold_time, GOLD)
 
 

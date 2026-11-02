@@ -6,6 +6,7 @@ extends Node
 ##   --auto=stealth 잠입 봇: 알아채지 못한 적은 활·뒤 처치로 조용히 쓰러뜨리며 지나감(경보 0이 목표)
 ##   --shot=경로     몇 초 뒤 화면을 PNG로 저장하고 종료 (--shot-at=초, 기본 3)
 ##   --start=gate   성문 경비대 앞에서 시작
+##   --start=winch  성문 경비대를 치운 뒤 권양기 앞에서 시작
 ##   --showcase     오디세우스 8방향(무기 장착)을 한 줄로 세워 보여 줌
 ##   --god          오디세우스가 죽지 않음(흐름 확인용)
 
@@ -58,6 +59,8 @@ func start_chapter() -> void:
 		_showcase()
 	if args.get("start", "") == "gate":
 		(level as Chapter1Troy).skip_to_gate()
+	elif args.get("start", "") == "winch":
+		(level as Chapter1Troy).skip_to_winch()
 
 
 func _showcase() -> void:
@@ -164,6 +167,7 @@ func _report_and_quit() -> void:
 	if lv and is_instance_valid(lv):
 		info["step"] = lv.get("step")
 		info["capture"] = lv.get("capture")
+		info["gate_open"] = lv.get("gate_open")
 		if Game.player:
 			info["player_hp"] = Game.player.hp
 		info["enemies_alive"] = lv.enemies().size()

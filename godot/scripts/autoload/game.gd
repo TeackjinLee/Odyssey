@@ -14,6 +14,8 @@ var squad: Node = null
 var hud: Node = null
 var shake_amount := 0.0
 var quest_marker := Vector2.INF
+## 골라서 하는 목표 자리(미니맵에 빈 원으로 표시, 끝나면 레벨이 뺀다)
+var side_markers: Array = []
 var autoplay := false
 ## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
 var stealth_bot := false
@@ -82,6 +84,7 @@ func reset_run() -> void:
 	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
+	side_markers = []
 	Engine.time_scale = 1.0
 
 
