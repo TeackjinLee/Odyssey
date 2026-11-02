@@ -20,6 +20,8 @@ var astar := AStarGrid2D.new()
 var solids_body: StaticBody2D
 var occluders: Array = []
 var lights: Array = []
+var torches: Array = []
+var sight_layer: Node2D
 var player: Player
 var squad: Squad
 var chapter_title := ""
@@ -40,6 +42,14 @@ func _ready() -> void:
 	fx_layer = Node2D.new()
 	fx_layer.z_index = 50
 	add_child(fx_layer)
+	# 적 시야 부채꼴: 바닥 바로 위, 인물·소품 아래. 밤 어둠과 상관없이 보이게 빛을 받지 않는다
+	sight_layer = Node2D.new()
+	sight_layer.z_index = -5
+	var unshaded := CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	sight_layer.material = unshaded
+	sight_layer.draw.connect(_draw_sight)
+	add_child(sight_layer)
 	solids_body = StaticBody2D.new()
 	solids_body.collision_layer = 1
 	add_child(solids_body)
@@ -264,11 +274,12 @@ func add_burning_house(prop_name: String, cell: Vector2i) -> Sprite2D:
 		add_fire(s, Vector2(sp[0], sp[1]) + Vector2(randf_range(-3, 3), randf_range(-2, 2)), randf_range(0.6, 0.95), false)
 	add_fire(s, center + Vector2(randf_range(-6, 6), -4), 1.15, false)
 	add_embers(s, center + Vector2(0, -20))
-	add_light(s.global_position + center + Vector2(0, -10), Color(1.0, 0.5, 0.2), 1.25, 2.2)
+	add_light(s.global_position + center + Vector2(0, -10), Color(1.0, 0.5, 0.2), 1.25, 2.2, true, 0.4)
 	return s
 
 
-func add_light(pos: Vector2, color: Color, energy: float, size_k: float, flicker := true) -> PointLight2D:
+## sight: 적 시야 밝기(light_at)에 이 빛을 얼마나 셀지. 불탄 집의 넓은 불빛은 덜 쳐서 골목 그늘을 남긴다
+func add_light(pos: Vector2, color: Color, energy: float, size_k: float, flicker := true, sight := 1.0) -> PointLight2D:
 	var l := PointLight2D.new()
 	l.texture = AssetLibrary.light_texture()
 	l.color = color
@@ -276,11 +287,55 @@ func add_light(pos: Vector2, color: Color, energy: float, size_k: float, flicker
 	l.texture_scale = size_k
 	l.position = pos
 	add_child(l)
-	lights.append([l, energy, randf() * TAU, flicker])
+	lights.append([l, energy, randf() * TAU, flicker, sight])
 	return l
 
 
+## 끌 수 있는 횃불대: E로 끄면 빛이 사라지고, 순찰병이 보면 가서 다시 켠다.
+func add_torch(cell: Vector2i) -> Dictionary:
+	var s := add_prop("torch_post", cell, true, false)
+	var l := add_light(s.global_position + Vector2(1, -20), Color(1.0, 0.55, 0.25), 0.6, 0.85)
+	var it := Interactable.new()
+	it.label = "횃불 끄기"
+	it.radius = 30.0
+	it.position = s.global_position + Vector2(0, 6)
+	world.add_child(it)
+	var t := {"sprite": s, "light": l, "point": it, "lit": true, "claimed": null}
+	it.on_use = func(_by): set_torch(t, false)
+	torches.append(t)
+	return t
+
+
+func set_torch(t: Dictionary, lit: bool) -> void:
+	t["lit"] = lit
+	t["light"].enabled = lit
+	t["point"].enabled = lit
+	t["sprite"].texture = AssetLibrary.prop_texture("torch_post" if lit else "torch_post_off")
+	Sfx.play("ui", -8.0)
+
+
+## 소리: radius(땅 거리) 안의 알아채지 못한 적이 그만큼 의심한다.
+func noise(pos: Vector2, radius: float, amount: float) -> void:
+	for e in enemies():
+		if Combat.ground_dist(pos, e.global_position) < radius:
+			e.hear(pos, amount)
+
+
 # ── 질의 ─────────────────────────────────────────────
+## 그 자리의 밝기 0~1. 켜진 빛들의 세기를 빛 그림(AssetLibrary.light_texture: 가운데 1 → 45% 지점 0.45 → 끝 0)대로
+## 거리에 따라 더하고, 횃불 바로 옆(세기 0.5)을 1로 친다. 오디세우스 자신의 빛은 lights에 없어 빠진다.
+func light_at(pos: Vector2) -> float:
+	var sum := 0.0
+	for l in lights:
+		var light: PointLight2D = l[0]
+		if not light.enabled:
+			continue
+		var t := light.global_position.distance_to(pos) / (128.0 * light.texture_scale)
+		if t < 1.0:
+			sum += l[1] * l[4] * (1.0 - t * 0.55 / 0.45 if t < 0.45 else 0.45 * (1.0 - t) / 0.55)
+	return pow(clampf(sum / 0.5, 0.0, 1.0), 1.5)
+
+
 func in_bounds(c: Vector2i) -> bool:
 	return c.x >= 0 and c.y >= 0 and c.x < W and c.y < H
 
@@ -360,6 +415,7 @@ func greeks() -> Array:
 func _process(delta: float) -> void:
 	Game.stats["time"] += delta
 	_update_camera(delta)
+	sight_layer.queue_redraw()
 	_update_occlusion(delta)
 	var t := Time.get_ticks_msec() * 0.001
 	for l in lights:
@@ -415,3 +471,38 @@ func _covers(s: Sprite2D, p: Vector2) -> bool:
 	if not _alpha_images.has(s.texture):
 		_alpha_images[s.texture] = s.texture.get_image()
 	return _alpha_images[s.texture].get_pixel(int(local.x), int(local.y)).a > 0.5
+
+
+# ── 적 시야 그리기 ─────────────────────────────────────
+## 알아채지 못한 적마다 앞쪽 부채꼴: 진한 안쪽 = 어둠 속에서도 보이는 거리, 옅은 바깥 = 밝은 곳에서 보이는 거리.
+## 벽·건물에 막히면 거기서 끊는다. 의심이 찰수록 붉어진다.
+func _draw_sight() -> void:
+	var view := Rect2(_cam_pos - Vector2(380, 230), Vector2(760, 460))
+	for e in enemies():
+		if e.alerted or not view.has_point(e.global_position):
+			continue
+		var o: Vector2 = e.global_position
+		var col := Color(1.0, 0.92, 0.65).lerp(Color(1.0, 0.25, 0.15), e.suspicion)
+		var far := PackedVector2Array([o])
+		var near := PackedVector2Array([o])
+		var n := 10
+		for i in n + 1:
+			var a: float = e.facing.angle() + deg_to_rad(Enemy.VIEW_ARC * (float(i) / n - 0.5))
+			var dv := Vector2(cos(a), sin(a))
+			var k := 1.0 / Vector2(dv.x, dv.y * Combat.Y_STRETCH).length()
+			var reach := _ray_len(o, dv, e.vision * k)
+			far.append(o + dv * reach)
+			near.append(o + dv * minf(reach, Enemy.SIGHT_DARK * k))
+		sight_layer.draw_colored_polygon(far, Color(col, 0.1 + 0.08 * e.suspicion))
+		sight_layer.draw_colored_polygon(near, Color(col, 0.18 + 0.1 * e.suspicion))
+		far.append(o)
+		sight_layer.draw_polyline(far, Color(col, 0.35 + 0.3 * e.suspicion), 1.0)
+
+
+func _ray_len(o: Vector2, dv: Vector2, max_len: float) -> float:
+	var d := 8.0
+	while d < max_len:
+		if is_blocked_world(o + dv * d):
+			return d
+		d += 8.0
+	return max_len

@@ -15,7 +15,7 @@ var hud: Node = null
 var shake_amount := 0.0
 var quest_marker := Vector2.INF
 var autoplay := false
-var stats := {"kills": 0, "time": 0.0, "downs": 0}
+var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0}
 
 var ui_font: SystemFont
 
@@ -75,7 +75,7 @@ func _register_input() -> void:
 
 
 func reset_run() -> void:
-	stats = {"kills": 0, "time": 0.0, "downs": 0}
+	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	Engine.time_scale = 1.0

@@ -115,6 +115,9 @@ func _choose_target() -> Actor:
 	var best: Actor = null
 	var best_d := INF
 	for e in Game.level.enemies():
+		# 잠입 중엔 먼저 덤비지 않는다: 알아챈 적만 (알아채지 못한 적은 집중 공격 명령으로만)
+		if not e.alerted:
+			continue
 		var ep: Vector2 = e.global_position
 		var d := global_position.distance_to(ep)
 		var ok := false

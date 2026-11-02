@@ -1,7 +1,7 @@
 class_name Player
 extends Actor
 ## 오디세우스. 이동·달리기, 검 3연타 + 강공격, 방패 막기(막기 직후 0.2초는 패링), 구르기, 활 조준·발사,
-## 상호작용(E 길게), 전투의 함성(R), 부대 명령(1~4).
+## 상호작용(E 길게), 전투의 함성(R), 부대 명령(1~4). 알아채지 못한 적의 뒤에서 E를 누르면 조용히 처치한다.
 
 const SWORD_COMBO := [
 	{"anim": "attack1", "dur": 0.34, "hit": 0.11, "dmg": 11.0, "reach": 27.0, "arc": 150.0, "kb": 70.0, "lunge": 120.0, "stop": 0.05, "shake": 1.5},
@@ -10,6 +10,10 @@ const SWORD_COMBO := [
 ]
 const HEAVY := {"anim": "heavy", "dur": 0.72, "hit": 0.34, "dmg": 28.0, "reach": 35.0, "arc": 220.0, "kb": 230.0, "lunge": 120.0, "stop": 0.11, "shake": 5.0, "heavy": true}
 const BOW_RECOVER := {"anim": "", "dur": 0.2, "hit": 99.0}
+const TAKEDOWN := {"anim": "attack3", "dur": 0.42, "hit": 99.0, "quiet": true}
+## 검을 휘두르는 소리가 들리는 거리와 그 소리로 차는 의심
+const SWING_NOISE := 95.0
+const SWING_SUSPICION := 0.55
 const SKILL_CD := 20.0
 const HEAVY_CD := 1.2
 
@@ -141,6 +145,8 @@ func _free_move(delta: float) -> void:
 		if it:
 			if it.hold_time <= 0.0:
 				it.use(self)
+				if state == St.ATTACK:
+					return
 			else:
 				interact_target = it
 				interact_progress = 0.0
@@ -174,7 +180,9 @@ func _start_attack(spec: Dictionary) -> void:
 	move_vel = Vector2.ZERO
 	if spec["anim"] != "":
 		play_timed(spec["anim"], spec["dur"])
-		Sfx.play("swing", -12.0)
+		if not spec.get("quiet", false):
+			Sfx.play("swing", -12.0)
+			Game.level.noise(global_position, SWING_NOISE, SWING_SUSPICION)
 	var idx := SWORD_COMBO.find(spec)
 	if idx >= 0:
 		combo_step = (idx + 1) % SWORD_COMBO.size()
@@ -268,6 +276,12 @@ func _interact_update(delta: float) -> void:
 		interact_target = null
 		set_state(St.IDLE)
 		it.use(self)
+
+
+func takedown(e: Enemy) -> void:
+	face(e.global_position - global_position)
+	_start_attack(TAKEDOWN)
+	e.silent_kill(true)
 
 
 func _switch_weapon() -> void:

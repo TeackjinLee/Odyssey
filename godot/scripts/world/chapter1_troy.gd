@@ -3,6 +3,7 @@ extends IsoLevel
 ## CHAPTER 1 — 트로이의 목마.
 ## 밤, 불타는 트로이. 목마에서 내린 오디세우스와 부하 셋이 대로를 따라 북쪽 성문으로 가서
 ## 순찰대 → 성문 경비대(수비대장) 처치 → 권양기로 성문 개방 → 아카이아 증원군과 성문 거점 사수.
+## 적은 알아채기 전까지 시야 부채꼴로 오디세우스만 보므로, 순찰대와 경비대는 몰래 처치할 수도 있다.
 ##
 ## 격자: x는 화면 오른쪽 아래, y는 왼쪽 아래로 늘어난다. 바깥 성벽은 y=3 줄과 x=2 열(화면 위쪽 두 변).
 
@@ -20,6 +21,7 @@ var capture := 0.0
 var waves_sent := 0
 var zone_pos := Vector2.ZERO
 var _done := false
+var _combat_hint := false
 
 
 func build() -> void:
@@ -76,9 +78,7 @@ func build() -> void:
 		add_prop("column", c)
 	# 소품
 	for c in [Vector2i(16, 12), Vector2i(21, 12), Vector2i(16, 17), Vector2i(21, 17), Vector2i(12, 8), Vector2i(23, 8)]:
-		# 횃불대 그림에 불이 그려져 있으니 빛만 더한다
-		var t := add_prop("torch_post", c, true, false)
-		add_light(t.global_position + Vector2(1, -20), Color(1.0, 0.55, 0.25), 0.6, 0.85)
+		add_torch(c)
 	for c in [Vector2i(15, 4), Vector2i(21, 4)]:
 		var b := add_prop("brazier", c, true, false)
 		add_fire(b, Vector2(0, -16), 0.6)
@@ -127,7 +127,7 @@ func start() -> void:
 		_spawn("trojan_captain", Vector2(18.0, 5.2)),
 	]
 	for g in guard_group:
-		g.aggro_range = 110.0
+		g.vision = 130.0
 	winch_point = Interactable.new()
 	winch_point.label = "권양기 돌리기"
 	winch_point.hold_time = 2.0
@@ -159,7 +159,7 @@ func _set_step(s: int) -> void:
 		1:
 			Game.set_objective(chapter_title, "대로의 트로이 순찰대를 처치하라  (0/3)")
 			Game.quest_marker = Iso.grid_to_world(Vector2(19, 17))
-			Game.show_hint("좌클릭 검 3연타 · F 강공격 · 우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
+			Game.show_hint("들키지 않게: 바닥의 옅은 부채꼴이 적의 시야(밝은 곳일수록 멀리 봄) · 뒤에서 E 조용히 처치 · Q 활은 눈치채지 못한 적을 한 발에 · E 횃불 끄기 · 달리면 발소리")
 		2:
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (0/6)")
 			Game.quest_marker = Iso.grid_to_world(Vector2(18, 7))
@@ -193,6 +193,9 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if _done:
 		return
+	if not _combat_hint and step in [1, 2] and enemies().any(func(e): return e.alerted):
+		_combat_hint = true
+		Game.show_hint("들켰다! 좌클릭 검 3연타 · F 강공격 · 우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
 	match step:
 		1:
 			var n := _dead_count(patrol_group)

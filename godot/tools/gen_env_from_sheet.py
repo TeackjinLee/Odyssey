@@ -135,6 +135,21 @@ def greek_banner(img):
     return Image.fromarray(a)
 
 
+def torch_off(img):
+    """꺼진 횃불: 아주 밝은 불꽃이 있는 마지막 줄까지(불꽃·연기) 지우고, 그 아래 그릇의 달군 색은 재처럼 어둡게."""
+    a = np.asarray(img).copy()
+    bright = (a[..., :3].astype(int).sum(axis=2) > 600) & (a[..., 3] > 0)
+    rows = np.nonzero(bright.sum(axis=1) >= 3)[0]
+    if len(rows) == 0:
+        return img
+    fb = rows.max()
+    a[:fb + 1] = 0
+    hot = a[fb + 1:fb + 5]
+    warm = (hot[..., 0] > 170) & (hot[..., 3] > 0)
+    hot[warm, :3] = (hot[warm, :3] * np.array([0.42, 0.3, 0.3])).astype(np.uint8)
+    return Image.fromarray(a)
+
+
 def shift_or(m, n):
     """m을 상하좌우 n px 넓힌다."""
     out = m.copy()
@@ -308,6 +323,8 @@ def main(root):
             variants.append(("gate_open", open_gate(img)))
         if name == "banner_troy":
             variants.append(("banner_greek", greek_banner(img)))
+        if name == "torch_post":
+            variants.append(("torch_post_off", torch_off(img)))
         for n, im in variants:
             im.save(out / f"{n}.png")
             meta["props"][n] = {"file": f"{n}.png", "anchor": anchor_of(im, fp, n), "footprint": list(fp),
