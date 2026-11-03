@@ -78,6 +78,9 @@ GEAR_CUT_ARC = 0.008   # 자른 선을 가운데가 처지는 호로(키 비율)
 CUT_GEARS = ("helm",)
 GEAR_TINT = {"hood": (1.08, 0.94, 0.74)}   # 받은 두건이 보랏빛이라 갈색 쪽으로
 BACK_DIRS = (5, 6, 7)
+# 투구 방향별 맞춤: 방향 → (크기 배율, 위로 올리는 양(머리 폭 비율)). 뒤쪽은 머리카락이 투구 위로 삐져나오지 않게 키우고 올린다
+GEAR_FIT = {0: (1.06, 0.04), 1: (1.06, 0.04), 2: (1.06, 0.04), 3: (1.06, 0.04), 4: (1.06, 0.04),
+            5: (1.05, 0.07), 6: (1.05, 0.07), 7: (1.05, 0.07)}
 
 
 def head_box(cell):
@@ -117,10 +120,11 @@ def put_gears(cell, d, gears):
     out = cell.copy()
     for g, mode in gears:
         img, hx0, top0, hw0 = g[d]
-        s = (head[2] - head[0]) / hw0
+        fit = GEAR_FIT.get(d, (1.0, 0.0)) if g is not None and mode == "over" else (1.0, 0.0)
+        s = (head[2] - head[0]) / hw0 * fit[0]
         sized = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
         layer = Image.new("RGBA", cell.size, (0, 0, 0, 0))
-        layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s)))
+        layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s - fit[1] * (head[2] - head[0]))))
         if mode == "cape" and d not in BACK_DIRS:
             layer.alpha_composite(out)
             out = layer
