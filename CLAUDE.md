@@ -21,6 +21,7 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 | `godot/docs/ART_PLAN.md` | 화풍 규칙·크기 규격·전체 그림 목록(ID·상태)·요청 순서 |
 | `godot/docs/sprite_request/` | 그림 요청: 오디세우스 차림(`OUTFIT.md`), 요청 키트(`motion_kit/`), 요청 묶음(`attack_requests/`·`action_requests/`), 병사·환경·UI 프롬프트 |
 | `godot/docs/references/` | 사용자가 준 참고 이미지와 `INDEX.md` |
+| `godot/docs/maps/` | 맵 설계(챕터 1 개편안 `CH1_TROY.md`, 배치도는 `tools/gen_map_plan.py`) |
 
 ## 명령 (godot/ 안에서)
 

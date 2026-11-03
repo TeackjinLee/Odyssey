@@ -185,6 +185,14 @@
 | `E-TROY-gate_anim` | 성문 열림 3단계 | ⬜ (있으면 좋음) |
 | `E-TROY-stairs` | 성벽 계단·성벽 위 통로 | ⬜ (M2 높낮이 때) |
 | `E-TROY-decal` | 바닥 그을음·부서진 방패·떨어진 창 | ⬜ (있으면 좋음) |
+| `E-TROY-temple` | 아테나 신전(3×3칸)·사자상 — 맵 개편 [maps/CH1_TROY.md](maps/CH1_TROY.md) (`troy_city`) | ⬜ |
+| `E-TROY-fountain` | 분수(2×2칸) (`troy_city`) | ⬜ |
+| `E-TROY-belltower` | 나무 종탑(2×2칸) (`troy_city`) | ⬜ |
+| `E-TROY-stall` | 차양 좌판 2색 (`troy_city`, `E-TROY-market`과 함께) | ⬜ |
+| `E-TROY-ladder` `-column_broken` `-wall_banner` `-wall_low` | 목마 사다리·부러진 기둥·벽 깃발·반 높이 성벽 (`troy_city`) | ⬜ |
+| `E-TROY-sea` `-shore` `-dock` `-mosaic` | 바닥: 바다·바위 해안·부두·모자이크 각 4변형 (`troy_coast`) | ⬜ |
+| `E-TROY-ship` `-boat` `-rock` `-post` | 갤리선·작은 배·바위·부두 말뚝 (`troy_coast`) | ⬜ |
+| `E-TROY-tree` | 사이프러스·올리브·소나무·화분·덤불 (`troy_coast`) | ⬜ |
 
 ### 4.5 이펙트 `F`
 

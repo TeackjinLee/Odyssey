@@ -10,6 +10,7 @@
 | [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
 | [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
 | [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
+| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 개편안과 배치도(`tools/gen_map_plan.py`) |
 
 현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 끝까지 플레이할 수 있다.
 

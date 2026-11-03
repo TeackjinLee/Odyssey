@@ -14,6 +14,8 @@
 | 불꽃·연기 | `troy_fire.webp` | ✅ |
 | 꺼진 횃불대 | (`torch_post`를 가공) | ✅ |
 | 경보 종·권양기·화로·그리스 깃발·화살 + 무기고·시장 소품 | `troy_extra.webp` | 다음 (§1) |
+| 신전·분수·종탑·좌판·사자상·사다리·반 높이 성벽 (맵 개편) | `troy_city.webp` | 요청 준비됨 (§3) |
+| 바다·해안·부두·배·나무 (맵 개편) | `troy_coast.webp` | 요청 준비됨 (§4) |
 
 ---
 
@@ -74,7 +76,76 @@ Row 4: 6 single ember sparks (2-4px) and a charred/burnt roof-tile overlay patch
 
 ---
 
-## 3. 다음 챕터 (그때 채운다)
+## 3. 트로이 도시 건물 (한 장) — 받을 이름 `troy_city.webp`
+
+챕터 1 맵 개편([../maps/CH1_TROY.md](../maps/CH1_TROY.md))용. 첨부 두 장:
+`troy_env.webp`(화풍·크기 기준)와 `docs/references/environment/ch1_troy__city-layout.webp`(건물 모양·재질 참고만).
+
+```
+Pixel art isometric game buildings and props sprite sheet, matching EXACTLY the style, outline, palette, lighting (from the upper left)
+and pixel density of the FIRST attached image (isometric Greek city of Troy at night, one floor tile = 64x32 px).
+Use the SECOND attached image only as a reference for the SHAPES and MATERIALS of the buildings (light sandstone walls,
+red clay roof tiles, red banners with a gold emblem); do NOT copy its sunset lighting or its painting style.
+Night colors: blue-grey stone, warm orange light only where there are torches.
+Solid flat dark background #282B35. Every item separated by empty space. No text, no labels, no grid lines, no shadows on the ground.
+2:1 isometric view (camera looks down about 30 degrees), no perspective.
+
+Row 1 (big landmarks):
+- A Greek TEMPLE of Athena on a raised stone platform: six front columns, red tiled pediment roof, two red banners between columns,
+  a wide flight of stone steps in front, footprint about 3x3 floor tiles.
+- A round stone FOUNTAIN with a two-tier basin and blue water, footprint 2x2 floor tiles.
+- A wooden BELL TOWER: four tall posts, a small roofed platform on top with a bronze bell, a ladder on one side,
+  footprint 2x2 floor tiles, about 130 px tall.
+
+Row 2 (props, one floor tile each unless noted):
+- A seated stone LION statue on a square base (draw it once; the game mirrors it).
+- A MARKET STALL with a RED and WHITE striped cloth awning, wooden counter with baskets and jars, 2x1 floor tiles.
+- The same market stall with a plain RED awning.
+- A wooden LADDER leaning to the right (to lean against the Trojan horse), about 70 px tall.
+- A BROKEN marble COLUMN: standing lower half with a jagged top, plus the fallen drum pieces beside it.
+
+Row 3 (wall parts, same stone and size as the wall in the first image):
+- A RED cloth BANNER with a gold emblem hanging flat on a wall face, about 20x40 px, drawn for the left-facing wall face
+  (the game mirrors it for the right face).
+- A LOW city wall segment: the same wall as in the first image but only HALF its height, in both directions
+  (running to the lower right, and running to the lower left), plus a half-height corner tower.
+```
+
+---
+
+## 4. 트로이 해안·나무 (한 장) — 받을 이름 `troy_coast.webp`
+
+첨부는 §3과 같다. 바닥 타일은 64×32 마름모 한 칸에 꼭 맞게, 서로 이어 붙여도 이음매가 안 보이게.
+
+```
+Pixel art isometric game tiles and props sprite sheet, matching EXACTLY the style, outline, palette, lighting
+and pixel density of the FIRST attached image (isometric Greek city of Troy at night, one floor tile = 64x32 px).
+Use the SECOND attached image only as a reference for the harbor, rocks, trees and ships; do NOT copy its sunset lighting.
+Night colors: deep blue sea, moonlit highlights, warm orange only on torches.
+Solid flat dark background #282B35. Every item separated by empty space. No text, no labels, no grid lines.
+2:1 isometric view, no perspective.
+
+Row 1 (floor tiles, each exactly one 64x32 diamond, seamless when tiled):
+- 4 variants of deep night SEA water with small wave highlights.
+- 4 variants of ROCKY SHORE (grey rocks with white foam on the water side).
+- 4 variants of wooden DOCK planks.
+- 4 variants of a round MOSAIC stone floor (pieces of one large circle pattern: center, edge, edge, plain).
+
+Row 2 (props):
+- A wooden dock POST sticking out of the water, about 12x40 px.
+- A Greek GALLEY ship with one mast and a square sail with a dark horse emblem, seen from the side at the isometric angle,
+  footprint about 5x2 floor tiles.
+- A small rowing BOAT, footprint about 2x1 floor tiles.
+- 3 sizes of grey sea ROCKS.
+
+Row 3 (plants, each standing on one floor tile):
+- A tall thin dark green CYPRESS tree about 80 px tall, an OLIVE tree with a twisted trunk about 70 px tall,
+  a PINE tree about 80 px tall, a clay POT with flowers about 24 px tall, a low green BUSH.
+```
+
+---
+
+## 5. 다음 챕터 (그때 채운다)
 
 챕터 2부터는 `troy_env`처럼 챕터마다 기준 한 장(`<챕터>_env.webp`: 바닥 타일 + 큰 건물 + 소품)을 먼저 받아 화풍을 잡고,
 그다음 소품·애니메이션을 받는다. 무엇이 필요한지는 ART_PLAN §4.7.
