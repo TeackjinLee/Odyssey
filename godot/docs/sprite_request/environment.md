@@ -5,6 +5,7 @@
 공통 규칙·검사표는 [README.md](README.md), 목록·상태는 [../ART_PLAN.md](../ART_PLAN.md) §4.4.
 
 - 늘 같이 첨부: `assets/source/troy_env.webp` (화풍·크기 기준 — 바닥 칸 한 개가 64×32px)
+- Codex로 돌릴 요청 묶음(`prompt.txt`·첨부·`run.sh`)은 [env_requests/](env_requests/README.md) — 이 문서를 고치면 `python3 tools/env_request.py .`로 다시 만든다
 
 ## 0. 진행 상태
 

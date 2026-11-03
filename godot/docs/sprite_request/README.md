@@ -11,6 +11,7 @@
 | [OUTFIT.md](OUTFIT.md) | 오디세우스 새 차림(치비) 결정 기록, 기본 8방향·걷기·달리기 프롬프트 |
 | [motion_kit/](motion_kit/README.md) | 걷기·달리기·공격 요청 키트: 움직임 안내 그림, 요청 글 틀, 예시, 한도 아끼기, 받아 본 교훈 |
 | [attack_requests/](attack_requests/README.md) | 새 차림 공격 4종 요청 9개 (`pose.png`+`guide.png`+`prompt.txt`, `ALL_PROMPTS.txt`) |
+| [env_requests/](env_requests/README.md) | 환경 시트 요청 3개(`troy_extra`·`troy_city`·`troy_coast`) — `prompt.txt` + 첨부 그림 + `run.sh` |
 | [action_requests/](action_requests/README.md) | 새 차림 나머지 7동작(idle hit death block dodge bow interact) 요청 14개 (`pose.png`+`prompt.txt`) |
 | [soldiers.md](soldiers.md) | 챕터 1 인물: 그리스 부하 3종, 트로이 병사 3종, 수비대장 아게노르, 시논, 정찰병 |
 | [environment.md](environment.md) | 환경: 트로이 추가 소품(권양기·화로·경보 종·횃불대 등), 불 효과 |
