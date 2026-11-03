@@ -10,6 +10,10 @@ extends IsoLevel
 ## 권양기는 E를 누르고 있는 동안만 돌아가고 손을 떼면 성문이 다시 내려간다(부하를 2 위치 사수로 곁에 세워 지킴).
 ## 사수 반격 3파: 방패벽 → 높은 곳 궁수 → 권양기 돌격(트로이군이 권양기를 돌려 성문을 닫으면 다시 열어야 함).
 ## 체크포인트: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 죽으면 그 자리부터 다시 하고, 골라서 하는 목표는 이룬 그대로 둔다.
+## 튜토리얼: 목마 광장에서 시논이 연습을 시킨다 — 이동 → 말 걸기 → 졸고 있는 보초 조용히 처치 → 횃불 끄기 → 활로 쏘기.
+## 그 뒤로는 처음 겪는 일(의심·전투·부하 합류·권양기·보스)마다 튜토리얼 카드가 하나씩 뜬다(_tut, HUD 하단).
+## 성문이 열리면 아카이아 대군이 줄지어 들어오고(ARMY_SIZE), 불이 도시로 번지며, 트로이군이 네 차례 대규모로 반격한다
+## (방패벽 → 궁수 → 권양기 돌격 → 왕자 데이포보스의 총공세).
 ##
 ## 격자: x는 화면 오른쪽 아래, y는 왼쪽 아래로 늘어난다. 바깥 성벽은 y=3 줄과 x=2 열(화면 위쪽 두 변).
 ## 위(북)부터: 성문 광장 y4~9 · 북쪽 가로 y10~12 · 세 갈래 y13~37(뒷골목 x3~6, 대로 x16~20, 시장 x27~33,
@@ -35,6 +39,27 @@ const WINCH_STAND := Vector2(20.5, 6.6)
 ## 거점 점령 속도(초당 %): 싸우는 동안 / 알아챈 적이 없을 때(파 사이에 오래 서 있지 않게)
 const CAPTURE_RATE := 1.9
 const CAPTURE_CALM := 3.2
+## 연습 보초 자리: 졸고 있는 보초(조용히 처치 연습) · 횃불 빛 안의 보초(활 연습)와 그 옆 횃불
+const DRILL_SNEAK := Vector2(12.5, 45.0)
+const DRILL_BOW := Vector2(29.5, 45.5)
+const DRILL_TORCH := Vector2i(27, 44)
+## 성문이 열린 뒤 들어오는 아카이아 대군: 병사 수, 한 명씩 들어오는 간격(초), 맡을 자리(북쪽 가로·세 갈래 입구·성문 광장)
+const ARMY_SIZE := 24
+const ARMY_INTERVAL := 0.45
+const ARMY_POSTS := [Vector2(6.0, 11.0), Vector2(30.0, 11.0), Vector2(18.5, 14.0), Vector2(10.0, 11.5), Vector2(26.0, 11.5),
+	Vector2(4.5, 14.0), Vector2(30.0, 14.5), Vector2(16.5, 15.0), Vector2(20.5, 15.0), Vector2(14.0, 11.0), Vector2(22.5, 11.0),
+	Vector2(13.0, 8.0), Vector2(23.5, 8.0)]
+## 트로이군 물결: 반격 n파 뒤 살아 있는 트로이군이 TIDE_MIN보다 적으면 세 갈래 중 한 곳에서 셋씩 더 몰려온다.
+## 파마다 더 보낼 수 있는 수(TIDE_BUDGET)가 정해져 있어, 다 막으면 숨 돌릴 틈(점령이 차는 시간)이 생긴다
+const TIDE_MIN := [8, 11, 13, 16]
+const TIDE_BUDGET := [6, 9, 9, 9]
+const TIDE_INTERVAL := 2.2
+## 반격 2파부터 파마다 오디세우스가 회복하는 체력
+const WAVE_HEAL := 50.0
+## 왕자가 살아 있으면 점령이 여기서 멈춘다
+const PRINCE_CAP := 95.0
+## 성문이 열리면 불이 번지는 집(build의 houses 순서 번호)
+const SPREAD_FIRE := [0, 3, 4, 6, 11, 14, 22, 24, 27, 33]
 ## 경보 종이 울릴 때마다 성문 경비대에 붙는 병사
 const ALARM_GUARDS := [["trojan_sword", Vector2(17.5, 7.5)], ["trojan_spear", Vector2(18.5, 8.0)]]
 
@@ -49,7 +74,6 @@ var capture := 0.0
 var waves_sent := 0
 var zone_pos := Vector2.ZERO
 var _done := false
-var _combat_hint := false
 var scout: Npc
 var scout_freed := false
 var armory_point: Interactable
@@ -64,6 +88,30 @@ var _crank_frame := -1
 var _winch_attacks := 0
 var captain: Enemy
 var _boss_hint := false
+## 튜토리얼 카드 줄: [글, 끝났는지 묻는 Callable, 깜빡일 하단 슬롯, 넘어가는 시간(0이면 끝날 때까지)]
+var _tut_queue: Array = []
+var _tut_cur: Array = []
+var _tut_time := 0.0
+var _tut_gap := 0.0
+var _tut_seen := {}
+## 앞에 끼운 카드 수(다음 카드가 뜨면 0)
+var _tut_front := 0
+## step 0 안의 연습 단계: 0 시논에게 가기 · 1 조용히 처치 · 2 횃불 끄기 · 3 활 · 4 끝
+var drill_phase := 0
+var drill: Array = []
+var drill_torch: Dictionary = {}
+var _drill_swapped := false
+var _sneak_card: Array = []
+var _start_pos := Vector2.ZERO
+## 아카이아 대군: 남은 병사, 다음 병사까지 남은 시간, 들어온 병사 수
+var _army_left := 0
+var _army_timer := 0.0
+var _army_in := 0
+var _houses: Array = []
+var prince: Enemy
+var _routed := false
+var _tide_timer := 0.0
+var _tide_left := 0
 
 
 func build() -> void:
@@ -125,9 +173,10 @@ func build() -> void:
 	]
 	for h in houses:
 		if h[2]:
+			_houses.append(null)
 			add_burning_house(h[0], h[1])
 		else:
-			add_prop(h[0], h[1])
+			_houses.append([add_prop(h[0], h[1]), h[0]])
 	# 목마 광장
 	add_prop("horse", Vector2i(19, 42))
 	for c in [Vector2i(15, 40), Vector2i(26, 40), Vector2i(15, 46), Vector2i(26, 46)]:
@@ -137,6 +186,7 @@ func build() -> void:
 	for c in [Vector2i(16, 15), Vector2i(20, 15), Vector2i(16, 28), Vector2i(20, 28), Vector2i(16, 36), Vector2i(20, 36),
 			Vector2i(6, 31), Vector2i(27, 21), Vector2i(12, 8), Vector2i(23, 8), Vector2i(34, 26)]:
 		add_torch(c)
+	drill_torch = add_torch(DRILL_TORCH)
 	for c in [Vector2i(15, 4), Vector2i(21, 4), Vector2i(30, 31), Vector2i(5, 21)]:
 		var b := add_prop("brazier", c, true, false)
 		add_fire(b, Vector2(0, -16), 0.6)
@@ -172,6 +222,7 @@ func start() -> void:
 	player.position = Iso.grid_to_world(Vector2(21.5, 46.0))
 	world.add_child(player)
 	player.face(Vector2(-1, -1))
+	_start_pos = player.position
 	sinon = Npc.new()
 	sinon.setup("greek_archer", "시논", _talk_sinon)
 	sinon.position = Iso.grid_to_world(Vector2(18.5, 45.5))
@@ -201,6 +252,11 @@ func start() -> void:
 		_spawn("trojan_captain", Vector2(18.0, 5.2)),
 	]
 	captain = guard_group[5]
+	# 연습 보초: 시야가 짧고 들켜도 경보를 울리지 않는다
+	drill = [_spawn("trojan_sword", DRILL_SNEAK, [], _gdir(Vector2(-1, 0))), _spawn("trojan_sword", DRILL_BOW, [], _gdir(Vector2(1, 0)))]
+	for d in drill:
+		d.vision = 60.0
+		d.raises_alarm = false
 	for g in guard_group:
 		g.vision = 130.0
 		g.raises_alarm = false
@@ -284,6 +340,7 @@ func restore_checkpoint(cp: Dictionary) -> void:
 	sinon.talk.enabled = false
 	if cp.get("armory", false):
 		_burn_armory(true)
+	_end_drill()
 	match cp["id"]:
 		"stealth":
 			_set_step(1)
@@ -305,6 +362,7 @@ func restore_checkpoint(cp: Dictionary) -> void:
 
 ## 검증용(--start=gate): 잠입을 건너뛰고 부하와 함께 성문 경비대 앞에서 시작
 func skip_to_gate() -> void:
+	_end_drill()
 	for e in stealth_group:
 		e.queue_free()
 	stealth_group.clear()
@@ -335,43 +393,196 @@ func _set_step(s: int) -> void:
 		_save_checkpoint(["stealth", "merge", "winch"][s - 1])
 	match s:
 		0:
-			Game.set_objective(chapter_title, "목마 옆의 첩자 시논에게 말을 걸어라  [E]")
+			Game.set_objective(chapter_title, "목마에서 내려왔다. 목마 옆의 첩자 시논에게 가라")
 			Game.quest_marker = sinon.global_position
+			_tut("WASD / 방향키 — 이동\nShift를 누르고 있으면 달린다 (빠르지만 발소리가 난다)",
+				func(): return player.position.distance_to(_start_pos) > 40.0)
+			_tut("E — 시논에게 말 걸기", func(): return drill_phase >= 1 or step != 0)
 		1:
+			_tut_clear()
 			Game.set_objective(chapter_title, "들키지 않고 성문 앞 북쪽 가로까지 가서 횃불로 신호를 보내라" + _side_text())
 			for it in signals:
 				it.enabled = true
 			Game.quest_marker = signals[1].global_position
-			Game.show_hint("들키지 않게: 바닥의 옅은 부채꼴이 적의 시야(밝은 곳일수록 멀리 봄) · 뒤에서 E 조용히 처치 · Q 활은 눈치채지 못한 적을 한 발에 · E 횃불 끄기 · 달리면 발소리")
+			Game.show_hint("길은 셋 — 횃불이 늘어선 대로 · 어두운 서쪽 뒷골목 · 짐더미 동쪽 시장. 원하는 길로 가라")
+			_tut("세 갈래 중 하나를 골라 북쪽 가로까지\n미니맵의 노란 점이 목표, 빈 원은 골라서 하는 목표", Callable(), -1, 7.0)
 		2:
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (0/%d)" % guard_group.size() + _side_text())
 			Game.quest_marker = Iso.grid_to_world(Vector2(18, 7))
-			Game.show_hint("부대 명령  1 따라오기 · 2 위치 사수 · 3 집중 공격(조준한 적) · 4 후퇴·집결   R 전투의 함성 · Q 활")
+			_tut_once("squad", "부하 셋이 합류했다 — 1~4 부대 명령\n1 따라오기 · 2 위치 사수 · 3 집중 공격 · 4 후퇴·집결", Callable(), -1, 7.0)
+			_tut_once("focus", "3 — 조준한 적을 부하들이 한꺼번에 친다\n먼저 궁수를 노려라",
+				func(): return squad.mode == Squad.Mode.FOCUS, -1, 16.0)
+			_tut_once("cry", "R — 전투의 함성: 주변 부하 회복·강화, 가까운 적은 휘청인다",
+				func(): return player.skill_cd > 0.0, 5, 16.0)
 		3:
 			winch_point.enabled = true
 			Game.quest_marker = winch_point.global_position
 			Game.boss_changed.emit(null)
-			Game.show_hint("권양기는 E를 누르고 있는 동안만 돈다 — 손을 떼면 성문이 다시 내려간다. 2(위치 사수)로 부하를 곁에 세워 지키게 하라")
+			_tut_seen["winch"] = true
+			_tut_urgent("E를 누르고 있기 — 권양기 돌리기\n손을 떼면 성문이 다시 내려간다. 2(위치 사수)로 부하를 곁에 세워라",
+				func(): return winch_progress > 0.25, -1, 25.0)
 		4:
 			Game.set_objective(chapter_title, "성문 거점을 사수하라  (0%)")
 			Game.quest_marker = zone_pos
-			Game.show_hint("붉은 원 안에 머물러라. 적이 원 안에 있으면 점령이 멈춘다.")
+			_tut_seen["zone"] = true
+			_tut_urgent("붉은 원 안에 머물러라 — 원이 다 차면 승리\n적이 원 안에 있으면 멈춘다. 대군이 들어올 시간을 벌어라",
+				func(): return capture > 12.0, -1, 14.0)
 
 
 func _talk_sinon(_by) -> void:
-	if step != 0:
+	if step != 0 or drill_phase > 0:
 		Game.say([["시논", "성문 앞 북쪽 가로에 닿으면 꺼진 횃불에 불을 붙이십시오. 부하들을 보내겠습니다."]])
 		return
 	sinon.talk.enabled = false
+	drill_phase = 1
 	Game.say([
 		["시논", "오디세우스 님! 트로이 놈들은 목마를 신의 선물이라 믿고 밤새 잔치를 벌였습니다."],
 		["오디세우스", "부하들은 아직 목마 안에 둔다. 내가 먼저 성문까지 길을 살피겠다."],
-		["시논", "보초는 앞만 봅니다. 횃불 빛 안에선 멀리서도 보이니 그늘로 다니십시오. 뒤로 다가가면 소리 없이 처리할 수 있습니다."],
-		["시논", "들키면 놈들이 경보 종으로 달려갑니다. 종이 울리면 성문 경비가 늘어날 겁니다."],
+		["시논", "그럼 몸부터 푸시지요. 저기 서쪽에 술에 취해 졸고 있는 보초가 있습니다. 등 뒤로 다가가 소리 없이 처리해 보십시오."],
+	], _drill_sneak)
+
+
+# ── 튜토리얼: 목마 광장 연습 ─────────────────────────
+func _drill_sneak() -> void:
+	Game.set_objective(chapter_title, "연습 1/3 — 졸고 있는 보초를 조용히 처치하라")
+	Game.quest_marker = drill[0].global_position
+	_sneak_card = _tut("적의 등 뒤로 다가가 E — 조용히 처치\n바닥의 옅은 부채꼴이 적의 시야다. 그 안으로 들어가지 마라",
+		func(): return not drill[0].is_alive())
+
+
+func _drill_torch() -> void:
+	drill_phase = 2
+	Game.set_objective(chapter_title, "연습 2/3 — 동쪽 보초 옆의 횃불을 꺼라")
+	Game.quest_marker = drill_torch["point"].global_position
+	_tut("E — 횃불 끄기\n불빛 안에선 적이 멀리서도 본다. 어두우면 바로 앞까지 와야 본다",
+		func(): return not drill_torch["lit"] or not drill[1].is_alive())
+
+
+func _drill_bow() -> void:
+	drill_phase = 3
+	Game.set_objective(chapter_title, "연습 3/3 — 활로 보초를 쏘아라")
+	Game.quest_marker = drill[1].global_position
+	_tut("Q — 활로 바꾸기 · J/좌클릭을 누르고 있다가 떼면 발사\n눈치채지 못한 적은 한 발에 쓰러진다",
+		func(): return not drill[1].is_alive(), 0)
+
+
+func _drill_end() -> void:
+	drill_phase = 4
+	Game.say([
+		["시논", "훌륭하십니다. 이제 진짜입니다."],
 		["시논", "성문 앞 북쪽 가로 끝마다 꺼진 횃불이 있습니다. 불을 붙이시면 그걸 신호로 부하들을 보내겠습니다."],
+		["시논", "들키면 놈들이 경보 종으로 달려갑니다. 종이 울리면 성문 경비가 늘어날 겁니다."],
 		["시논", "그리고… 시장 동쪽 막다른 골목에 우리 정찰병이 묶여 있습니다. 뒷골목 성벽 밑 무기고를 태우면 놈들 궁수가 화살을 못 챙길 겁니다."],
 		["오디세우스", "대로, 뒷골목, 시장… 길은 셋이군. 소리 없이 가겠다."],
 	], func(): _set_step(1))
+
+
+## 연습 단계 진행: 하나 끝날 때마다 다음 연습으로. 들키면 싸우는 법을 알려 준다.
+func _update_drill() -> void:
+	if drill_phase == 1 and not _drill_swapped and drill[0].is_alive() and drill[0].alerted:
+		_drill_swapped = true
+		_sneak_card[0] = "들켰다! J/좌클릭 — 검 3연타로 쓰러뜨려라\n다음엔 등 뒤로, 걸어서 다가가라"
+		_sneak_card[2] = 1
+		if _tut_cur == _sneak_card:
+			Game.tutorial(_sneak_card[0], 1)
+	match drill_phase:
+		1:
+			if not drill[0].is_alive():
+				_drill_torch()
+		2:
+			if not drill_torch["lit"] or not drill[1].is_alive():
+				_drill_bow()
+		3:
+			if not drill[1].is_alive():
+				_drill_end()
+
+
+## 연습을 건너뛸 때(체크포인트·검증용 시작): 연습 보초를 치우고 연습을 끝낸 것으로 친다.
+func _end_drill() -> void:
+	drill_phase = 4
+	for d in drill:
+		if is_instance_valid(d):
+			d.queue_free()
+	drill.clear()
+	_tut_clear()
+
+
+# ── 튜토리얼 카드 ─────────────────────────────────────
+## 카드 하나를 줄에 넣는다. done이 참이 되거나 timeout(0이면 없음)이 지나면 ✓ 표시 뒤 다음 카드.
+## front면 기다리는 카드들 앞(앞에 끼운 카드들 뒤)에 넣는다. front가 아닌 카드는 그 단계(step)가 지나면 버린다.
+func _tut(text: String, done: Callable, slot := -1, timeout := 0.0, front := false) -> Array:
+	var card := [text, done, slot, timeout, -1 if front else step]
+	if front:
+		_tut_queue.insert(mini(_tut_front, _tut_queue.size()), card)
+		_tut_front += 1
+	else:
+		_tut_queue.append(card)
+	return card
+
+
+## 한 판에 한 번만 띄우는 카드
+func _tut_once(id: String, text: String, done: Callable, slot := -1, timeout := 0.0, front := false) -> void:
+	if _tut_seen.has(id):
+		return
+	_tut_seen[id] = true
+	_tut(text, done, slot, timeout, front)
+
+
+## 급한 카드(보스 등): 지금 카드를 미뤄 두고 바로 띄운다.
+func _tut_urgent(text: String, done: Callable, slot := -1, timeout := 0.0) -> void:
+	if not _tut_cur.is_empty():
+		_tut_queue.push_front(_tut_cur)
+		_tut_cur = []
+	_tut_queue.push_front([text, done, slot, timeout, step])
+	_tut_gap = 0.0
+
+
+func _tut_clear() -> void:
+	_tut_queue.clear()
+	_tut_front = 0
+	if not _tut_cur.is_empty():
+		_tut_cur = []
+		Game.tutorial_done()
+
+
+func _update_tutorial(delta: float) -> void:
+	if _tut_gap > 0.0:
+		_tut_gap -= delta
+		return
+	if _tut_cur.is_empty():
+		while not _tut_queue.is_empty() and _tut_queue[0][4] >= 0 and _tut_queue[0][4] != step:
+			_tut_queue.pop_front()
+		if _tut_queue.is_empty():
+			return
+		_tut_cur = _tut_queue.pop_front()
+		_tut_time = 0.0
+		_tut_front = 0
+		Game.tutorial(_tut_cur[0], _tut_cur[2])
+		return
+	_tut_time += delta
+	var done: Callable = _tut_cur[1]
+	var timeout: float = _tut_cur[3]
+	if (done.is_valid() and done.call()) or (timeout > 0.0 and _tut_time >= timeout):
+		_tut_cur = []
+		_tut_gap = 1.2
+		Game.tutorial_done()
+
+
+## 처음 겪는 일마다 카드: 의심 · 첫 전투(연타 → 막기 → 구르기 → 강공격) · 보스
+func _watch_firsts() -> void:
+	if step == 1 and not _tut_seen.has("sus"):
+		for e in enemies():
+			if not e.alerted and e.suspicion > 0.3 and e not in drill:
+				_tut_once("sus", "적 머리 위 ? — 의심하는 중\n시야(부채꼴) 밖 그늘로 물러나면 의심이 풀린다",
+					func(): return enemies().all(func(x): return x.alerted or x.suspicion <= 0.0), -1, 7.0)
+				break
+	if step in [1, 2] and not _tut_seen.has("atk") and enemies().any(func(e): return e.alerted and e not in drill):
+		_tut_once("atk", "싸움이다! J/좌클릭 — 검 3연타 (세 번째가 가장 세다)", func(): return player.state == Actor.St.ATTACK, 1, 10.0, true)
+		_tut_once("blk", "K/우클릭 — 방패 막기\n적이 붉게 깜빡이는 순간 막으면 패링: 적이 휘청인다",
+			func(): return player.state == Actor.St.BLOCK, 3, 12.0, true)
+		_tut_once("dodge", "Space — 구르기: 구르는 동안은 맞지 않는다 (스태미나 소모)",
+			func(): return player.state == Actor.St.DODGE, 4, 12.0, true)
+		_tut_once("heavy", "F — 강공격: 방패를 든 적의 방어를 부순다", func(): return player.heavy_cd > 0.0, 2, 12.0, true)
 
 
 func _send_signal(torch: Sprite2D) -> void:
@@ -493,6 +704,7 @@ func _send_winch_attack(i: int) -> void:
 		"또 몰려온다 — 궁수도 있다! 손을 떼고 쏘거나 3(집중 공격)으로 부하를 보내라"][i])
 	for g in groups[i]:
 		var e := _spawn(g[0], g[1])
+		e.raises_alarm = false
 		e.alert(player)
 
 
@@ -522,8 +734,10 @@ func on_boss_horn(_boss: Enemy) -> void:
 		var e := _spawn("trojan_sword", g)
 		e.raises_alarm = false
 		e.alert(player)
-		guard_group.append(e)
-	Game.show_hint("아게노르가 뿔나팔로 검병을 불렀다! 방패 돌진(붉은 길)은 옆으로 피하라 — 벽에 박히면 2초 무방비")
+		if step == 2:
+			guard_group.append(e)
+	var who: String = _boss.display_name.get_slice(" ", _boss.display_name.count(" "))
+	Game.show_hint("%s가 뿔나팔로 검병을 불렀다! 방패 돌진(붉은 길)은 옆으로 피하라 — 벽에 박히면 2초 무방비" % who)
 
 
 func _on_alarm(_bell: Dictionary) -> void:
@@ -541,14 +755,16 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if _done:
 		return
-	if not _combat_hint and step in [1, 2] and enemies().any(func(e): return e.alerted):
-		_combat_hint = true
-		Game.show_hint("들켰다! J/좌클릭 검 3연타 · F 강공격 · K/우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
+	_update_tutorial(delta)
+	_watch_firsts()
 	match step:
+		0:
+			_update_drill()
 		2:
 			if not _boss_hint and is_instance_valid(captain) and captain.alerted:
 				_boss_hint = true
-				Game.show_hint("아게노르: 3연타 뒤 크게 붉게 깜빡이면 내려찍기 — 막는 순간(K/우클릭) 패링하면 2초 무방비")
+				_tut_urgent("아게노르 — 3연타 뒤 크게 붉게 깜빡이면 내려찍기\n그 순간 K/우클릭으로 패링하면 2초 동안 무방비",
+					func(): return not is_instance_valid(captain) or not captain.is_alive(), 3, 18.0)
 			var n := _dead_count(guard_group)
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (%d/%d)" % [n, guard_group.size()] + _side_text())
 			if n >= guard_group.size():
@@ -557,6 +773,7 @@ func _process(delta: float) -> void:
 			if not gate_open:
 				_update_winch(delta)
 		4:
+			_update_army(delta)
 			if gate_open:
 				if not _cranked:
 					close_progress = maxf(0.0, close_progress - delta * 0.3)
@@ -579,18 +796,66 @@ func _open_gate() -> void:
 	winch_point.enabled = false
 	opened_once = true
 	_set_gate(true)
+	# 성문 바로 안을 지키는 선봉 넷(거점 둘레) + 뒤이어 줄지어 들어오는 대군
 	var allies := [["sword", "아카이아 검병"], ["spear", "아카이아 창병"], ["sword", "아카이아 검병"], ["spear", "아카이아 창병"]]
 	for i in allies.size():
-		var c := Companion.new()
-		c.setup(allies[i][0], allies[i][1])
-		c.independent = true
-		c.position = Iso.grid_to_world(Vector2(17.2 + (i % 2) * 1.2, 0.6 + (i / 2) * 1.0))
-		world.add_child(c)
+		var c := _add_soldier(allies[i][0], allies[i][1], Iso.grid_to_world(Vector2(17.2 + (i % 2) * 1.2, 0.6 + (i / 2) * 1.0)))
 		c.hold_anchor = zone_pos + Vector2(-30 + i * 20, 10 + (i % 2) * 8)
+	_army_left = ARMY_SIZE
+	_army_timer = 1.5
+	_ignite_city()
+	Sfx.play("cry", -2.0)
+	Game.shake(9.0)
+	if Game.hud:
+		Game.hud.show_title(["트로이 함락의 밤", "아카이아 대군 입성", "대군이 다 들어올 때까지 성문을 지켜라"])
 	Game.say([
 		["아카이아 병사", "성문이 열렸다! 이타카의 왕이 길을 열었다!"],
-		["오디세우스", "트로이의 반격이 올 것이다. 성문을 지켜라!"],
+		["아가멤논의 전령", "전군, 진격하라! 트로이는 오늘 밤 무너진다!"],
+		["오디세우스", "트로이 놈들이 전부 몰려올 것이다. 성문을 지켜라 — 우리 군이 다 들어올 때까지!"],
 	], func(): _set_step(4))
+
+
+func _add_soldier(role: String, who: String, at: Vector2) -> Companion:
+	var c := Companion.new()
+	c.setup(role, who)
+	c.independent = true
+	c.position = at
+	world.add_child(c)
+	return c
+
+
+## 대군이 성문 밖에서 한 명씩 들어와 맡은 자리(북쪽 가로·세 갈래 입구)로 달려간다.
+func _update_army(delta: float) -> void:
+	if _army_left <= 0:
+		return
+	_army_timer -= delta
+	if _army_timer > 0.0:
+		return
+	_army_timer = ARMY_INTERVAL
+	_army_left -= 1
+	var roles := ["sword", "spear", "sword", "archer"]
+	var role: String = roles[_army_in % roles.size()]
+	var at := Iso.grid_to_world(Vector2(17.3 + randf() * 1.4, 0.4 + randf() * 1.2))
+	var c := _add_soldier(role, "아카이아 " + Companion.ROLE_NAMES[role], at)
+	var post: Vector2 = ARMY_POSTS[_army_in % ARMY_POSTS.size()]
+	c.hold_anchor = Iso.grid_to_world(post + Vector2(randf_range(-0.6, 0.6), randf_range(-0.6, 0.6)))
+	_army_in += 1
+	if _army_in == 1:
+		Fx.text(at + Vector2(0, -50), "아카이아 대군!", Color(0.6, 0.85, 1.0))
+	if _army_left == 0:
+		Game.show_hint("아카이아 대군 %d명이 성 안에 들어왔다! 트로이군을 막아라" % (ARMY_SIZE + 4))
+
+
+## 성문이 열리면 불이 도시로 번진다(정해 둔 집에 차례로 불).
+func _ignite_city() -> void:
+	var k := 0
+	for i in SPREAD_FIRE:
+		if i >= _houses.size() or _houses[i] == null:
+			continue
+		var h: Array = _houses[i]
+		_houses[i] = null
+		get_tree().create_timer(0.6 + k * 0.7).timeout.connect(func(): ignite_house(h[0], h[1]))
+		k += 1
 
 
 func _update_capture(delta: float) -> void:
@@ -601,45 +866,73 @@ func _update_capture(delta: float) -> void:
 			contested = true
 			break
 	var calm := not enemies().any(func(e): return e.alerted)
+	var cap_max := 100.0
+	if waves_sent >= 4 and is_instance_valid(prince) and prince.is_alive():
+		cap_max = PRINCE_CAP
 	if p_in and not contested and gate_open:
-		capture = min(100.0, capture + delta * (CAPTURE_CALM if calm else CAPTURE_RATE))
-	var wave_at := [0.0, 30.0, 62.0]
+		capture = minf(cap_max, capture + delta * (CAPTURE_CALM if calm else CAPTURE_RATE))
+	_update_tide(delta)
+	var wave_at := [0.0, 22.0, 45.0, 70.0]
 	if waves_sent < wave_at.size() and capture >= wave_at[waves_sent]:
 		_send_wave(waves_sent)
 		waves_sent += 1
 	var status := "" if p_in else "  — 원 안으로 들어가라"
 	if contested:
 		status = "  — 적이 거점에 있다!"
+	if capture >= PRINCE_CAP - 0.01 and cap_max < 100.0:
+		status = "\n왕자 데이포보스를 쓰러뜨려라!"
 	if not gate_open:
 		status = "\n성문이 닫혔다! 권양기를 다시 돌려라  %d%%" % int(winch_progress * 100.0)
 	elif close_progress > 0.0:
 		status += "\n트로이군이 권양기를 돌린다! 성문이 닫힌다  %d%%" % int(close_progress * 100.0)
 	Game.set_objective(chapter_title, "성문 거점을 사수하라  (%d%%)%s" % [int(capture), status])
+	if waves_sent >= 4 and is_instance_valid(prince) and not prince.is_alive() and not _routed:
+		_routed = true
+		_rout()
 	if capture >= 100.0:
 		_finish()
 
 
-## 반격 3파: [종류, 칸, 역할("wall" 방패벽 · "perch" 높은 곳 궁수 · "crank" 권양기 돌격 · "" 보통)]
+## 반격 4파: [종류, 칸, 역할("wall" 방패벽 · "perch" 높은 곳 궁수 · "crank" 권양기 돌격 · "prince" 총대장 · "" 보통)]
+## 세 갈래(뒷골목 x4.5 · 대로 x18.5 · 시장 x30)에서 한꺼번에 몰려온다. 마지막 파는 왕자 데이포보스가 이끄는 총공세.
 func _send_wave(i: int) -> void:
-	var waves := [
-		[["trojan_spear", Vector2(16.5, 17.0), "wall"], ["trojan_sword", Vector2(17.5, 17.0), "wall"],
-			["trojan_sword", Vector2(18.5, 17.0), "wall"], ["trojan_spear", Vector2(19.5, 17.0), "wall"]],
-		[["trojan_archer", Vector2(PERCH_CELLS[0]) + Vector2(0.5, 0.5), "perch"], ["trojan_archer", Vector2(PERCH_CELLS[1]) + Vector2(0.5, 0.5), "perch"],
-			["trojan_sword", Vector2(7.0, 11.0), ""], ["trojan_sword", Vector2(29.0, 11.0), ""]],
-		[["trojan_sword", Vector2(7.0, 11.0), "crank"], ["trojan_sword", Vector2(29.5, 11.0), "crank"], ["trojan_sword", Vector2(18.5, 15.0), "crank"],
-			["trojan_spear", Vector2(17.5, 16.0), ""], ["trojan_spear", Vector2(19.5, 16.0), ""],
-			["trojan_archer", Vector2(10.0, 10.5), ""], ["trojan_archer", Vector2(26.5, 10.5), ""]],
-	]
+	var waves := []
+	var w0 := []
+	for row in 2:
+		for col in 4:
+			w0.append([["trojan_spear", "trojan_sword"][(col + row) % 2], Vector2(16.5 + col, 17.0 + row), "wall"])
+	w0 += _route_squad(["trojan_sword", "trojan_spear"], 20.0, [4.5, 30.0])
+	waves.append(w0)
+	var w1 := [["trojan_archer", Vector2(PERCH_CELLS[0]) + Vector2(0.5, 0.5), "perch"], ["trojan_archer", Vector2(PERCH_CELLS[1]) + Vector2(0.5, 0.5), "perch"]]
+	w1 += _route_squad(["trojan_sword", "trojan_sword", "trojan_archer"], 18.0)
+	waves.append(w1)
+	var w2 := [["trojan_sword", Vector2(7.0, 11.0), "crank"], ["trojan_sword", Vector2(29.5, 11.0), "crank"], ["trojan_sword", Vector2(18.5, 15.0), "crank"]]
+	w2 += _route_squad(["trojan_spear", "trojan_sword", "trojan_spear", "trojan_archer"], 18.0)
+	waves.append(w2)
+	var w3 := [["trojan_prince", Vector2(18.5, 19.0), "prince"]]
+	w3 += _route_squad(["trojan_sword", "trojan_spear", "trojan_sword", "trojan_archer"], 21.0)
+	waves.append(w3)
 	var hints := [
-		"반격 1/3 — 방패벽이 밀고 온다! 정면은 막힌다: F 강공격으로 방패를 부숴라",
-		"반격 2/3 — 짐더미 위의 궁수! Q 활로 쏘거나 3(집중 공격)으로 부하를 보내라",
-		"반격 3/3 — 트로이군이 권양기로 달려간다! 돌리면 성문이 닫힌다 — 막아라",
+		"반격 1/4 — 트로이군이 세 갈래로 몰려온다! 대로엔 방패벽: F 강공격으로 방패를 부숴라",
+		"반격 2/4 — 짐더미 위의 궁수! Q 활로 쏘거나 3(집중 공격)으로 부하를 보내라",
+		"반격 3/4 — 트로이군이 권양기로 달려간다! 돌리면 성문이 닫힌다 — 막아라",
+		"반격 4/4 — 트로이 왕자 데이포보스의 총공세! 왕자를 쓰러뜨리면 트로이군이 무너진다",
 	]
-	Game.show_hint(hints[i])
+	Game.show_hint(hints[i] + ("  (무기고가 타서 궁수가 줄었다)" if armory_burned and i >= 2 else ""))
+	# 반격 사이 숨 돌리기: 대군의 함성에 오디세우스가 기운을 차린다(체력 회복·함성 다시 쓸 수 있음)
+	if i > 0 and player.is_alive():
+		player.heal(WAVE_HEAL)
+		player.skill_cd = 0.0
+		Fx.text(player.global_position + Vector2(0, -70), "대군의 함성 — 기운이 솟는다", Color(0.6, 1.0, 0.6))
+	Sfx.play("cry", -6.0)
+	Game.shake(4.0)
+	_tide_left = TIDE_BUDGET[i]
 	for w in waves[i]:
-		if i == 2 and w[0] == "trojan_archer" and armory_burned:
+		if i >= 2 and w[0] == "trojan_archer" and armory_burned:
 			continue
 		var e := _spawn(w[0], w[1])
+		e.hunts_player = true
+		e.raises_alarm = false
 		match w[2]:
 			"wall":
 				e.shield_wall = true
@@ -649,9 +942,54 @@ func _send_wave(i: int) -> void:
 			"crank":
 				e.start_crank(Iso.grid_to_world(WINCH_STAND))
 				continue
+			"prince":
+				prince = e
 		e.alert(player)
-	if i == 2 and armory_burned:
-		Game.show_hint(hints[i] + "  (무기고가 타서 궁수가 없다)")
+	if i == 3:
+		_tut_seen["prince"] = true
+		_tut_urgent("왕자 데이포보스 — 아게노르처럼 붉게 깜빡이면 패링(K/우클릭)\n쓰러뜨리면 남은 트로이군이 무너진다",
+			func(): return not is_instance_valid(prince) or not prince.is_alive(), 3, 20.0)
+
+
+## 세 갈래 길 입구마다 같은 무리를 하나씩: kinds를 y 줄에서 x로 조금씩 벌려 세운다.
+func _route_squad(kinds: Array, y: float, xs := [4.5, 18.5, 30.0]) -> Array:
+	var out := []
+	for x in xs:
+		for j in kinds.size():
+			out.append([kinds[j], Vector2(x + (j % 2) * 1.0 - 0.5, y + j * 0.9), ""])
+	return out
+
+
+## 끝없이 몰려오는 트로이군: 반격이 시작되면 수가 줄 때마다 세 갈래 입구에서 무리를 더 보낸다(왕자가 쓰러지면 멈춤).
+func _update_tide(delta: float) -> void:
+	if waves_sent == 0 or _routed:
+		return
+	_tide_timer -= delta
+	if _tide_timer > 0.0:
+		return
+	_tide_timer = TIDE_INTERVAL
+	if _tide_left <= 0 or enemies().size() >= TIDE_MIN[waves_sent - 1]:
+		return
+	_tide_left -= 3
+	var x: float = [4.5, 18.5, 30.0][randi() % 3]
+	var kinds := ["trojan_sword", "trojan_spear", "trojan_sword"]
+	for j in kinds.size():
+		var e := _spawn(kinds[j], Vector2(x + (j % 2) - 0.5, 21.0 + j * 0.9))
+		e.hunts_player = true
+		e.raises_alarm = false
+		e.alert(player)
+
+
+## 왕자가 쓰러지면 남은 트로이군이 무너진다: 모두 휘청이며 크게 다치고, 거점 점령이 곧 끝난다.
+func _rout() -> void:
+	Game.show_hint("데이포보스가 쓰러졌다! 트로이군이 무너진다!")
+	Fx.text(player.global_position + Vector2(0, -70), "트로이군 붕괴!", Color(1, 0.85, 0.35))
+	Sfx.play("cry", -2.0)
+	Game.shake(6.0)
+	for e in enemies():
+		e.take_hit(e.max_hp * 0.6, player, 40.0)
+		e.stagger(1.5)
+	capture = maxf(capture, 92.0)
 
 
 func _finish() -> void:
@@ -662,8 +1000,11 @@ func _finish() -> void:
 	Game.stats["armory"] = armory_burned
 	for c in squad.members:
 		c.revive(0.6)
-	Game.set_objective(chapter_title, "성문 점령 완료")
+	Game.set_objective(chapter_title, "성문 점령 완료 — 트로이 함락")
+	if Game.hud:
+		Game.hud.show_title(["CHAPTER 1 CLEAR", "트로이 함락", "십 년의 전쟁이 끝났다"])
 	Game.say([
+		["아카이아 병사", "트로이가 무너졌다! 오디세우스! 오디세우스!"],
 		["오디세우스", "트로이의 성문은 우리 것이다. 십 년의 전쟁이 오늘 밤 끝난다."],
 		["에우릴로코스", "장군, 이제… 이타카로 돌아가는 겁니까?"],
 		["오디세우스", "그래. 배를 준비해라. 고향이 기다린다."],

@@ -7,6 +7,8 @@ signal boss_changed(actor)
 signal dialogue_requested(lines: Array, on_done: Callable)
 signal chapter_cleared(stats: Dictionary)
 signal player_died
+## 튜토리얼 카드: text가 비면 닫기, done이면 ✓ 표시 뒤 닫힘. slot은 하단 슬롯 번호(-1 없음, 깜빡여 알려 줌)
+signal tutorial_changed(text: String, done: bool, slot: int)
 
 var level: Node = null
 var player: Node = null
@@ -112,6 +114,15 @@ func set_objective(title: String, text: String) -> void:
 
 func show_hint(text: String) -> void:
 	hint.emit(text)
+
+
+## 튜토리얼 카드 띄우기(한 번에 하나). 끝나면 tutorial_done()
+func tutorial(text: String, slot := -1) -> void:
+	tutorial_changed.emit(text, false, slot)
+
+
+func tutorial_done() -> void:
+	tutorial_changed.emit("", true, -1)
 
 
 func say(lines: Array, on_done: Callable = Callable()) -> void:

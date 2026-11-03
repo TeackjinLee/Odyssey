@@ -29,6 +29,11 @@ var overlay := ""
 var overlay_stats: Dictionary = {}
 var _portraits := {}
 var _buttons: Array = []
+## 튜토리얼 카드: 글, ✓ 표시 남은 시간, 깜빡일 하단 슬롯
+var tut_text := ""
+var tut_done := 0.0
+var tut_slot := -1
+var tut_t := 0.0
 
 
 func _ready() -> void:
@@ -46,6 +51,20 @@ func _ready() -> void:
 	Game.dialogue_requested.connect(_on_dialogue)
 	Game.chapter_cleared.connect(func(st): _show_overlay("clear", st))
 	Game.player_died.connect(func(): _show_overlay("dead", Game.stats))
+	Game.tutorial_changed.connect(_on_tutorial)
+
+
+func _on_tutorial(text: String, done: bool, slot: int) -> void:
+	if done:
+		if tut_text != "":
+			tut_done = 1.1
+			Sfx.play("ui", -6.0)
+		tut_slot = -1
+		return
+	tut_text = text
+	tut_done = 0.0
+	tut_slot = slot
+	tut_t = 0.0
 
 
 func show_title(lines: Array) -> void:
@@ -56,6 +75,11 @@ func show_title(lines: Array) -> void:
 func _process(delta: float) -> void:
 	hint_time = max(0.0, hint_time - delta)
 	title_time = max(0.0, title_time - delta)
+	tut_t += delta
+	if tut_done > 0.0:
+		tut_done -= delta
+		if tut_done <= 0.0:
+			tut_text = ""
 	if dialogue.size() > 0 and Game.autoplay:
 		dialogue_auto += delta
 		if dialogue_auto > 0.25:
@@ -156,6 +180,7 @@ func _draw_hud() -> void:
 		_draw_slots(p)
 		_draw_boss()
 		_draw_interact(p)
+		_draw_tutorial()
 		_draw_hint()
 	_draw_title()
 	if show_help:
@@ -277,6 +302,9 @@ func _draw_slots(p: Player) -> void:
 		var r := Rect2(x0 + i * (w + 4), y, w, w)
 		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
 		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
+		if i == tut_slot and tut_done <= 0.0:
+			var pulse := 0.5 + 0.5 * sin(tut_t * 8.0)
+			canvas.draw_rect(r.grow(2.0 + pulse * 2.0), Color(1.0, 0.9, 0.4, 0.5 + 0.5 * pulse), false, 1.5)
 		var cd: float = s[2]
 		if cd > 0.0:
 			canvas.draw_rect(Rect2(r.position.x, r.position.y + w * (1.0 - cd), w, w * cd), Color(0, 0, 0, 0.65))
@@ -309,13 +337,33 @@ func _draw_interact(p: Player) -> void:
 		_bar(Rect2(r.position.x + 2, r.end.y + 2, tw - 4, 3), p.interact_progress / it.hold_time, GOLD)
 
 
+## 튜토리얼 카드: 하단 슬롯 위. 할 일을 마치면 초록 ✓로 바뀌었다 사라진다.
+func _draw_tutorial() -> void:
+	if tut_text == "":
+		return
+	var done := tut_done > 0.0
+	var a: float = clamp(tut_done, 0.0, 1.0) if done else clamp(tut_t * 4.0, 0.0, 1.0)
+	var lines := tut_text.count("\n") + 1
+	var h := 18.0 + lines * 11.0
+	var r := Rect2(160, 274 - h, 320, h)
+	canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.86 * a))
+	var edge := Color(0.45, 0.95, 0.5, a) if done else Color(GOLD, a * (0.75 + 0.25 * sin(tut_t * 5.0)))
+	canvas.draw_rect(r, edge, false, 1.0)
+	_text(r.position + Vector2(8, 11), "✓ 완료" if done else "튜토리얼", 7, edge)
+	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(8, 24), tut_text, HORIZONTAL_ALIGNMENT_LEFT, 304, 8, lines,
+		Color(0.7, 0.7, 0.7, a) if done else Color(1, 1, 1, a))
+
+
 func _draw_hint() -> void:
 	if hint_time <= 0.0 or hint_text == "":
 		return
 	var a: float = clamp(hint_time, 0.0, 1.0)
-	var r := Rect2(70, 290, 500, 18)
+	# 길면 두 줄로 접는다(아래 슬롯과 겹치지 않게 위로 늘림)
+	var two: bool = Game.ui_font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > 490.0
+	var r := Rect2(70, 290 - (11 if two else 0), 500, 29 if two else 18)
 	canvas.draw_rect(r, Color(0, 0, 0, 0.55 * a))
-	_text(Vector2(70, 302), hint_text, 8, Color(1, 0.92, 0.7, a), HORIZONTAL_ALIGNMENT_CENTER, 500)
+	canvas.draw_multiline_string(Game.ui_font, Vector2(75, r.position.y + 12), hint_text, HORIZONTAL_ALIGNMENT_CENTER, 490, 8, 2,
+		Color(1, 0.92, 0.7, a))
 
 
 func _draw_title() -> void:

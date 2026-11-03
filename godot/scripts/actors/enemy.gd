@@ -16,6 +16,8 @@ const KINDS := {
 	"trojan_spear": {"name": "트로이 창병", "hp": 38.0, "speed": 52.0, "reach": 34.0, "dmg": 10.0, "windup": 0.55, "dur": 0.42, "arc": 45.0, "shield": true, "cd": 1.6},
 	"trojan_archer": {"name": "트로이 궁수", "hp": 26.0, "speed": 50.0, "reach": 160.0, "dmg": 7.0, "windup": 0.65, "dur": 0.3, "arc": 0.0, "shield": false, "cd": 2.2, "ranged": true},
 	"trojan_captain": {"name": "성문 수비대장 아게노르", "hp": 300.0, "speed": 50.0, "reach": 27.0, "dmg": 13.0, "windup": 0.6, "dur": 0.45, "arc": 140.0, "shield": true, "cd": 0.9, "boss": true},
+	## 마지막 총공세를 이끄는 트로이 왕자(그림은 아게노르 것을 쓴다)
+	"trojan_prince": {"name": "트로이 왕자 데이포보스", "sheet": "trojan_captain", "hp": 320.0, "speed": 54.0, "reach": 27.0, "dmg": 14.0, "windup": 0.55, "dur": 0.45, "arc": 140.0, "shield": true, "cd": 0.85, "boss": true},
 }
 
 var kind := "trojan_sword"
@@ -43,6 +45,8 @@ var errand_time := 0.0
 var takedown: Interactable
 var _quiet := false
 var raises_alarm := true
+## 반격군: 노리던 상대가 쓰러지면 멀리 있어도 가장 가까운 그리스군을 쫓는다
+var hunts_player := false
 var bell: Dictionary = {}
 var shield_wall := false
 var perch := false
@@ -89,7 +93,7 @@ func _attackers_on(t: Actor) -> int:
 func setup(k: String) -> void:
 	kind = k
 	cfg = KINDS[k]
-	sheet = k
+	sheet = cfg.get("sheet", k)
 	team = Team.TROJAN
 	display_name = cfg["name"]
 	max_hp = cfg["hp"]
@@ -283,8 +287,16 @@ func _pick_target() -> void:
 			best = a
 	if best:
 		target = best
-	elif target and not target.is_alive():
+	elif target == null or not target.is_alive():
 		target = null
+		# 몰려오는 반격군(hunts_player)은 노리던 상대가 쓰러지면 거리와 상관없이 가장 가까운 그리스군을 쫓는다
+		# (태어난 자리에 멍하니 서 있지 않게. 오디세우스 한 명에게만 몰리지 않게 부하·대군도 노린다)
+		if hunts_player:
+			for a in Game.level.greeks():
+				var d := global_position.distance_to(a.global_position)
+				if d < best_d:
+					best_d = d
+					target = a
 
 
 # ── 잠입: 보기·듣기·의심 ──────────────────────────────

@@ -263,8 +263,20 @@ func add_embers(parent: Node2D, local_pos: Vector2, scale_k := 1.0) -> CPUPartic
 
 ## 불타는 집: 그을린 지붕 그림에 불꽃 여러 개(자리는 env.json의 fire_spots)와 연기·불티, 큰 불빛 하나
 func add_burning_house(prop_name: String, cell: Vector2i) -> Sprite2D:
+	var s := add_prop(prop_name + "_burnt", cell)
+	return _set_house_fire(s, prop_name + "_burnt")
+
+
+## 이미 세운 집에 불을 붙인다(불탄 그림으로 바꾸고 불꽃·연기·빛). 성문이 열린 뒤 불이 번지는 연출용.
+func ignite_house(s: Sprite2D, prop_name: String) -> void:
 	var burnt := prop_name + "_burnt"
-	var s := add_prop(burnt, cell)
+	var meta: Dictionary = AssetLibrary.prop(burnt)
+	s.texture = AssetLibrary.prop_texture(burnt)
+	s.offset = -Vector2(meta["anchor"][0], meta["anchor"][1])
+	_set_house_fire(s, burnt)
+
+
+func _set_house_fire(s: Sprite2D, burnt: String) -> Sprite2D:
 	var spots: Array = AssetLibrary.prop(burnt).get("fire_spots", [])
 	if spots.is_empty():
 		return s

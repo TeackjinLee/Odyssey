@@ -29,8 +29,8 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 godot --path .                                          # 타이틀부터
 godot --path . -- --play                                # 바로 챕터 1
 godot --headless --path . --import                      # 그림 가져오기(처음 한 번)
-godot --headless --path . -- --auto --quit-after=220    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
-godot --headless --path . -- --auto=stealth --quit-after=300   # 잠입 봇, alarms 0이어야 함
+godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
+godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
 godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch도 있음)
 python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
@@ -40,6 +40,8 @@ python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방
 ```
 
 테스트 프레임워크는 없다. 변경 확인은 `--auto` 봇 클리어(일반·잠입)와 직접 플레이·`--shot` 화면 저장으로 한다.
+`--fixed-fps 60`을 붙이면 실시간을 기다리지 않아 빠르고, 느린 기계에서 프레임이 떨어져 봇이 지는 일이 없다. 마지막 전투에 무작위가 있으니 2~3번 돌린다.
+화면이 없는 곳에서 `--shot`은 `xvfb-run -a godot --path . --rendering-driver opengl3 ...`로 찍는다.
 
 ## 핵심 규칙 (자세한 것은 godot/README.md)
 
