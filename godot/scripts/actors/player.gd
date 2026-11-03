@@ -21,8 +21,8 @@ const SKILL_CD := 20.0
 const DECOY_CD := 6.0
 const DECOY_RANGE := 170.0
 const HEAVY_CD := 1.2
-## 이 키를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
-const KEY_AIM_KEYS := [KEY_J, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
+## 이 키(+ 공격·방패 키)를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
+const KEY_AIM_KEYS := [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 ## 키보드 조준이 적을 찾는 거리와 반각(검 / 활·부대 명령)
 const KEY_AIM_NEAR := [60.0, 70.0]
 const KEY_AIM_FAR := [320.0, 40.0]
@@ -51,6 +51,8 @@ var aim_lock: Actor = null
 ## 판정 직후 남는 범위: [spec, 남은 시간, 위치, 바라보는 방향]
 var _reach_flash: Array = []
 var weapons: WeaponLayer
+## 연출(Game.cutscene)에서 걸어갈 자리 (INF면 제자리)
+var script_goal := Vector2.INF
 
 
 func _ready() -> void:
@@ -88,11 +90,18 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		if event.pressed:
 			aim_mouse = true
-	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in KEY_AIM_KEYS:
+	elif event is InputEventKey and event.pressed and not event.echo \
+			and (event.physical_keycode in KEY_AIM_KEYS or event.is_action("attack") or event.is_action("block")):
 		aim_mouse = false
 
 
 func _read_input() -> void:
+	if Game.cutscene:
+		inp = _idle_input()
+		if script_goal != Vector2.INF:
+			var v := nav_velocity(script_goal, 1.0, get_physics_process_delta_time(), 6.0)
+			inp["move"] = v.normalized() if v.length() > 0.01 else Vector2.ZERO
+		return
 	if Game.autoplay:
 		inp = _bot_input()
 		return
@@ -505,10 +514,15 @@ func _die() -> void:
 
 
 # ── 자동 플레이(검증용: --auto) ──────────────────────
-func _bot_input() -> Dictionary:
-	var out := {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
+## 아무것도 누르지 않은 입력
+func _idle_input() -> Dictionary:
+	return {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
 		"dodge": false, "heavy": false, "switch": false, "interact": false, "interact_held": false, "skill": false,
 		"decoy": false, "aim": global_position + facing * 20.0}
+
+
+func _bot_input() -> Dictionary:
+	var out := _idle_input()
 	if Game.stealth_bot:
 		var sneak := _bot_sneak(out)
 		if not sneak.is_empty():

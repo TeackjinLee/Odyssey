@@ -3,7 +3,8 @@ extends Node2D
 ## 챕터 맵의 공통 틀: 바닥 타일, 막힌 칸(충돌·길찾기), 소품 배치, 깊이 정렬, 가림 투명화, 조명, 카메라.
 ## 챕터는 이 클래스를 상속해 build()(지형·소품)와 start()(인물·퀘스트)만 채운다.
 
-const FLOOR_ROWS := {"cobble": 0, "plaza": 1, "dirt": 2, "grass": 3, "road": 4, "ash": 5}
+## 바닥 이름 → floor_atlas 줄 번호 (env.json floor_atlas.rows 순서. water는 지나갈 수 없는 바다)
+var FLOOR_ROWS := {}
 
 signal alarm_rung(bell: Dictionary)
 
@@ -30,6 +31,8 @@ var squad: Squad
 var chapter_title := ""
 var _source_id := 0
 var _cam_pos := Vector2.ZERO
+## 연출: 카메라가 오디세우스 대신 따라갈 것(null이면 오디세우스)
+var camera_target: Node2D = null
 
 
 func _ready() -> void:
@@ -122,7 +125,10 @@ func _make_tileset() -> TileSet:
 	src.texture_region_size = Vector2i(64, 32)
 	_source_id = ts.add_source(src)
 	var variants: int = int(AssetLibrary.env()["floor_atlas"]["variants"])
-	for r in FLOOR_ROWS.size():
+	var rows: Array = AssetLibrary.env()["floor_atlas"]["rows"]
+	for r in rows.size():
+		FLOOR_ROWS[rows[r]] = r
+	for r in rows.size():
 		for v in variants:
 			src.create_tile(Vector2i(v, r))
 	return ts
@@ -478,6 +484,8 @@ func _update_camera(delta: float) -> void:
 	if player == null:
 		return
 	var target := player.global_position + Vector2(0, -16)
+	if camera_target and is_instance_valid(camera_target):
+		target = camera_target.global_position + Vector2(0, -30)
 	_cam_pos = _cam_pos.lerp(target, 1.0 - exp(-8.0 * delta))
 	camera.global_position = _cam_pos.round()
 	Game.shake_amount = max(0.0, Game.shake_amount - 30.0 * delta)

@@ -21,7 +21,7 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 | `godot/docs/ART_PLAN.md` | 화풍 규칙·크기 규격·전체 그림 목록(ID·상태)·요청 순서 |
 | `godot/docs/sprite_request/` | 그림 요청: 오디세우스 차림(`OUTFIT.md`), 요청 키트(`motion_kit/`), 요청 묶음(`attack_requests/`·`action_requests/`), 병사·환경·UI 프롬프트 |
 | `godot/docs/references/` | 사용자가 준 참고 이미지와 `INDEX.md` |
-| `godot/docs/maps/` | 맵 설계(챕터 1 개편안 `CH1_TROY.md`, 배치도는 `tools/gen_map_plan.py`) |
+| `godot/docs/maps/` | 맵 설계(챕터 1 맵 `CH1_TROY.md` — 개편 반영, 배치도는 `tools/gen_map_plan.py`) |
 
 ## 명령 (godot/ 안에서)
 
@@ -32,14 +32,17 @@ godot --headless --path . --import                      # 그림 가져오기(�
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
 godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
-godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch도 있음)
+godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음)
+godot --path . -- --play --god --at=37,38                # 오디세우스를 그 칸에 옮겨 맵 보기 (--menu=pause|settings, --continue)
 python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
+python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로)
 python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
 python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일
 python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장
 ```
 
 테스트 프레임워크는 없다. 변경 확인은 `--auto` 봇 클리어(일반·잠입)와 직접 플레이·`--shot` 화면 저장으로 한다.
+봇 결과 `REPORT`의 `ending`이 true면 엔딩(부두 → 출항)까지 끝난 것. 봇은 `user://` 저장 파일을 쓰지 않는다.
 `--fixed-fps 60`을 붙이면 실시간을 기다리지 않아 빠르고, 느린 기계에서 프레임이 떨어져 봇이 지는 일이 없다. 마지막 전투에 무작위가 있으니 2~3번 돌린다.
 화면이 없는 곳에서 `--shot`은 `xvfb-run -a godot --path . --rendering-driver opengl3 ...`로 찍는다.
 

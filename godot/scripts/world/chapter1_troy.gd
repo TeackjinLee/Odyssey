@@ -2,11 +2,11 @@ class_name Chapter1Troy
 extends IsoLevel
 ## CHAPTER 1 — 트로이의 목마.
 ## 밤, 불타는 트로이. 오디세우스가 혼자 목마에서 내려(부하는 목마 안에 대기) 세 갈래 길 —
-## 횃불이 늘어선 대로, 어두운 서쪽 뒷골목, 짐더미가 쌓인 동쪽 시장 — 중 하나로 성문 앞 북쪽 가로까지 몰래 간다.
+## 횃불이 늘어선 대로, 어두운 서쪽 뒷골목, 불타는 구역을 지나 시장으로 이어지는 동쪽 길 — 중 하나로 성문 앞 북쪽 가로까지 몰래 간다.
 ## 가로 끝의 꺼진 횃불에 불을 붙여 시논에게 신호를 보내면 부하들이 합류하고,
 ## 성문 경비대(수비대장) 처치 → 권양기로 성문 개방 → 아카이아 증원군과 성문 거점 사수.
 ## 들키면 경보병이 갈래마다 하나 있는 경보 종으로 달려가고, 종이 울리면 성문 경비가 2명씩 는다.
-## 골라서 하는 목표: 시장 동쪽 막다른 골목의 묶인 정찰병 구출(부하 +1), 뒷골목 성벽 밑 무기고 불태우기(마지막 반격에 궁수 없음).
+## 골라서 하는 목표: 바다 문 밖 부두에 묶인 정찰병 구출(부하 +1), 뒷골목 성벽 밑 무기고 불태우기(마지막 반격에 궁수 없음).
 ## 권양기는 E를 누르고 있는 동안만 돌아가고 손을 떼면 성문이 다시 내려간다(부하를 2 위치 사수로 곁에 세워 지킴).
 ## 사수 반격 3파: 방패벽 → 높은 곳 궁수 → 권양기 돌격(트로이군이 권양기를 돌려 성문을 닫으면 다시 열어야 함).
 ## 체크포인트: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 죽으면 그 자리부터 다시 하고, 골라서 하는 목표는 이룬 그대로 둔다.
@@ -15,20 +15,27 @@ extends IsoLevel
 ## 성문이 열리면 아카이아 대군이 줄지어 들어오고(ARMY_SIZE), 불이 도시로 번지며, 트로이군이 네 차례 대규모로 반격한다
 ## (방패벽 → 궁수 → 권양기 돌격 → 왕자 데이포보스의 총공세).
 ##
-## 격자: x는 화면 오른쪽 아래, y는 왼쪽 아래로 늘어난다. 바깥 성벽은 y=3 줄과 x=2 열(화면 위쪽 두 변).
-## 위(북)부터: 성문 광장 y4~9 · 북쪽 가로 y10~12 · 세 갈래 y13~37(뒷골목 x3~6, 대로 x16~20, 시장 x27~33,
-## 가운데 가로 y22~25로 서로 이어짐) · 목마 광장 y38~48.
+## 격자(48×50): x는 화면 오른쪽 아래, y는 왼쪽 아래로 늘어난다. 성벽은 네 변(y=3 · x=2 · x=35 · y=49),
+## 앞쪽 두 변(x=35, y=49)은 오디세우스를 가리면 반투명해진다. x=36부터는 바위 해안과 바다(지나갈 수 없음, 엔딩에 배가 나아가는 곳).
+## 위(북)부터: 성문 광장 y4~9(서쪽 나무 종탑, 동쪽 아테나 신전) · 북쪽 가로 y10~12 ·
+## 세 갈래 y13~37(뒷골목 x3~6, 대로 x16~20, 동쪽 길 x27~32 = 위쪽 불타는 구역 + 아래쪽 시장,
+## 가운데 분수 광장 y22~25로 서로 이어짐) · 목마 광장 y38~48(목마는 서쪽).
+## 시장 남쪽 골목(y33~34) 끝의 바다 문(35,33)을 나가면 부두 — 묶인 정찰병은 가운데 부두 끝에 있다.
 
 const GATE_CELLS := [Vector2i(17, 3), Vector2i(18, 3)]
 const ZONE_CELL := Vector2(18.0, 6.5)
 const ZONE_RADIUS := 56.0
 ## 신호 횃불 자리: 갈래마다 하나 (뒷골목 · 대로 · 시장 끝)
 const SIGNAL_CELLS := [Vector2i(4, 12), Vector2i(15, 12), Vector2i(33, 11)]
-## 묶인 정찰병 자리(시장 동쪽 막다른 골목)와 무기고(뒷골목 성벽 밑, 화로 옆)
-const SCOUT_CELL := Vector2(34.3, 27.8)
+## 묶인 정찰병 자리(바다 문 밖 가운데 부두 끝)와 무기고(뒷골목 성벽 밑, 화로 옆)
+const SCOUT_CELL := Vector2(40.4, 38.6)
+## 동쪽 성벽의 바다 문(시장 남쪽 골목 끝 → 부두), 목마(서쪽 성벽 가까이, 4×2), 분수(대로 한가운데, 2×2)
+const SEA_GATE := Vector2i(35, 33)
+const HORSE_CELL := Vector2i(9, 41)
+const FOUNTAIN_CELL := Vector2i(17, 23)
 const ARMORY_CELLS := [Vector2i(3, 22), Vector2i(3, 23), Vector2i(3, 24)]
-## 높은 곳 궁수가 올라서는 짐더미(북쪽 가로 양쪽)
-const PERCH_CELLS := [Vector2i(12, 10), Vector2i(24, 10)]
+## 높은 곳 궁수가 올라서는 자리(북쪽 가로 서쪽 짐더미 · 신전 계단 가운데)
+const PERCH_CELLS := [Vector2i(12, 10), Vector2i(30, 8)]
 ## 권양기: 처음 여는 데 / 다시 여는 데 / 트로이군이 닫는 데 걸리는 시간, 손을 떼면 내려가는 빠르기(1초에)
 const WINCH_TIME := 12.0
 const REOPEN_TIME := 5.0
@@ -39,8 +46,10 @@ const WINCH_STAND := Vector2(20.5, 6.6)
 ## 거점 점령 속도(초당 %): 싸우는 동안 / 알아챈 적이 없을 때(파 사이에 오래 서 있지 않게)
 const CAPTURE_RATE := 1.9
 const CAPTURE_CALM := 3.2
+## 오디세우스가 사다리로 내려와 서는 자리(목마 동쪽 옆)
+const START_CELL := Vector2(13.8, 43.2)
 ## 연습 보초 자리: 졸고 있는 보초(조용히 처치 연습) · 횃불 빛 안의 보초(활 연습)와 그 옆 횃불
-const DRILL_SNEAK := Vector2(12.5, 45.0)
+const DRILL_SNEAK := Vector2(21.5, 44.5)
 const DRILL_BOW := Vector2(29.5, 45.5)
 const DRILL_TORCH := Vector2i(27, 44)
 ## 성문이 열린 뒤 들어오는 아카이아 대군: 병사 수, 한 명씩 들어오는 간격(초), 맡을 자리(북쪽 가로·세 갈래 입구·성문 광장)
@@ -58,8 +67,6 @@ const TIDE_INTERVAL := 2.2
 const WAVE_HEAL := 50.0
 ## 왕자가 살아 있으면 점령이 여기서 멈춘다
 const PRINCE_CAP := 95.0
-## 성문이 열리면 불이 번지는 집(build의 houses 순서 번호)
-const SPREAD_FIRE := [0, 3, 4, 6, 11, 14, 22, 24, 27, 33]
 ## 경보 종이 울릴 때마다 성문 경비대에 붙는 병사
 const ALARM_GUARDS := [["trojan_sword", Vector2(17.5, 7.5)], ["trojan_spear", Vector2(18.5, 8.0)]]
 
@@ -107,125 +114,189 @@ var _start_pos := Vector2.ZERO
 var _army_left := 0
 var _army_timer := 0.0
 var _army_in := 0
+## 성문이 열리면 불이 번지는 집들: [Sprite2D, 그림 이름] (build의 houses에서 "spread")
 var _houses: Array = []
 var prince: Enemy
 var _routed := false
 var _tide_timer := 0.0
 var _tide_left := 0
+## 엔딩: 부두의 갤리선과 그 불빛, 엔딩 때 불이 붙는 동쪽 집들(부두에서 보임), 건너뛰기, 끝났는지
+var _galley: Sprite2D
+var _galley_light: PointLight2D
+var _late_houses: Array = []
+var _ending := false
+var _skip := false
+var ending_done := false
 
 
 func build() -> void:
 	chapter_title = "CHAPTER 1 — 트로이의 목마"
-	W = 36
+	W = 48
 	H = 50
 	canvas_mod.color = Color(0.5, 0.5, 0.74)
-	# 바닥
+	# 바닥: 성 밖(위·왼쪽 풀밭, 오른쪽 바다), 성 안 구역
 	fill(Rect2i(0, 0, 36, 3), "grass")
 	fill(Rect2i(0, 0, 2, 50), "grass")
 	fill(Rect2i(16, 0, 4, 3), "road")
+	fill(Rect2i(36, 0, 12, 50), "water")
+	fill(Rect2i(36, 0, 1, 50), "sand")
 	fill(Rect2i(12, 4, 13, 6), "plaza")
-	fill(Rect2i(3, 10, 31, 3), "dirt")
+	fill(Rect2i(26, 4, 9, 6), "plaza")
+	fill(Rect2i(3, 10, 32, 3), "dirt")
 	fill(Rect2i(16, 13, 5, 26), "road")
 	fill(Rect2i(3, 13, 4, 35), "dirt")
-	fill(Rect2i(27, 13, 6, 26), "plaza")
-	fill(Rect2i(6, 22, 10, 4), "ash")
-	fill(Rect2i(21, 22, 6, 4), "ash")
+	fill(Rect2i(27, 13, 6, 9), "ash")
+	fill(Rect2i(27, 22, 6, 17), "plaza")
+	fill(Rect2i(6, 22, 10, 4), "plaza")
+	fill(Rect2i(21, 22, 6, 4), "plaza")
 	fill(Rect2i(21, 30, 6, 2), "dirt")
 	fill(Rect2i(7, 38, 26, 10), "plaza")
-	# 성벽·탑·성문
+	# 바다 문 밖 부두: 성벽을 따라 난 나무 길 + 바다로 뻗은 부두 셋
+	fill(Rect2i(36, 31, 1, 15), "planks")
+	fill(Rect2i(37, 33, 4, 2), "planks")
+	fill(Rect2i(37, 38, 5, 2), "planks")
+	fill(Rect2i(37, 43, 3, 2), "planks")
+	for c in floor_kind:
+		if floor_kind[c] in ["water", "sand"]:
+			set_solid(c)
+	# 성벽·탑·성문: 네 변. 화면 앞쪽 두 변(x=35, y=49)은 오디세우스를 가리면 반투명해진다
 	for x in range(2, 36):
 		var c := Vector2i(x, 3)
 		if c in GATE_CELLS:
 			continue
-		add_prop("tower" if x in [2, 8, 16, 19, 26, 33] else "wall", c, true, false)
+		add_prop("tower" if x in [2, 8, 16, 19, 26, 35] else "wall", c, true, false)
 	for y in range(4, H):
 		add_prop("tower" if y in [10, 18, 26, 34, 42] else "wall", Vector2i(2, y), true, false)
+	for y in range(4, H):
+		var c := Vector2i(35, y)
+		if c == SEA_GATE:
+			continue
+		add_prop("tower" if y in [10, 18, 26, 32, 34, 42, 49] else "wall", c, true, true)
+	for x in range(3, 35):
+		add_prop("tower" if x in [10, 18, 26] else "wall", Vector2i(x, 49), true, true)
 	for c in GATE_CELLS:
 		gate_sprites.append(add_prop("gate_closed", c, true, false))
-	# 맵 끝(오른쪽 아래 두 변)은 막는다
-	for i in range(3, H):
-		set_solid(Vector2i(35, i))
-	for i in range(3, 36):
-		set_solid(Vector2i(i, H - 1))
-	# 집 (이름, 칸, 불탐)
+	add_prop("gate_open", SEA_GATE, false, true)
+	# 집 (이름, 칸, "burnt" 처음부터 불탐 · "spread" 성문이 열리면 불이 번짐 · "" 그대로)
 	var houses := [
-		# 성문 광장 양옆
-		["house_b", Vector2i(4, 6), false], ["house_a", Vector2i(9, 6), true],
-		["house_c", Vector2i(27, 6), false], ["house_a", Vector2i(31, 6), false],
+		# 성문 광장 서쪽 (동쪽은 신전 언덕)
+		["house_b", Vector2i(4, 6), "spread"], ["house_a", Vector2i(9, 6), "burnt"],
 		# 서쪽 덩어리 (뒷골목과 대로 사이)
-		["house_b", Vector2i(7, 13), false], ["house_c", Vector2i(11, 13), false], ["house_d", Vector2i(14, 13), false],
-		["house_a", Vector2i(7, 16), false], ["house_d", Vector2i(10, 17), false], ["house_c", Vector2i(13, 16), false],
-		["house_c", Vector2i(7, 19), false], ["house_a", Vector2i(10, 20), false], ["house_b", Vector2i(13, 20), false],
-		["house_b", Vector2i(7, 26), false], ["house_a", Vector2i(11, 26), false], ["house_d", Vector2i(14, 26), true],
-		["house_d", Vector2i(7, 29), false], ["house_c", Vector2i(10, 29), false], ["house_a", Vector2i(13, 30), false],
-		["house_a", Vector2i(7, 33), false], ["house_b", Vector2i(10, 33), false], ["house_c", Vector2i(14, 33), true],
-		["house_d", Vector2i(7, 36), false],
+		["house_b", Vector2i(7, 13), "spread"], ["house_c", Vector2i(11, 13), ""], ["house_d", Vector2i(14, 13), "spread"],
+		["house_a", Vector2i(7, 16), ""], ["house_d", Vector2i(10, 17), ""], ["house_c", Vector2i(13, 16), ""],
+		["house_c", Vector2i(7, 19), ""], ["house_a", Vector2i(10, 20), "spread"], ["house_b", Vector2i(13, 20), ""],
+		["house_b", Vector2i(7, 26), ""], ["house_a", Vector2i(11, 26), "spread"], ["house_d", Vector2i(14, 26), "burnt"],
+		["house_d", Vector2i(7, 29), ""], ["house_c", Vector2i(10, 29), ""], ["house_a", Vector2i(13, 30), ""],
+		["house_a", Vector2i(7, 33), ""], ["house_b", Vector2i(10, 33), ""], ["house_c", Vector2i(14, 33), "burnt"],
+		["house_d", Vector2i(7, 36), "spread"],
 		# 동쪽 덩어리 (대로와 시장 사이)
-		["house_c", Vector2i(21, 13), false], ["house_a", Vector2i(24, 13), false],
-		["house_d", Vector2i(24, 16), false], ["house_a", Vector2i(21, 17), true],
-		["house_b", Vector2i(21, 20), false], ["house_a", Vector2i(24, 20), false],
-		["house_d", Vector2i(21, 26), false], ["house_c", Vector2i(24, 26), false], ["house_a", Vector2i(21, 28), false],
-		["house_b", Vector2i(21, 32), false], ["house_a", Vector2i(24, 33), false],
-		["house_d", Vector2i(21, 35), false], ["house_a", Vector2i(24, 36), false],
-		# 시장 동쪽 끝
-		["house_c", Vector2i(33, 13), false], ["house_a", Vector2i(33, 18), false], ["house_d", Vector2i(33, 24), false],
-		["house_c", Vector2i(33, 30), false], ["house_a", Vector2i(33, 35), false],
+		["house_c", Vector2i(21, 13), ""], ["house_a", Vector2i(24, 13), "spread"],
+		["house_d", Vector2i(24, 16), ""], ["house_a", Vector2i(21, 17), "burnt"],
+		["house_b", Vector2i(21, 20), "spread"], ["house_a", Vector2i(24, 20), ""],
+		["house_d", Vector2i(21, 26), ""], ["house_c", Vector2i(24, 26), ""], ["house_a", Vector2i(21, 28), ""],
+		["house_b", Vector2i(21, 32), ""], ["house_a", Vector2i(24, 33), ""],
+		["house_d", Vector2i(21, 35), "spread"], ["house_a", Vector2i(24, 36), ""],
+		# 동쪽 끝: 위쪽 둘은 불타는 구역, 아래 셋은 시장
+		["house_c", Vector2i(33, 13), "burnt"], ["house_a", Vector2i(33, 18), "burnt"], ["house_d", Vector2i(33, 24), "spread"],
+		["house_c", Vector2i(33, 30), ""], ["house_a", Vector2i(33, 35), ""],
 	]
 	for h in houses:
-		if h[2]:
-			_houses.append(null)
+		if h[2] == "burnt":
 			add_burning_house(h[0], h[1])
 		else:
-			_houses.append([add_prop(h[0], h[1]), h[0]])
-	# 목마 광장
-	add_prop("horse", Vector2i(19, 42))
+			var s := add_prop(h[0], h[1])
+			if h[2] == "spread":
+				_houses.append([s, h[0]])
+			elif h[1].x >= 21:
+				_late_houses.append([s, h[0]])
+	# 성문 광장: 서쪽 나무 종탑, 동쪽 높은 터 위 아테나 신전 + 계단·사자상
+	add_prop("bell_tower", Vector2i(10, 4))
+	add_prop("temple", Vector2i(29, 5))
+	for c in [Vector2i(29, 8), Vector2i(31, 8)]:
+		add_prop("steps", c, false, false)
+	for c in [Vector2i(28, 8), Vector2i(32, 8)]:
+		add_prop("lion", c, true, false)
+	for c in [Vector2i(27, 4), Vector2i(33, 4)]:
+		add_prop("cypress", c, true, false)
+	# 목마 광장: 서쪽 성벽 가까이 목마, 옆구리에 기댄 사다리(오디세우스가 내려온 곳)
+	add_prop("horse", HORSE_CELL)
+	add_prop("ladder", HORSE_CELL + Vector2i(4, 0), false, false)
 	for c in [Vector2i(15, 40), Vector2i(26, 40), Vector2i(15, 46), Vector2i(26, 46)]:
 		add_prop("column", c)
-	add_light(Iso.grid_to_world(Vector2(21, 43)), Color(0.55, 0.65, 1.0), 0.5, 2.5, false)
-	# 횃불: 대로는 밝은 곳과 그늘이 번갈아, 뒷골목은 종 옆에 하나, 시장 하나(+화로), 성문 광장 둘
+	add_light(Iso.grid_to_world(Vector2(HORSE_CELL) + Vector2(2, 2)), Color(0.55, 0.65, 1.0), 0.5, 2.5, false)
+	# 횃불: 대로는 밝은 곳과 그늘이 번갈아, 뒷골목은 종 옆에 하나, 시장 하나(+화로), 성문 광장 둘, 부두 하나
 	for c in [Vector2i(16, 15), Vector2i(20, 15), Vector2i(16, 28), Vector2i(20, 28), Vector2i(16, 36), Vector2i(20, 36),
-			Vector2i(6, 31), Vector2i(27, 21), Vector2i(12, 8), Vector2i(23, 8), Vector2i(34, 26)]:
+			Vector2i(6, 31), Vector2i(27, 23), Vector2i(12, 8), Vector2i(23, 8), Vector2i(34, 26), Vector2i(37, 37)]:
 		add_torch(c)
 	drill_torch = add_torch(DRILL_TORCH)
 	for c in [Vector2i(15, 4), Vector2i(21, 4), Vector2i(30, 31), Vector2i(5, 21)]:
 		var b := add_prop("brazier", c, true, false)
 		add_fire(b, Vector2(0, -16), 0.6)
-	# 경보 종: 뒷골목 · 대로 · 시장
+	# 경보 종: 뒷골목 · 분수 광장 · 불타는 구역
 	for c in [Vector2i(3, 30), Vector2i(20, 23), Vector2i(32, 21)]:
 		add_bell(c)
-	for c in [Vector2i(13, 4), Vector2i(23, 4), Vector2i(16, 38), Vector2i(20, 38)]:
+	for c in [Vector2i(12, 4), Vector2i(23, 4), Vector2i(16, 38), Vector2i(20, 38)]:
 		add_prop("banner_troy", c, true, false)
-	# 시장 짐더미·좌판
-	for c in [Vector2i(28, 15), Vector2i(30, 16), Vector2i(28, 19), Vector2i(31, 23), Vector2i(29, 26), Vector2i(28, 28),
-			Vector2i(31, 28), Vector2i(28, 33), Vector2i(31, 34), Vector2i(29, 37), Vector2i(11, 9), Vector2i(25, 9),
-			Vector2i(10, 44), Vector2i(30, 44), Vector2i(4, 38)]:
+	# 분수 광장(세 갈래가 만나는 가운데 가로): 대로 한가운데 분수, 양쪽 차양 좌판
+	add_prop("fountain", FOUNTAIN_CELL)
+	add_light(Iso.grid_to_world(Vector2(FOUNTAIN_CELL) + Vector2(1, 1)), Color(0.5, 0.7, 1.0), 0.35, 1.2, false, 0.3)
+	add_prop("stall_red", Vector2i(12, 22))
+	add_prop("stall_white", Vector2i(24, 25))
+	for c in [Vector2i(9, 25), Vector2i(15, 25), Vector2i(22, 22)]:
+		add_prop("pot", c, true, false)
+	# 불타는 구역(동쪽 길 위쪽): 부서진 기둥·돌무더기. 가운데(x29~30)는 반격 무리가 지나가게 비운다
+	for c in [Vector2i(28, 15), Vector2i(31, 14), Vector2i(32, 19), Vector2i(27, 20)]:
+		add_prop("rubble", c, true, false)
+	for c in [Vector2i(28, 18), Vector2i(32, 16)]:
+		add_prop("column_broken", c, true, false)
+	# 시장(동쪽 길 아래쪽): 짐더미·좌판
+	for c in [Vector2i(31, 23), Vector2i(29, 26), Vector2i(28, 28), Vector2i(31, 28), Vector2i(28, 33), Vector2i(31, 34),
+			Vector2i(29, 37), Vector2i(11, 9), Vector2i(25, 9), Vector2i(10, 44), Vector2i(30, 44), Vector2i(4, 38)]:
 		add_prop("crate" if hash(c) % 2 == 0 else "barrel", c, true, false)
-	for c in [Vector2i(30, 19), Vector2i(28, 31)]:
-		add_prop("cart", c)
+	add_prop("cart", Vector2i(28, 31))
+	add_prop("stall_red", Vector2i(31, 25))
+	add_prop("stall_white", Vector2i(32, 37))
 	for c in [Vector2i(30, 24), Vector2i(29, 35), Vector2i(12, 47)]:
 		add_prop("amphora", c, true, false)
-	for c in [Vector2i(27, 24), Vector2i(19, 9), Vector2i(12, 23), Vector2i(5, 41)]:
+	for c in [Vector2i(19, 9), Vector2i(5, 41)]:
 		add_prop("rubble", c, true, false)
-	add_prop("spear_rack", Vector2i(32, 16))
 	add_prop("winch", Vector2i(20, 5))
+	# 서쪽 뒷골목: 사이프러스·화분(나무는 시야를 가리는 엄폐물)
+	for c in [Vector2i(3, 17), Vector2i(6, 19), Vector2i(3, 34), Vector2i(6, 26)]:
+		add_prop("cypress", c, true, true)
+	for c in [Vector2i(3, 27), Vector2i(6, 40)]:
+		add_prop("pot", c, true, false)
 	# 무기고: 통·창걸이·상자 (화로 불빛 안)
 	for i in ARMORY_CELLS.size():
 		armory_sprites.append(add_prop(["barrel", "spear_rack", "crate"][i], ARMORY_CELLS[i], true, false))
-	# 높은 곳 궁수 발판(지나갈 수 있음 — 화살이 막히지 않게)
-	for c in PERCH_CELLS:
-		add_prop("crate", c, false, false)
+	# 높은 곳 궁수 발판(지나갈 수 있음 — 화살이 막히지 않게): 북쪽 가로 서쪽 짐더미, 신전 계단 가운데
+	add_prop("crate", PERCH_CELLS[0], false, false)
+	add_prop("steps", PERCH_CELLS[1], false, false)
+	# 부두: 갤리선·작은 배·말뚝, 해안 바위
+	_galley = add_prop("galley", Vector2i(37, 40), true, true)
+	add_prop("boat", Vector2i(38, 36), true, false)
+	for c in [Vector2i(41, 33), Vector2i(41, 34), Vector2i(40, 43), Vector2i(40, 44)]:
+		add_prop("pier_post", c, false, false)
+	_galley_light = add_light(Iso.grid_to_world(Vector2(39.5, 41.0)), Color(1.0, 0.6, 0.3), 0.45, 0.9)
+	for y in [1, 6, 13, 20, 27, 47]:
+		add_prop("rock", Vector2i(36, y), true, false)
+	# 성 밖 나무
+	for c in [Vector2i(5, 1), Vector2i(10, 0), Vector2i(24, 1), Vector2i(29, 0), Vector2i(33, 1)]:
+		add_prop("pine", c, true, false)
+	for c in [Vector2i(0, 9), Vector2i(1, 21), Vector2i(0, 33), Vector2i(1, 45)]:
+		add_prop("cypress", c, true, false)
 
 
 func start() -> void:
 	zone_pos = Iso.grid_to_world(ZONE_CELL)
 	player = Player.new()
-	player.position = Iso.grid_to_world(Vector2(21.5, 46.0))
+	player.position = Iso.grid_to_world(START_CELL)
 	world.add_child(player)
-	player.face(Vector2(-1, -1))
+	player.face(_gdir(Vector2(1, 0)))
 	_start_pos = player.position
 	sinon = Npc.new()
 	sinon.setup("greek_archer", "시논", _talk_sinon)
-	sinon.position = Iso.grid_to_world(Vector2(18.5, 45.5))
+	sinon.position = Iso.grid_to_world(START_CELL + Vector2(2.6, 0.6))
 	world.add_child(sinon)
 	var south := _gdir(Vector2(0, 1))
 	stealth_group = [
@@ -240,8 +311,8 @@ func start() -> void:
 		_spawn("trojan_spear", Vector2(28.5, 37.0), [Vector2(28.5, 37.0), Vector2(31.5, 31.0), Vector2(28.5, 25.0),
 			Vector2(31.5, 18.0), Vector2(28.5, 25.0), Vector2(31.5, 31.0)]),
 		_spawn("trojan_sword", Vector2(30.0, 14.5), [], south),
-		# 막다른 골목: 묶인 정찰병을 지키는 보초(골목 안쪽을 봄)
-		_spawn("trojan_sword", Vector2(32.6, 27.8), [], _gdir(Vector2(1, 0))),
+		# 부두: 묶인 정찰병을 지키는 보초(부두 끝 쪽을 봄 — 성벽 길로 오면 등 뒤)
+		_spawn("trojan_sword", SCOUT_CELL + Vector2(-2.8, 0.0), [], _gdir(Vector2(1, 0))),
 	]
 	guard_group = [
 		_spawn("trojan_sword", Vector2(15.5, 6.5)),
@@ -253,7 +324,7 @@ func start() -> void:
 	]
 	captain = guard_group[5]
 	# 연습 보초: 시야가 짧고 들켜도 경보를 울리지 않는다
-	drill = [_spawn("trojan_sword", DRILL_SNEAK, [], _gdir(Vector2(-1, 0))), _spawn("trojan_sword", DRILL_BOW, [], _gdir(Vector2(1, 0)))]
+	drill = [_spawn("trojan_sword", DRILL_SNEAK, [], _gdir(Vector2(1, 0))), _spawn("trojan_sword", DRILL_BOW, [], _gdir(Vector2(1, 0)))]
 	for d in drill:
 		d.vision = 60.0
 		d.raises_alarm = false
@@ -331,6 +402,7 @@ func _spawn_crew(at: Vector2) -> void:
 func _save_checkpoint(id: String) -> void:
 	Game.checkpoint = {"id": id, "stats": Game.stats.duplicate(), "scout": scout_freed, "armory": armory_burned,
 		"guards": guard_group.size()}
+	Game.save_progress()
 	if id != "stealth":
 		Fx.text(player.global_position + Vector2(0, -64), "체크포인트", Color(0.55, 0.85, 1.0))
 
@@ -386,6 +458,18 @@ func skip_to_winch() -> void:
 	_set_step(3)
 
 
+## 검증용(--start=ending): 성문 거점을 다 차지한 것으로 하고 바로 엔딩
+func skip_to_ending() -> void:
+	skip_to_winch()
+	_set_gate(true)
+	opened_once = true
+	winch_point.enabled = false
+	waves_sent = 4
+	_routed = true
+	_set_step(4)
+	capture = 100.0
+
+
 # ── 퀘스트 ────────────────────────────────────────────
 func _set_step(s: int) -> void:
 	step = s
@@ -404,7 +488,7 @@ func _set_step(s: int) -> void:
 			for it in signals:
 				it.enabled = true
 			Game.quest_marker = signals[1].global_position
-			Game.show_hint("길은 셋 — 횃불이 늘어선 대로 · 어두운 서쪽 뒷골목 · 짐더미 동쪽 시장. 원하는 길로 가라")
+			Game.show_hint("길은 셋 — 횃불이 늘어선 대로 · 어두운 서쪽 뒷골목 · 불타는 동쪽 길(밝다). 원하는 길로 가라")
 			_tut("세 갈래 중 하나를 골라 북쪽 가로까지\n미니맵의 노란 점이 목표, 빈 원은 골라서 하는 목표", Callable(), -1, 7.0)
 			_tut("C — 미끼 던지기 (조준한 쪽으로 돌멩이)\n떨어진 곳으로 보초가 고개를 돌려 살피러 간다. 그 틈에 지나가거나 뒤로 돌아가라",
 				func(): return player.decoy_cd > 0.0, 6, 16.0)
@@ -442,7 +526,7 @@ func _talk_sinon(_by) -> void:
 	Game.say([
 		["시논", "오디세우스 님! 트로이 놈들은 목마를 신의 선물이라 믿고 밤새 잔치를 벌였습니다."],
 		["오디세우스", "부하들은 아직 목마 안에 둔다. 내가 먼저 성문까지 길을 살피겠다."],
-		["시논", "그럼 몸부터 푸시지요. 저기 서쪽에 술에 취해 졸고 있는 보초가 있습니다. 등 뒤로 다가가 소리 없이 처리해 보십시오."],
+		["시논", "그럼 몸부터 푸시지요. 저기 동쪽 기둥 너머에 술에 취해 졸고 있는 보초가 있습니다. 등 뒤로 다가가 소리 없이 처리해 보십시오."],
 	], _drill_sneak)
 
 
@@ -476,8 +560,8 @@ func _drill_end() -> void:
 		["시논", "훌륭하십니다. 이제 진짜입니다."],
 		["시논", "성문 앞 북쪽 가로 끝마다 꺼진 횃불이 있습니다. 불을 붙이시면 그걸 신호로 부하들을 보내겠습니다."],
 		["시논", "들키면 놈들이 경보 종으로 달려갑니다. 종이 울리면 성문 경비가 늘어날 겁니다."],
-		["시논", "그리고… 시장 동쪽 막다른 골목에 우리 정찰병이 묶여 있습니다. 뒷골목 성벽 밑 무기고를 태우면 놈들 궁수가 화살을 못 챙길 겁니다."],
-		["오디세우스", "대로, 뒷골목, 시장… 길은 셋이군. 소리 없이 가겠다."],
+		["시논", "그리고… 시장 남쪽 골목 끝 바다 문 밖, 부두에 우리 정찰병이 묶여 있습니다. 뒷골목 성벽 밑 무기고를 태우면 놈들 궁수가 화살을 못 챙길 겁니다."],
+		["오디세우스", "대로, 뒷골목, 불타는 동쪽 길… 길은 셋이군. 소리 없이 가겠다."],
 	], func(): _set_step(1))
 
 
@@ -631,6 +715,7 @@ func _add_scout(at: Vector2) -> void:
 	c.face(player.global_position - at)
 	if not Game.checkpoint.is_empty():
 		Game.checkpoint["scout"] = true
+		Game.save_progress()
 
 
 ## 무기고에 불을 지르면 불빛이 퍼지고 타는 소리에 가까운 적이 의심한다(quiet: 체크포인트에서 되살릴 때).
@@ -642,6 +727,7 @@ func _burn_armory(quiet := false) -> void:
 	Game.side_markers.erase(armory_point.global_position)
 	if not Game.checkpoint.is_empty():
 		Game.checkpoint["armory"] = true
+		Game.save_progress()
 	for i in armory_sprites.size():
 		var sp: Sprite2D = armory_sprites[i]
 		add_fire(sp, Vector2(randf_range(-3, 3), -10), 0.7 + 0.15 * i, i == 1)
@@ -855,14 +941,10 @@ func _update_army(delta: float) -> void:
 
 ## 성문이 열리면 불이 도시로 번진다(정해 둔 집에 차례로 불).
 func _ignite_city() -> void:
-	var k := 0
-	for i in SPREAD_FIRE:
-		if i >= _houses.size() or _houses[i] == null:
-			continue
-		var h: Array = _houses[i]
-		_houses[i] = null
+	for k in _houses.size():
+		var h: Array = _houses[k]
 		get_tree().create_timer(0.6 + k * 0.7).timeout.connect(func(): ignite_house(h[0], h[1]))
-		k += 1
+	_houses.clear()
 
 
 func _update_capture(delta: float) -> void:
@@ -1015,7 +1097,127 @@ func _finish() -> void:
 		["오디세우스", "트로이의 성문은 우리 것이다. 십 년의 전쟁이 오늘 밤 끝난다."],
 		["에우릴로코스", "장군, 이제… 이타카로 돌아가는 겁니까?"],
 		["오디세우스", "그래. 배를 준비해라. 고향이 기다린다."],
-	], func(): Game.chapter_cleared.emit(Game.stats.duplicate()))
+	], _play_ending)
+
+
+# ── 엔딩: 불타는 트로이를 뒤로 부두에서 배에 오른다 → 출항 → 챕터 2 예고 ──────────
+## E / Space / 클릭으로 건너뛴다(대화 중에는 대화를 넘김). 끝나면 결과 화면(chapter_cleared).
+func _play_ending() -> void:
+	_ending = true
+	Game.cutscene = true
+	var hud: Hud = Game.hud
+	if hud:
+		hud.cinematic = true
+		hud.fade_to(1.0, 0.8)
+	await _wait(0.9)
+	# 검은 화면 뒤에서: 남은 트로이군을 치우고, 오디세우스와 부하를 바다 문 밖 성벽 길로 옮긴다
+	for e in enemies():
+		e.queue_free()
+	if is_instance_valid(scout) and not scout_freed:
+		scout.queue_free()   # 풀어 주지 못한 정찰병은 대군이 구했다
+	player.position = Iso.grid_to_world(Vector2(36.5, 35.2))
+	player.face(_gdir(Vector2(-1, -1)))
+	for i in squad.members.size():
+		var c: Companion = squad.members[i]
+		c.position = Iso.grid_to_world(Vector2(36.5, 33.4 - i * 0.6))
+		c.face(_gdir(Vector2(0, 1)))
+	squad.set_mode(Squad.Mode.FOLLOW)
+	occluders.erase(_galley)
+	# 부두에서 보이는 동쪽 집들에도 불이 번진다
+	for k in mini(_late_houses.size(), 8):
+		var h: Array = _late_houses[_late_houses.size() - 1 - k]
+		get_tree().create_timer(0.2 + k * 0.5).timeout.connect(func(): ignite_house(h[0], h[1]))
+	_late_houses.clear()
+	if hud:
+		hud.fade_to(0.0, 1.2)
+	await _wait(1.6)
+	await _say_wait([
+		["에우릴로코스", "배는 준비됐습니다, 장군. 열두 척 모두 이타카의 깃발을 달았습니다."],
+		["오디세우스", "십 년이다… 저 불길을 잘 봐 두어라. 우리가 무엇을 하고 이 땅을 떠나는지."],
+		["폴리테스", "이제 집으로 가는 겁니다. 바람만 좋으면 열흘이면 닿겠지요."],
+	])
+	# 부두를 따라 배까지 걷는다(부하는 따라온다)
+	for goal in [Vector2(36.5, 38.6), Vector2(39.6, 38.7)]:
+		player.script_goal = Iso.grid_to_world(goal)
+		var t := 0.0
+		while not _skip and t < 6.0 and player.global_position.distance_to(player.script_goal) > 8.0:
+			await get_tree().process_frame
+			if not get_tree().paused:
+				t += get_process_delta_time()
+	player.script_goal = Vector2.INF
+	# 배에 오른다
+	var board := create_tween().set_parallel(true)
+	for a in [player] + squad.members:
+		board.tween_property(a, "modulate:a", 0.0, 0.6)
+	await _wait(0.8)
+	player.visible = false
+	for c in squad.members:
+		c.visible = false
+	# 출항: 갤리선이 바다로 나아가고 카메라가 따라간다
+	camera_target = _galley
+	var sail := create_tween().set_parallel(true)
+	var off := Iso.grid_to_world(Vector2(7, -3)) - Iso.grid_to_world(Vector2.ZERO)
+	sail.tween_property(_galley, "position", _galley.position + off, 11.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	sail.tween_property(_galley_light, "position", _galley_light.position + off, 11.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	sail.tween_property(_galley, "modulate:a", 0.0, 2.5).set_delay(9.5)
+	Sfx.play("cry", -12.0)
+	for line in ["트로이는 하룻밤 사이에 불타 무너졌다.",
+			"오디세우스와 부하들은 이타카로 뱃머리를 돌렸다.",
+			"그러나 바다의 신 포세이돈은 그들을 쉽게 보내 주지 않았다…"]:
+		if hud:
+			hud.caption(line, 3.4)
+		await _wait(3.6)
+	if hud:
+		hud.fade_to(1.0, 1.0)
+	await _wait(1.2)
+	if hud and not _skip:
+		hud.show_title(["CHAPTER 2", "귀환의 시작", "배를 몰아 이타카로 — 준비 중"])
+		await _wait(4.2)
+	_end_ending()
+
+
+func _end_ending() -> void:
+	if ending_done:
+		return
+	ending_done = true
+	sail_stop()
+	Game.mark_cleared(1)
+	Game.cutscene = false
+	if Game.hud:
+		Game.hud.cinematic = false
+		Game.hud.fade_to(0.0, 0.01)
+		Game.hud.title_time = 0.0
+	Game.chapter_cleared.emit(Game.stats.duplicate())
+
+
+## 건너뛰면 남은 움직임은 멈춘다(결과 화면 뒤에서 계속 돌지 않게)
+func sail_stop() -> void:
+	for t in get_tree().get_processed_tweens():
+		t.kill()
+
+
+## t초 기다림(건너뛰면 바로 끝)
+func _wait(t: float) -> void:
+	while t > 0.0 and not _skip:
+		await get_tree().create_timer(0.1, false).timeout   # 일시정지 중에는 멈춘다
+		t -= 0.1
+
+
+func _say_wait(lines: Array) -> void:
+	if _skip:
+		return
+	var done := [false]
+	Game.say(lines, func(): done[0] = true)
+	while not done[0]:
+		await get_tree().process_frame
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _ending or _skip or (Game.hud and Game.hud.dialogue.size() > 0):
+		return
+	if event.is_action_pressed("interact") or event.is_action_pressed("dodge") or event.is_action_pressed("attack"):
+		_skip = true
+		get_viewport().set_input_as_handled()
 
 
 func _draw() -> void:

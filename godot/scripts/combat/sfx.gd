@@ -13,6 +13,7 @@ static func play(name: String, volume_db := -8.0) -> void:
 	if _players.is_empty():
 		for i in 10:
 			var p := AudioStreamPlayer.new()
+			p.bus = "SFX"
 			Game.add_child(p)
 			_players.append(p)
 	if not _streams.has(name):

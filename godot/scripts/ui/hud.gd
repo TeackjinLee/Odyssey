@@ -34,6 +34,16 @@ var tut_text := ""
 var tut_done := 0.0
 var tut_slot := -1
 var tut_t := 0.0
+## 연출: 위아래 검은 띠 + 자막, 화면 페이드(0 투명 ~ 1 검정)
+var cinematic := false
+var fade_a := 0.0
+var _fade_target := 0.0
+var _fade_speed := 1.0
+var caption_text := ""
+var caption_time := 0.0
+var caption_len := 1.0
+var _bars := 0.0
+var pause_menu: PauseMenu = null
 
 
 func _ready() -> void:
@@ -67,6 +77,17 @@ func _on_tutorial(text: String, done: bool, slot: int) -> void:
 	tut_t = 0.0
 
 
+func fade_to(a: float, time: float) -> void:
+	_fade_target = a
+	_fade_speed = absf(a - fade_a) / maxf(time, 0.001)
+
+
+func caption(text: String, time: float) -> void:
+	caption_text = text
+	caption_time = time
+	caption_len = time
+
+
 func show_title(lines: Array) -> void:
 	title_lines = lines
 	title_time = 4.0
@@ -76,6 +97,9 @@ func _process(delta: float) -> void:
 	hint_time = max(0.0, hint_time - delta)
 	title_time = max(0.0, title_time - delta)
 	tut_t += delta
+	fade_a = move_toward(fade_a, _fade_target, _fade_speed * delta)
+	caption_time = max(0.0, caption_time - delta)
+	_bars = move_toward(_bars, 1.0 if cinematic else 0.0, delta * 2.0)
 	if tut_done > 0.0:
 		tut_done -= delta
 		if tut_done <= 0.0:
@@ -89,6 +113,12 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if pause_menu:
+		return
+	if event.is_action_pressed("pause") and overlay == "":
+		open_pause()
+		get_viewport().set_input_as_handled()
+		return
 	if dialogue.size() > 0:
 		var adv := event.is_action_pressed("interact") or event.is_action_pressed("dodge") or event.is_action_pressed("attack")
 		if adv:
@@ -98,6 +128,26 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("help"):
 		show_help = not show_help
 		get_viewport().set_input_as_handled()
+
+
+# ── 일시정지 메뉴 ─────────────────────────────────────
+func open_pause() -> void:
+	if pause_menu:
+		return
+	pause_menu = PauseMenu.new()
+	pause_menu.resumed.connect(_on_resume)
+	pause_menu.restart_requested.connect(func(): restart_requested.emit())
+	pause_menu.checkpoint_requested.connect(func(): checkpoint_requested.emit())
+	pause_menu.menu_requested.connect(func(): menu_requested.emit())
+	add_child(pause_menu)
+	show_help = false
+	get_tree().paused = true
+	Sfx.play("ui", -8.0)
+
+
+func _on_resume() -> void:
+	pause_menu = null
+	get_tree().paused = dialogue.size() > 0 or overlay != ""
 
 
 # ── 대화 ─────────────────────────────────────────────
@@ -172,7 +222,9 @@ func _portrait(path: String) -> Texture2D:
 
 func _draw_hud() -> void:
 	var p: Player = Game.player
-	if p and Game.level:
+	if _bars > 0.0:
+		_draw_cinematic()
+	if p and Game.level and not cinematic:
 		_draw_player(p)
 		_draw_squad()
 		_draw_quest()
@@ -182,6 +234,8 @@ func _draw_hud() -> void:
 		_draw_interact(p)
 		_draw_tutorial()
 		_draw_hint()
+	if fade_a > 0.0:
+		canvas.draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, fade_a))
 	_draw_title()
 	if show_help:
 		_draw_help()
@@ -260,7 +314,8 @@ func _draw_minimap(p: Player) -> void:
 		var d := Vector2(c) + Vector2(0.5, 0.5) - pg
 		var m := center + Vector2((d.x - d.y) * k, (d.x + d.y) * k * 0.5)
 		if m.distance_to(center) < radius - 2:
-			canvas.draw_rect(Rect2(m - Vector2(1.5, 1), Vector2(3, 2)), Color(0.55, 0.5, 0.42))
+			var sea: bool = lvl.floor_kind.get(c, "") in ["water", "sand"]
+			canvas.draw_rect(Rect2(m - Vector2(1.5, 1), Vector2(3, 2)), Color(0.2, 0.34, 0.55) if sea else Color(0.55, 0.5, 0.42))
 	for a in get_tree().get_nodes_in_group("actors"):
 		if not a.is_alive() or a == p:
 			continue
@@ -287,14 +342,14 @@ func _draw_minimap(p: Player) -> void:
 
 func _draw_slots(p: Player) -> void:
 	var slots := [
-		["검" if p.weapon == "sword" else "활", "Q 교체", 0.0, p.weapon == "sword"],
-		["연타" if p.weapon == "sword" else "조준", "J/클릭", 0.0, true],
-		["강공격", "F", p.heavy_cd / Player.HEAVY_CD, p.weapon == "sword"],
-		["방패", "K/우클릭", 0.0, p.weapon == "sword"],
-		["구르기", "Space", 0.0, p.stamina >= 11.0],
-		["함성", "R", p.skill_cd / Player.SKILL_CD, true],
-		["미끼", "C", p.decoy_cd / Player.DECOY_CD, true],
-		["부대기술", "5", Game.squad.special_cd / Squad.SPECIAL_CD, not Game.squad.members.is_empty()],
+		["검" if p.weapon == "sword" else "활", Game.key_label("switch_weapon") + " 교체", 0.0, p.weapon == "sword"],
+		["연타" if p.weapon == "sword" else "조준", Game.key_label("attack") + "/클릭", 0.0, true],
+		["강공격", Game.key_label("heavy"), p.heavy_cd / Player.HEAVY_CD, p.weapon == "sword"],
+		["방패", Game.key_label("block") + "/우클릭", 0.0, p.weapon == "sword"],
+		["구르기", Game.key_label("dodge"), 0.0, p.stamina >= 11.0],
+		["함성", Game.key_label("skill"), p.skill_cd / Player.SKILL_CD, true],
+		["미끼", Game.key_label("decoy"), p.decoy_cd / Player.DECOY_CD, true],
+		["부대기술", Game.key_label("cmd_special"), Game.squad.special_cd / Squad.SPECIAL_CD, not Game.squad.members.is_empty()],
 	]
 	var w := 34.0
 	var x0 := 320.0 - slots.size() * (w + 4) * 0.5
@@ -368,6 +423,18 @@ func _draw_hint() -> void:
 		Color(1, 0.92, 0.7, a))
 
 
+## 연출 화면: 위아래 검은 띠, 아래 띠 위 자막, 건너뛰기 안내
+func _draw_cinematic() -> void:
+	var h := 30.0 * _bars
+	canvas.draw_rect(Rect2(0, 0, 640, h), Color(0, 0, 0))
+	canvas.draw_rect(Rect2(0, 360 - h, 640, h), Color(0, 0, 0))
+	if caption_time > 0.0 and caption_text != "":
+		var a: float = clamp(min(caption_time, caption_len - caption_time) * 2.0, 0.0, 1.0)
+		_text(Vector2(0, 360 - h - 14), caption_text, 10, Color(1, 0.95, 0.85, a), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	if cinematic and dialogue.is_empty():
+		_text(Vector2(0, 360 - 10), "E / Space / 클릭 — 건너뛰기", 6, Color(0.7, 0.7, 0.7, 0.8 * _bars), HORIZONTAL_ALIGNMENT_RIGHT, 630)
+
+
 func _draw_title() -> void:
 	if title_time <= 0.0 or title_lines.is_empty():
 		return
@@ -392,16 +459,18 @@ func _draw_help() -> void:
 	var r := Rect2(150, 40, 340, 270)
 	canvas.draw_rect(r, Color(0.04, 0.03, 0.04, 0.92))
 	canvas.draw_rect(r, GOLD, false, 1.0)
-	_text(r.position + Vector2(0, 16), "조작법  (F1 / Tab 닫기)", 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
+	_text(r.position + Vector2(0, 16), "조작법  (F1 / Tab 닫기 · Esc 일시정지·키 바꾸기)", 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
+	var k := func(a): return Game.key_label(a)
 	var rows := [
-		["WASD", "이동 (Shift 달리기)"], ["J / 좌클릭", "검 3연타 (누르고 있던 입력은 다음 타로 이어짐)"],
-		["F", "강공격 — 방패를 부수고 크게 밀어냄"], ["K / 우클릭", "방패 막기 — 막는 순간 0.2초는 패링"],
-		["Space", "구르기 (무적, 공격 후딜 취소)"], ["Q", "검 ↔ 활 (활: 누르고 있다가 놓아 발사)"],
-		["E", "대화·조사 / 길게: 권양기, 쓰러진 부하 일으키기"], ["R", "전투의 함성 — 아군 회복·공격력 증가, 주변 적 경직"],
-		["C", "미끼 던지기 — 떨어진 곳으로 보초가 살피러 간다"],
-		["1 2 3 4", "부대: 따라오기 · 위치 사수 · 집중 공격 · 후퇴·집결"],
-		["5", "부대 특수 명령 — 검병 방패벽 · 창병 창 던지기 · 궁병 일제 사격"],
-		["조준", "마우스 쪽 / J·K·방향키를 쓰면 이동·바라보는 쪽의 적"],
+		["%s%s%s%s" % [k.call("move_up"), k.call("move_left"), k.call("move_down"), k.call("move_right")], "이동 (%s 달리기)" % k.call("run")],
+		["%s / 좌클릭" % k.call("attack"), "검 3연타 (누르고 있던 입력은 다음 타로 이어짐)"],
+		[k.call("heavy"), "강공격 — 방패를 부수고 크게 밀어냄"], ["%s / 우클릭" % k.call("block"), "방패 막기 — 막는 순간 0.2초는 패링"],
+		[k.call("dodge"), "구르기 (무적, 공격 후딜 취소)"], [k.call("switch_weapon"), "검 ↔ 활 (활: 누르고 있다가 놓아 발사)"],
+		[k.call("interact"), "대화·조사 / 길게: 권양기, 쓰러진 부하 일으키기"], [k.call("skill"), "전투의 함성 — 아군 회복·공격력 증가, 주변 적 경직"],
+		[k.call("decoy"), "미끼 던지기 — 떨어진 곳으로 보초가 살피러 간다"],
+		["%s %s %s %s" % [k.call("cmd_follow"), k.call("cmd_hold"), k.call("cmd_focus"), k.call("cmd_regroup")], "부대: 따라오기 · 위치 사수 · 집중 공격 · 후퇴·집결"],
+		[k.call("cmd_special"), "부대 특수 명령 — 검병 방패벽 · 창병 창 던지기 · 궁병 일제 사격"],
+		["조준", "마우스 쪽 / %s·%s·방향키를 쓰면 이동·바라보는 쪽의 적" % [k.call("attack"), k.call("block")]],
 	]
 	for i in rows.size():
 		var y: float = r.position.y + 38 + i * 19

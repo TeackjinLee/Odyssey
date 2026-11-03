@@ -8,7 +8,7 @@ gen_environment.py가 만든 env.json을 읽고, 받은 그림에 있는 것만 
 - 소품: 칸 범위(SRC_X·SRC_Y)로 잘라 배경을 지우고 K배 축소, 기준점은 발자국 중심
 - 바닥: 4열×6줄 마름모를 64×32로 맞춰 floor_atlas.png로
 
-사용: python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py .
+사용: python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .
 """
 import json
 import sys
@@ -364,6 +364,8 @@ def main(root):
     meta["props"]["alarm_bell"] = {"file": "alarm_bell.png", "anchor": anchor_of(bell, (1, 1), "alarm_bell"),
                                    "footprint": [1, 1], "size": [bell.width, bell.height]}
     fa = meta["floor_atlas"]
+    # 받은 그림에 있는 바닥 줄만 다시 만든다(바다·부두 등은 gen_env_extra.py가 뒤에 붙임)
+    fa["rows"] = [r for r in fa["rows"] if r in FLOOR_SRC]
     floor_atlas(src, fa["rows"], fa["variants"]).save(out / fa["file"])
     (out / "env.json").write_text(json.dumps(meta, ensure_ascii=False))
     print("환경 그림 교체:", ", ".join(ITEMS))

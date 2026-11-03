@@ -1,5 +1,6 @@
 extends Node
-## 전역 상태: 입력 키 등록, 히트스톱·화면 흔들림, 현재 레벨·플레이어·부대 참조, HUD로 가는 신호.
+## 전역 상태: 입력 키 등록, 히트스톱·화면 흔들림, 현재 레벨·플레이어·부대 참조, HUD로 가는 신호,
+## 설정(user://settings.json: 음량·전체 화면·키 바꾸기)과 진행 저장(user://save.json: 깬 챕터·마지막 체크포인트).
 
 signal objective_changed(title: String, text: String)
 signal hint(text: String)
@@ -21,11 +22,27 @@ var side_markers: Array = []
 var autoplay := false
 ## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
 var stealth_bot := false
+## 연출 중: 오디세우스가 입력을 받지 않는다(Player.script_goal이 있으면 그리로 걷는다)
+var cutscene := false
 var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
 ## 마지막 체크포인트: {"id", "stats", "scout", "armory", "guards"} — 챕터를 처음 시작하면 비운다(레벨이 채움)
 var checkpoint: Dictionary = {}
 
 var ui_font: SystemFont
+
+const SETTINGS_PATH := "user://settings.json"
+const SAVE_PATH := "user://save.json"
+const DEFAULT_SETTINGS := {"vol_master": 1.0, "vol_music": 0.8, "vol_sfx": 1.0, "fullscreen": false, "keys": {}}
+## 설정: 음량 0~1(전체·음악·효과음), 전체 화면, 바꾼 키 {동작: [물리 키 코드…]}
+var settings: Dictionary = {}
+## 진행: {"cleared": [깬 챕터 번호…], "checkpoint": 마지막 체크포인트(Game.checkpoint와 같은 모양)}
+var progress: Dictionary = {"cleared": [], "checkpoint": {}}
+## 키 바꾸기 화면에 나오는 동작과 이름
+const REBIND := [["move_up", "위로 이동"], ["move_down", "아래로 이동"], ["move_left", "왼쪽 이동"], ["move_right", "오른쪽 이동"],
+	["run", "달리기"], ["attack", "공격"], ["block", "방패 막기"], ["heavy", "강공격"], ["dodge", "구르기"],
+	["switch_weapon", "검 ↔ 활"], ["interact", "상호작용"], ["skill", "전투의 함성"], ["decoy", "미끼 던지기"],
+	["cmd_follow", "부대: 따라오기"], ["cmd_hold", "부대: 위치 사수"], ["cmd_focus", "부대: 집중 공격"],
+	["cmd_regroup", "부대: 후퇴·집결"], ["cmd_special", "부대 특수 명령"]]
 
 const KEYS := {
 	"move_up": [KEY_W, KEY_UP],
@@ -62,6 +79,115 @@ func _ready() -> void:
 	var cmd := OS.get_cmdline_user_args()
 	autoplay = "--auto" in cmd or "--auto=stealth" in cmd
 	stealth_bot = "--auto=stealth" in cmd
+	_setup_buses()
+	settings = DEFAULT_SETTINGS.duplicate(true)
+	var st = _read_json(SETTINGS_PATH)
+	if st is Dictionary:
+		settings.merge(st, true)
+	var pg = _read_json(SAVE_PATH)
+	if pg is Dictionary:
+		progress.merge(pg, true)
+	apply_settings()
+
+
+# ── 설정·저장 ─────────────────────────────────────────
+func _read_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
+
+
+func _write_json(path: String, data: Dictionary) -> void:
+	if autoplay:
+		return   # 검증용 봇은 사람의 저장을 건드리지 않는다
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(data, "\t"))
+
+
+## 음악·효과음 버스(없으면 만든다). 효과음은 Sfx가 "SFX" 버스로 낸다
+func _setup_buses() -> void:
+	for bus in ["Music", "SFX"]:
+		if AudioServer.get_bus_index(bus) == -1:
+			AudioServer.add_bus()
+			var i := AudioServer.bus_count - 1
+			AudioServer.set_bus_name(i, bus)
+			AudioServer.set_bus_send(i, "Master")
+
+
+func apply_settings() -> void:
+	for pair in [["Master", "vol_master"], ["Music", "vol_music"], ["SFX", "vol_sfx"]]:
+		var i := AudioServer.get_bus_index(pair[0])
+		var v: float = float(settings.get(pair[1], 1.0))
+		AudioServer.set_bus_mute(i, v <= 0.001)
+		AudioServer.set_bus_volume_db(i, linear_to_db(maxf(v, 0.001)))
+	if DisplayServer.get_name() != "headless":
+		var fs: bool = settings.get("fullscreen", false)
+		var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fs else DisplayServer.WINDOW_MODE_WINDOWED
+		if DisplayServer.window_get_mode() != mode:
+			DisplayServer.window_set_mode(mode)
+	var keys: Dictionary = settings.get("keys", {})
+	for action in keys:
+		if InputMap.has_action(action):
+			_set_keys(action, keys[action])
+
+
+func save_settings() -> void:
+	_write_json(SETTINGS_PATH, settings)
+
+
+## 동작의 키보드 키를 바꾼다(마우스 버튼은 그대로 둔다)
+func _set_keys(action: String, codes: Array) -> void:
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			InputMap.action_erase_event(action, ev)
+	for k in codes:
+		var ev := InputEventKey.new()
+		ev.physical_keycode = int(k)
+		InputMap.action_add_event(action, ev)
+
+
+func rebind(action: String, physical_keycode: int) -> void:
+	settings["keys"][action] = [physical_keycode]
+	_set_keys(action, [physical_keycode])
+	save_settings()
+
+
+## 키를 모두 처음대로
+func reset_keys() -> void:
+	settings["keys"] = {}
+	for action in KEYS:
+		_set_keys(action, KEYS[action])
+	_set_keys("attack", [KEY_J])
+	_set_keys("block", [KEY_K])
+	save_settings()
+
+
+## 화면에 보일 키 이름(첫 키보드 키). 예: "C", "Space", "Shift"
+func key_label(action: String) -> String:
+	if not InputMap.has_action(action):
+		return "?"
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			return OS.get_keycode_string(ev.physical_keycode)
+	return "-"
+
+
+## 진행 저장: 체크포인트가 생기거나 바뀔 때, 챕터를 깼을 때
+func save_progress() -> void:
+	progress["checkpoint"] = checkpoint.duplicate(true)
+	_write_json(SAVE_PATH, progress)
+
+
+func mark_cleared(chapter: int) -> void:
+	if not chapter in progress["cleared"]:
+		progress["cleared"].append(chapter)
+	checkpoint = {}
+	save_progress()
+
+
+func is_cleared(chapter: int) -> bool:
+	return progress["cleared"].any(func(c): return int(c) == chapter)
 
 
 func _register_input() -> void:
@@ -96,6 +222,7 @@ func reset_run() -> void:
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	side_markers = []
+	cutscene = false
 	Engine.time_scale = 1.0
 
 
