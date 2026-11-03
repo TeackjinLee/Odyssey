@@ -38,7 +38,9 @@ godot -e --path .             # 에디터로 열기
 | Q | 검 ↔ 활. 활은 공격 키(J/좌클릭)를 누르고 있다가 놓으면 발사(오래 당길수록 강함) |
 | E | 대화·조사. 쓰러진 부하 일으키기·포로 풀기·불 지르기는 길게, 권양기는 누르고 있는 동안만 돈다. 적 뒤에서 조용히 처치, 횃불대 옆에서 횃불 끄기 |
 | R | 전투의 함성 — 주변 아군 회복과 8초 공격력 증가, 가까운 적 경직 (20초) |
+| C | 미끼 던지기 — 조준한 쪽(최대 170px)으로 돌멩이, 떨어진 곳 둘레의 보초가 살피러 간다(알아채지는 않음, 6초) |
 | 1 2 3 4 | 부대 명령: 따라오기 · 위치 사수 · 집중 공격(조준한 적) · 후퇴·집결 |
+| 5 | 부대 특수 명령(조준한 곳, 18초): 검병 방패벽(5초간 제자리에서 앞쪽 화살·공격을 막음) · 창병 창 던지기 · 궁병 일제 사격(원 안 화살비, 무기고를 태웠으면 불화살) |
 | F1 / Tab | 조작법 |
 | 방향키·WASD + Enter/E | 메뉴·결과 화면 버튼 고르기·누르기. 대화는 E / Space / J / 클릭으로 넘김 |
 
@@ -63,7 +65,7 @@ godot -e --path .             # 에디터로 열기
 1. **튜토리얼(목마 광장)** — 화면 아래 튜토리얼 카드가 한 번에 하나씩 할 일을 알려 주고, 해내면 ✓로 바뀐다
    (해당 하단 슬롯이 깜빡임). 이동 → 첩자 **시논**에게 말 걸기 → 연습 1 졸고 있는 보초 뒤에서 E 조용히 처치
    (들키면 검 3연타 안내로 바뀜) → 연습 2 보초 옆 횃불 끄기 → 연습 3 활로 쏘기 → 시논이 세 갈래 길·골라서 하는 목표를 알려 줌.
-   그 뒤로는 처음 겪는 일마다 카드: 의심(?) · 첫 전투(연타·막기/패링·구르기·강공격) · 부하 합류(부대 명령·집중 공격·함성) ·
+   그 뒤로는 처음 겪는 일마다 카드: 미끼 던지기 · 의심(?) · 첫 전투(연타·막기/패링·구르기·강공격) · 부하 합류(부대 명령·집중 공격·특수 명령·함성) ·
    보스 패링 · 권양기 · 거점 사수
 2. 세 갈래 중 하나로 **몰래** 북쪽 가로까지 가서, 갈래 끝의 꺼진 횃불에 불을 붙여 **신호** → 부하 셋 합류.
    들키면 경보병이 갈래마다 하나 있는 **경보 종**으로 뛰고, 치기 전에 쓰러뜨리면 그만, 울리면 주변이 모두 알아채고 성문 경비가 2명 는다
@@ -106,7 +108,7 @@ scripts/
     companion.gd       부하 AI (검병·창병·궁병, 쓰러짐·부활)
     enemy.gd           트로이 병사 AI (검병·창병·궁수·수비대장)
     npc.gd             대화 인물
-  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 합성 효과음(sfx.gd)
+  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 기술 효과(skills.gd: 미끼·일제 사격), 합성 효과음(sfx.gd)
   ui/hud.gd            HUD 전부
 assets/                생성된 임시 그림 (sprites/, env/, ui/)
 tools/                 임시 그림 생성기 (Python + Pillow)
@@ -189,5 +191,7 @@ godot --headless --fixed-fps 60 --path . -- --start=winch --auto --quit-after=30
 - 거점 점령 속도·반격 시점: `chapter1_troy.gd`의 `CAPTURE_RATE`·`CAPTURE_CALM`·`_update_capture()`·`_send_wave()`
 - 대군·물결: `chapter1_troy.gd`의 `ARMY_SIZE`·`ARMY_INTERVAL`·`ARMY_POSTS`, `TIDE_MIN`·`TIDE_BUDGET`·`TIDE_INTERVAL`, `WAVE_HEAL`·`PRINCE_CAP`,
   왕자 `enemy.gd`의 `KINDS["trojan_prince"]`
+- 기술: 미끼 `player.gd`의 `DECOY_CD`·`DECOY_RANGE`, `skills.gd`의 `DECOY_HEAR`·`VOLLEY_*`, 반응 `enemy.gd`의 `lure()`,
+  부대 특수 명령 `squad.gd`의 `SPECIAL_CD`, `companion.gd`의 `WALL_TIME`·`JAVELIN_*`
 - 튜토리얼 카드: `chapter1_troy.gd`의 `_tut()`(줄에 넣기)·`_tut_once()`(한 번만)·`_tut_urgent()`(바로 띄우기)·`_watch_firsts()`, 그리는 곳 `hud.gd`의 `_draw_tutorial()`
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`

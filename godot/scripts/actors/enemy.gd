@@ -419,6 +419,18 @@ func hear(pos: Vector2, amount: float) -> void:
 	_drop_errand()
 
 
+## 미끼(던진 돌 소리): 그쪽을 반 넘게 의심해 살피러 간다. 알아채기(1.0)까지는 올리지 않는다 —
+## 다만 살피러 간 김에 오디세우스를 보면 금방 알아챈다.
+func lure(pos: Vector2) -> void:
+	if alerted or not is_alive() or poise or phase != "idle" and phase != "chase":
+		return
+	suspicion = clampf(suspicion + 0.65, 0.6, 0.9)
+	look_pos = pos
+	calm_delay = 3.0
+	_drop_errand()
+	Fx.text(global_position + Vector2(0, -head_height - 4), "?", Color(1, 0.9, 0.5))
+
+
 ## 의심 중: 멈춰서 그쪽을 보고, 반 넘게 차면 천천히 다가가 살핀다.
 func _investigate(delta: float) -> void:
 	if look_pos == Vector2.INF:

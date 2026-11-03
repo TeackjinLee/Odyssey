@@ -293,6 +293,8 @@ func _draw_slots(p: Player) -> void:
 		["방패", "K/우클릭", 0.0, p.weapon == "sword"],
 		["구르기", "Space", 0.0, p.stamina >= 11.0],
 		["함성", "R", p.skill_cd / Player.SKILL_CD, true],
+		["미끼", "C", p.decoy_cd / Player.DECOY_CD, true],
+		["부대기술", "5", Game.squad.special_cd / Squad.SPECIAL_CD, not Game.squad.members.is_empty()],
 	]
 	var w := 34.0
 	var x0 := 320.0 - slots.size() * (w + 4) * 0.5
@@ -387,7 +389,7 @@ func _draw_dialogue() -> void:
 
 
 func _draw_help() -> void:
-	var r := Rect2(150, 52, 340, 232)
+	var r := Rect2(150, 40, 340, 270)
 	canvas.draw_rect(r, Color(0.04, 0.03, 0.04, 0.92))
 	canvas.draw_rect(r, GOLD, false, 1.0)
 	_text(r.position + Vector2(0, 16), "조작법  (F1 / Tab 닫기)", 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
@@ -396,7 +398,9 @@ func _draw_help() -> void:
 		["F", "강공격 — 방패를 부수고 크게 밀어냄"], ["K / 우클릭", "방패 막기 — 막는 순간 0.2초는 패링"],
 		["Space", "구르기 (무적, 공격 후딜 취소)"], ["Q", "검 ↔ 활 (활: 누르고 있다가 놓아 발사)"],
 		["E", "대화·조사 / 길게: 권양기, 쓰러진 부하 일으키기"], ["R", "전투의 함성 — 아군 회복·공격력 증가, 주변 적 경직"],
+		["C", "미끼 던지기 — 떨어진 곳으로 보초가 살피러 간다"],
 		["1 2 3 4", "부대: 따라오기 · 위치 사수 · 집중 공격 · 후퇴·집결"],
+		["5", "부대 특수 명령 — 검병 방패벽 · 창병 창 던지기 · 궁병 일제 사격"],
 		["조준", "마우스 쪽 / J·K·방향키를 쓰면 이동·바라보는 쪽의 적"],
 	]
 	for i in rows.size():

@@ -406,12 +406,16 @@ func _set_step(s: int) -> void:
 			Game.quest_marker = signals[1].global_position
 			Game.show_hint("길은 셋 — 횃불이 늘어선 대로 · 어두운 서쪽 뒷골목 · 짐더미 동쪽 시장. 원하는 길로 가라")
 			_tut("세 갈래 중 하나를 골라 북쪽 가로까지\n미니맵의 노란 점이 목표, 빈 원은 골라서 하는 목표", Callable(), -1, 7.0)
+			_tut("C — 미끼 던지기 (조준한 쪽으로 돌멩이)\n떨어진 곳으로 보초가 고개를 돌려 살피러 간다. 그 틈에 지나가거나 뒤로 돌아가라",
+				func(): return player.decoy_cd > 0.0, 6, 16.0)
 		2:
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (0/%d)" % guard_group.size() + _side_text())
 			Game.quest_marker = Iso.grid_to_world(Vector2(18, 7))
 			_tut_once("squad", "부하 셋이 합류했다 — 1~4 부대 명령\n1 따라오기 · 2 위치 사수 · 3 집중 공격 · 4 후퇴·집결", Callable(), -1, 7.0)
 			_tut_once("focus", "3 — 조준한 적을 부하들이 한꺼번에 친다\n먼저 궁수를 노려라",
 				func(): return squad.mode == Squad.Mode.FOCUS, -1, 16.0)
+			_tut_once("special", "5 — 부대 특수 명령 (조준한 곳, 쿨타임 18초)\n검병 방패벽(화살을 막음) · 창병 창 던지기 · 궁병 일제 사격",
+				func(): return squad.special_cd > 0.0, 7, 16.0)
 			_tut_once("cry", "R — 전투의 함성: 주변 부하 회복·강화, 가까운 적은 휘청인다",
 				func(): return player.skill_cd > 0.0, 5, 16.0)
 		3:
@@ -803,6 +807,9 @@ func _open_gate() -> void:
 		c.hold_anchor = zone_pos + Vector2(-30 + i * 20, 10 + (i % 2) * 8)
 	_army_left = ARMY_SIZE
 	_army_timer = 1.5
+	# 성이 이미 뚫렸으니 남은 보초도 더는 경보 종을 치지 않는다(클리어 기록의 경보 수는 잠입 결과만 센다)
+	for e in enemies():
+		e.raises_alarm = false
 	_ignite_city()
 	Sfx.play("cry", -2.0)
 	Game.shake(9.0)
@@ -913,8 +920,8 @@ func _send_wave(i: int) -> void:
 	w3 += _route_squad(["trojan_sword", "trojan_spear", "trojan_sword", "trojan_archer"], 21.0)
 	waves.append(w3)
 	var hints := [
-		"반격 1/4 — 트로이군이 세 갈래로 몰려온다! 대로엔 방패벽: F 강공격으로 방패를 부숴라",
-		"반격 2/4 — 짐더미 위의 궁수! Q 활로 쏘거나 3(집중 공격)으로 부하를 보내라",
+		"반격 1/4 — 트로이군이 세 갈래로 몰려온다! 대로엔 방패벽: F 강공격으로 부수고, 몰린 곳엔 5 일제 사격",
+		"반격 2/4 — 짐더미 위의 궁수! Q 활로 쏘거나 5(부대 특수 명령) 방패벽으로 화살을 막아라",
 		"반격 3/4 — 트로이군이 권양기로 달려간다! 돌리면 성문이 닫힌다 — 막아라",
 		"반격 4/4 — 트로이 왕자 데이포보스의 총공세! 왕자를 쓰러뜨리면 트로이군이 무너진다",
 	]

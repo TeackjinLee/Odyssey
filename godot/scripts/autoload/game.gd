@@ -42,6 +42,8 @@ const KEYS := {
 	"cmd_hold": [KEY_2],
 	"cmd_focus": [KEY_3],
 	"cmd_regroup": [KEY_4],
+	"cmd_special": [KEY_5],
+	"decoy": [KEY_C],
 	"help": [KEY_F1, KEY_TAB],
 	"pause": [KEY_ESCAPE],
 }

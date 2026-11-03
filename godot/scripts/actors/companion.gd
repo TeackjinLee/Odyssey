@@ -25,6 +25,13 @@ var anim_i := 0
 var block_left := 0.0
 var _seen_windup: Actor = null
 var revive_point: Interactable
+## 방패벽: 남은 시간과 막는 방향(그동안 제자리에서 방패를 세우고 화살·정면 공격을 막는다)
+var wall_time := 0.0
+var wall_dir := Vector2.ZERO
+const WALL_TIME := 5.0
+## 창 던지기: 조준한 곳 가까이의 적을 찾는 거리, 피해
+const JAVELIN_RANGE := 230.0
+const JAVELIN_DMG := 22.0
 
 
 func setup(r: String, who: String) -> void:
@@ -47,8 +54,20 @@ func _ready() -> void:
 
 func think(delta: float) -> void:
 	if state == St.DOWNED:
+		if wall_time > 0.0:
+			_end_wall()
 		return
 	attack_cd -= delta
+	if wall_time > 0.0:
+		wall_time -= delta
+		desired_velocity = Vector2.ZERO
+		face(wall_dir)
+		state = St.BLOCK
+		stamina = max_stamina
+		play("block")
+		if wall_time <= 0.0:
+			_end_wall()
+		return
 	if state == St.ATTACK:
 		_attack_update()
 		return
@@ -101,6 +120,42 @@ func think(delta: float) -> void:
 		elif Game.player:
 			face(Game.player.facing)
 		play("idle")
+
+
+## 부대 특수 명령(Squad.special): 병과마다 기술 하나.
+func special(aim_pos: Vector2) -> void:
+	match role:
+		"sword":
+			wall_time = WALL_TIME
+			wall_dir = (aim_pos - global_position).normalized()
+			if wall_dir == Vector2.ZERO:
+				wall_dir = facing
+			add_to_group("shield_wall")
+			Fx.ring(global_position, 18.0, Color(0.6, 0.8, 1.0), 0.4)
+		"spear":
+			var best: Actor = null
+			var best_d := JAVELIN_RANGE
+			for e in Game.level.enemies():
+				var d := global_position.distance_to(e.global_position)
+				if d < best_d and e.global_position.distance_to(aim_pos) < 120.0 \
+						and Game.level.line_clear(global_position, e.global_position, 1.0):
+					best_d = d
+					best = e
+			if best:
+				face(best.global_position - global_position)
+				play_timed("attack1", 0.4)
+				Combat.shoot(self, best.global_position + best.velocity * 0.2, JAVELIN_DMG, 340.0)
+		"archer":
+			face(aim_pos - global_position)
+			play_timed("bow", 0.6)
+			Skills.volley(self, aim_pos, bool(Game.level.get("armory_burned")))
+
+
+func _end_wall() -> void:
+	wall_time = 0.0
+	remove_from_group("shield_wall")
+	if state == St.BLOCK:
+		set_state(St.IDLE)
 
 
 func _choose_target() -> Actor:

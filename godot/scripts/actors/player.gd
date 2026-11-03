@@ -17,6 +17,9 @@ const TAKEDOWN := {"anim": "attack3", "dur": 0.42, "hit": 99.0, "quiet": true}
 const SWING_NOISE := 95.0
 const SWING_SUSPICION := 0.55
 const SKILL_CD := 20.0
+## 미끼 던지기(C): 쿨타임, 던질 수 있는 가장 먼 거리
+const DECOY_CD := 6.0
+const DECOY_RANGE := 170.0
 const HEAVY_CD := 1.2
 ## 이 키를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
 const KEY_AIM_KEYS := [KEY_J, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
@@ -34,6 +37,7 @@ var hit_done := false
 var buffered := 0.0
 var heavy_cd := 0.0
 var skill_cd := 0.0
+var decoy_cd := 0.0
 var bow_draw := 0.0
 var dodge_dir := Vector2.ZERO
 var interact_target: Interactable = null
@@ -110,16 +114,20 @@ func _read_input() -> void:
 		"interact": Input.is_action_just_pressed("interact"),
 		"interact_held": Input.is_action_pressed("interact"),
 		"skill": Input.is_action_just_pressed("skill"),
+		"decoy": Input.is_action_just_pressed("decoy"),
 		"aim": aim,
 	}
-	var cmds := ["cmd_follow", "cmd_hold", "cmd_focus", "cmd_regroup"]
+	var cmds := ["cmd_follow", "cmd_hold", "cmd_focus", "cmd_regroup", "cmd_special"]
 	for i in cmds.size():
 		if Input.is_action_just_pressed(cmds[i]) and Game.squad:
 			var at := aim
 			if not aim_mouse:
 				var far := _assist_target(mv, true)
 				at = far.global_position if far else global_position + _key_dir(mv) * 90.0
-			Game.squad.command(i, at)
+			if i == 4:
+				Game.squad.special(at)
+			else:
+				Game.squad.command(i, at)
 
 
 func _key_dir(mv: Vector2) -> Vector2:
@@ -153,6 +161,7 @@ func think(delta: float) -> void:
 	_read_input()
 	heavy_cd = max(0.0, heavy_cd - delta)
 	skill_cd = max(0.0, skill_cd - delta)
+	decoy_cd = max(0.0, decoy_cd - delta)
 	buffered = max(0.0, buffered - delta)
 	if state == St.IDLE or state == St.MOVE:
 		combo_window -= delta
@@ -162,6 +171,8 @@ func think(delta: float) -> void:
 			_switch_weapon()
 	if inp["skill"] and skill_cd <= 0.0 and state != St.INTERACT:
 		_war_cry()
+	if inp.get("decoy", false) and decoy_cd <= 0.0 and (state == St.IDLE or state == St.MOVE):
+		_throw_decoy()
 	match state:
 		St.IDLE, St.MOVE:
 			_free_move(delta)
@@ -372,6 +383,24 @@ func _war_cry() -> void:
 			e.stagger(0.6)
 
 
+## 미끼 던지기: 조준한 쪽(가장 멀리 DECOY_RANGE)으로 돌멩이를 던진다. 막힌 칸이면 그 앞에 떨어진다.
+func _throw_decoy() -> void:
+	decoy_cd = DECOY_CD
+	var to: Vector2 = inp["aim"]
+	var v := to - global_position
+	if v.length() < 30.0:
+		v = facing * 110.0
+	to = global_position + v.limit_length(DECOY_RANGE)
+	var steps := 12
+	for i in range(1, steps + 1):
+		var p := global_position.lerp(to, float(i) / steps)
+		if Game.level.is_blocked_world(p):
+			to = global_position.lerp(to, float(i - 1) / steps)
+			break
+	face(to - global_position)
+	Skills.throw_decoy(global_position + Vector2(0, -2), to)
+
+
 func _update_visual() -> void:
 	super._update_visual()
 	if weapons:
@@ -479,7 +508,7 @@ func _die() -> void:
 func _bot_input() -> Dictionary:
 	var out := {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
 		"dodge": false, "heavy": false, "switch": false, "interact": false, "interact_held": false, "skill": false,
-		"aim": global_position + facing * 20.0}
+		"decoy": false, "aim": global_position + facing * 20.0}
 	if Game.stealth_bot:
 		var sneak := _bot_sneak(out)
 		if not sneak.is_empty():
@@ -498,6 +527,11 @@ func _bot_input() -> Dictionary:
 			foe = e
 	if foe:
 		out["aim"] = foe.global_position
+		# 알아챈 적이 셋 이상 모이면 부대 특수 명령을 쓴다(봇 검증용으로 기술 경로를 돌려 봄)
+		if Game.squad and Game.squad.special_cd <= 0.0 and not Game.squad.members.is_empty():
+			var crowd: Array = Game.level.enemies().filter(func(e): return e.alerted and e.global_position.distance_to(foe.global_position) < 90.0)
+			if crowd.size() >= 3:
+				Game.squad.special(foe.global_position)
 		if best > 24.0:
 			out["move"] = nav_velocity(foe.global_position, 1.0, get_physics_process_delta_time()).normalized()
 		else:
