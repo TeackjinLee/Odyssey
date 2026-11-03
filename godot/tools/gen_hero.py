@@ -242,7 +242,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
             head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
             hx = (head[0] + head[2]) / 2
             if col == 0:
-                hx0 = hx
+                hx0, top0 = hx, bb[1]
             frame, _, (ox, oy) = to_pose(cell, (hx, base), 0, k)
             if anim in ATTACK_HANDS:
                 src_d = STRIP_MIRROR.get(anim, {}).get(d)
@@ -251,6 +251,8 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
                 else:   # 뒤집어 만든 줄: 원래 줄의 칠 주먹·방패 손을 칸 폭 기준으로 뒤집는다
                     (rx, ry), (lx, ly) = ATTACK_HANDS[anim][src_d][col], ATTACK_LEFT[anim][src_d]
                     r, l = (cw - rx, ry), (cw - lx, ly)
+                # 방패 손은 첫 장 위치를 몸(머리)이 움직인 만큼 따라 옮긴다: 내딛고 웅크릴 때 방패가 몸에서 떨어지지 않게
+                l = (l[0] + (hx - hx0), l[1] + (bb[1] - top0))
             else:
                 h0 = strip_hand0(anim, d, cw)
                 sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)
