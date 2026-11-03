@@ -543,7 +543,7 @@ func _process(delta: float) -> void:
 		return
 	if not _combat_hint and step in [1, 2] and enemies().any(func(e): return e.alerted):
 		_combat_hint = true
-		Game.show_hint("들켰다! J/좌클릭 검 3연타 · F 강공격 · K/우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
+		Game.show_hint("들켰다! Z/좌클릭 검 3연타 · F 강공격 · K/우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
 	match step:
 		2:
 			if not _boss_hint and is_instance_valid(captain) and captain.alerted:

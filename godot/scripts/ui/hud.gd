@@ -263,7 +263,7 @@ func _draw_minimap(p: Player) -> void:
 func _draw_slots(p: Player) -> void:
 	var slots := [
 		["검" if p.weapon == "sword" else "활", "Q 교체", 0.0, p.weapon == "sword"],
-		["연타" if p.weapon == "sword" else "조준", "J/클릭", 0.0, true],
+		["연타" if p.weapon == "sword" else "조준", "Z/클릭", 0.0, true],
 		["강공격", "F", p.heavy_cd / Player.HEAVY_CD, p.weapon == "sword"],
 		["방패", "K/우클릭", 0.0, p.weapon == "sword"],
 		["구르기", "Space", 0.0, p.stamina >= 11.0],
@@ -344,12 +344,12 @@ func _draw_help() -> void:
 	canvas.draw_rect(r, GOLD, false, 1.0)
 	_text(r.position + Vector2(0, 16), "조작법  (F1 / Tab 닫기)", 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
 	var rows := [
-		["WASD", "이동 (Shift 달리기)"], ["J / 좌클릭", "검 3연타 (누르고 있던 입력은 다음 타로 이어짐)"],
+		["WASD", "이동 (Shift 달리기)"], ["Z / 좌클릭", "검 3연타 (누르고 있던 입력은 다음 타로 이어짐)"],
 		["F", "강공격 — 방패를 부수고 크게 밀어냄"], ["K / 우클릭", "방패 막기 — 막는 순간 0.2초는 패링"],
 		["Space", "구르기 (무적, 공격 후딜 취소)"], ["Q", "검 ↔ 활 (활: 누르고 있다가 놓아 발사)"],
 		["E", "대화·조사 / 길게: 권양기, 쓰러진 부하 일으키기"], ["R", "전투의 함성 — 아군 회복·공격력 증가, 주변 적 경직"],
 		["1 2 3 4", "부대: 따라오기 · 위치 사수 · 집중 공격 · 후퇴·집결"],
-		["조준", "마우스 쪽 / J·K·방향키를 쓰면 이동·바라보는 쪽의 적"],
+		["조준", "마우스 쪽 / Z·K·방향키를 쓰면 이동·바라보는 쪽의 적"],
 	]
 	for i in rows.size():
 		var y: float = r.position.y + 38 + i * 19

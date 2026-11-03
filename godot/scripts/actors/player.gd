@@ -2,7 +2,7 @@ class_name Player
 extends Actor
 ## 오디세우스. 이동·달리기, 검 3연타 + 강공격, 방패 막기(막기 직후 0.2초는 패링), 구르기, 활 조준·발사,
 ## 상호작용(E 길게), 전투의 함성(R), 부대 명령(1~4). 알아채지 못한 적의 뒤에서 E를 누르면 조용히 처치한다.
-## 조준은 마우스를 움직이거나 누르면 마우스 쪽, J·K·방향키를 누르면 키보드 조준(이동·바라보는 방향, 그쪽 가까운 적에 맞춤).
+## 조준은 마우스를 움직이거나 누르면 마우스 쪽, Z·K·방향키를 누르면 키보드 조준(이동·바라보는 방향, 그쪽 가까운 적에 맞춤).
 ## 공격하는 동안 실제 판정 범위(부채꼴·화살 길)를 바닥에 그린다(draw_reach, 레벨의 sight_layer).
 
 const SWORD_COMBO := [
@@ -19,7 +19,7 @@ const SWING_SUSPICION := 0.55
 const SKILL_CD := 20.0
 const HEAVY_CD := 1.2
 ## 이 키를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
-const KEY_AIM_KEYS := [KEY_J, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
+const KEY_AIM_KEYS := [KEY_Z, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 ## 키보드 조준이 적을 찾는 거리와 반각(검 / 활·부대 명령)
 const KEY_AIM_NEAR := [60.0, 70.0]
 const KEY_AIM_FAR := [320.0, 40.0]

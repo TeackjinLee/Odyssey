@@ -107,9 +107,9 @@ func _register_input() -> void:
 		var mb := InputEventMouseButton.new()
 		mb.button_index = pair[1]
 		InputMap.action_add_event(pair[0], mb)
-	var j := InputEventKey.new()
-	j.physical_keycode = KEY_J
-	InputMap.action_add_event("attack", j)
+	var z := InputEventKey.new()
+	z.physical_keycode = KEY_Z
+	InputMap.action_add_event("attack", z)
 	var k := InputEventKey.new()
 	k.physical_keycode = KEY_K
 	InputMap.action_add_event("block", k)

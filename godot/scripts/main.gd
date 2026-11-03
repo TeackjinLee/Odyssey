@@ -147,8 +147,8 @@ func _show_menu() -> void:
 		menu.add_child(b)
 		if i == 0:
 			b.grab_focus()
-	_label(menu, "WASD 이동 · J/좌클릭 공격 · K/우클릭 방패 · Space 구르기 · E 상호작용 · 1~4 부대 명령 · F1 조작법", Vector2(0, 300), 7, Color(0.75, 0.75, 0.75))
-	_label(menu, "마우스 없이: 메뉴는 방향키·WASD로 고르고 Enter/E, 조준은 J·K·방향키를 쓰면 바라보는 쪽의 적", Vector2(0, 314), 7, Color(0.75, 0.75, 0.75))
+	_label(menu, "WASD 이동 · Z/좌클릭 공격 · K/우클릭 방패 · Space 구르기 · E 상호작용 · 1~4 부대 명령 · F1 조작법", Vector2(0, 300), 7, Color(0.75, 0.75, 0.75))
+	_label(menu, "마우스 없이: 메뉴는 방향키·WASD로 고르고 Enter/E, 조준은 Z·K·방향키를 쓰면 바라보는 쪽의 적", Vector2(0, 314), 7, Color(0.75, 0.75, 0.75))
 	_label(menu, "임시 픽셀아트는 tools/의 생성기로 만든 것이다. assets/의 그림을 같은 규칙으로 바꾸면 그대로 반영된다.", Vector2(0, 340), 6, Color(0.5, 0.5, 0.5))
 
 
