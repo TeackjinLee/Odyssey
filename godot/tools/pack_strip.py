@@ -14,21 +14,28 @@
 출력: assets/source/odysseus_<동작>_8dir.webp (줄 = 남→남동→동→북동→북→북서→서→남서, 칸 CELL×CELL)
 사용: python3 tools/pack_strip.py <godot 프로젝트 폴더> <동작> [격자 열 수] [격자 줄 수] [프레임 수]
 """
+import os
 import sys
 from pathlib import Path
 
 from PIL import Image
 
+CHAR = os.environ.get("SPRITE_CHAR", "odysseus")   # 다른 캐릭터·옷: SPRITE_CHAR=odysseus_ch1
+# 받은 그림의 서 있는 키(px)가 동작마다 같게 그려졌으면(요청 글에 키를 정해 둔 경우) SPRITE_SRC_H로 주면
+# 모든 동작·방향을 같은 배율(CHAR_H / 그 키)로 줄인다 — 볏 달린 투구처럼 머리 폭이 자세마다 달라 머리 폭 맞춤이 어긋날 때
+SRC_H = float(os.environ.get("SPRITE_SRC_H", "0"))
+
 sys.path.insert(0, str(Path(__file__).parent))
 from gen_hero import is_bg  # noqa: E402
 
-CELL = 256
+CELL = 320      # 강공격 회오리·쓰러진 몸처럼 넓은 장면이 옆 칸에 묻어나지 않게
 CHAR_H = 216
-BASE_Y = 244
+BASE_Y = 296
 FIT_TOL = 0.01
 DRAWN = ["S", "SE", "E", "NE", "N"]
-FLIGHT = {"run", "attack1", "attack2", "attack3", "heavy"}
-HEAD_SCALE = {"attack1", "attack2", "attack3", "heavy"}
+# 웅크리거나 구르거나 쓰러지는 동작도 키가 크게 달라지므로 머리 폭으로 맞추고 뜬 높이를 살린다
+FLIGHT = {"run", "attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle"}
+HEAD_SCALE = {"attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle"}
 # 8방향 한 장의 줄 순서 → (받은 방향, 좌우 뒤집기)
 ROWS = [("S", False), ("SE", False), ("E", False), ("NE", False), ("N", False),
         ("NE", True), ("E", True), ("SE", True)]
@@ -37,10 +44,10 @@ MAGENTA = (255, 0, 255)
 
 def load(root, anim, d):
     for ext in ("webp", "png"):
-        p = root / f"assets/source/odysseus_{anim}_{d}.{ext}"
+        p = root / f"assets/source/{CHAR}_{anim}_{d}.{ext}"
         if p.exists():
             return Image.open(p).convert("RGB")
-    sys.exit(f"없음: assets/source/odysseus_{anim}_{d}.webp")
+    sys.exit(f"없음: assets/source/{CHAR}_{anim}_{d}.webp")
 
 
 def frames(src, cols, rows):
@@ -109,7 +116,7 @@ def head_w(f):
 
 def walk_head_widths(root):
     """같은 방향의 걷기 첫 장 머리 폭(공격 크기를 걷기에 맞추는 기준)."""
-    path = root / "assets/source/odysseus_walk_8dir.webp"
+    path = root / f"assets/source/{CHAR}_walk_8dir.webp"
     if not path.exists():
         sys.exit("공격은 걷기 8방향 시트(odysseus_walk_8dir.webp)를 먼저 묶어 둬야 한다")
     src = Image.open(path).convert("RGB")
@@ -130,17 +137,19 @@ def walk_head_widths(root):
 def main(root, anim, cols=4, rows=3, n=None):
     drawn, lift = {}, {}
     flight = anim in FLIGHT
-    ref_head = walk_head_widths(root) if anim in HEAD_SCALE else None
+    ref_head = walk_head_widths(root) if anim in HEAD_SCALE and not SRC_H else None
     n = n or cols * rows
     for d in DRAWN:
         fr = frames(load(root, anim, d), cols, rows)[:n]
-        if ref_head:
+        if SRC_H:
+            k = CHAR_H / SRC_H
+        elif ref_head:
             ws = sorted(head_w(f) for f, _ in fr)
             k = ref_head[d] / ws[len(ws) // 2]
         else:
             hs = sorted(f.height for f, _ in fr)
             k = CHAR_H / hs[len(hs) // 2]
-        drawn[d] = [fit(f, k, 1.0 if flight else FIT_TOL) for f, _ in fr]
+        drawn[d] = [fit(f, k, 1.0 if flight or (SRC_H and anim != "walk") else FIT_TOL) for f, _ in fr]
         base = max(b for _, b in fr)
         lift[d] = [round((base - b) * k) if flight else 0 for _, b in fr]
     sheet = Image.new("RGB", (CELL * n, CELL * len(ROWS)), MAGENTA)
@@ -149,7 +158,7 @@ def main(root, anim, cols=4, rows=3, n=None):
             if flip:
                 f = f.transpose(Image.FLIP_LEFT_RIGHT)
             sheet.paste(f, (i * CELL + CELL // 2 - round(head_cx(f)), row * CELL + BASE_Y - lift[d][i] - f.height), f)
-    out = root / f"assets/source/odysseus_{anim}_8dir.webp"
+    out = root / f"assets/source/{CHAR}_{anim}_8dir.webp"
     sheet.save(out, lossless=True)
     print(out.relative_to(root), sheet.size)
 

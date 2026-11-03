@@ -1,0 +1,20 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 5 facings, left to right: SOUTH (front), SOUTH-EAST (front-right), EAST (right side), NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art single-frame pose: KNOCKED DOWN (stunned on the ground, waiting to be revived) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), exactly like pose.png: bronze Corinthian helmet with gold scroll ornaments and a tall red horsehair crest sweeping back, face visible (dark eyebrows, brown eyes, short dark beard), red cape over both shoulders with round gold shoulder clasps, bronze muscle cuirass with a diagonal brown leather strap and a Greek-key belt, leather pteruges with crimson panels over a cream skirt, bronze bracers, bronze greaves with knee guards, sandals.
+Weapons always carried: a short bronze leaf-blade sword with a gold crossguard held in the RIGHT fist, a round bronze shield with a gold eight-pointed star strapped to the LEFT forearm, and a wooden recurve bow with a brown quiver of white-fletched arrows slung diagonally on his BACK.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+He lies on his side on the ground, knees bent, one arm under his head, eyes closed, helmet still on, the sword lying next to his hand,
+the star shield on the ground beside him, the cape spread on the ground. Same lying pose seen from 5 camera facings.
+
+Layout (very important):
+- ONE image 1536x1024, 3 columns x 2 rows, every cell 512x512. Cells in reading order: 1 SOUTH, 2 SOUTH-EAST, 3 EAST, 4 NORTH-EAST, 5 NORTH; cell 6 stays EMPTY magenta.
+- Each cell: the camera looks at him from that facing direction as in pose.png (front views show his face, back views show his back and cape).
+- Same character scale as pose.png (head as big as in pose.png). The lying body is COMPACT and fully inside its cell, near the cell's bottom.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).

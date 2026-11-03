@@ -1,0 +1,9 @@
+bow_NE-Nc /Users/itaegjin/.codex/generated_images/01a1a22c-f914-7d53-9f53-78782e7a7768/exec-443ae736-6053-46b2-8b1e-156d180f30a7.png
+downed_all /Users/itaegjin/.codex/generated_images/01a1a22c-f8ba-7ae1-adda-1e5973920841/exec-07cd2cbb-70d1-4875-99ce-7a106b3d7476.png
+heavy_Ea /Users/itaegjin/.codex/generated_images/01a1a22c-f8c7-7aa3-9c5a-9f7398761f16/exec-1bb77871-3374-4bac-8736-29d7fecfe828.png
+heavy_NEa /Users/itaegjin/.codex/generated_images/01a1a22c-f8c8-7111-a5be-a243927d903d/exec-55eaa972-02f4-40cb-9e89-7b2fa77a2343.png
+heavy_Na /Users/itaegjin/.codex/generated_images/01a1a22c-f8ed-73c0-be13-1920481bf4d1/exec-c80dd304-945f-4ad0-836c-17adc5a4d702.png
+heavy_SEa /Users/itaegjin/.codex/generated_images/01a1a22c-f8c8-7f52-b640-96a065645b4c/exec-096b9fe6-2ec1-4053-a616-ae0fdcc102a2.png
+heavy_Sa /Users/itaegjin/.codex/generated_images/01a1a22c-f8c6-70a0-99e0-6e7e573311ed/exec-d8eeccf4-1e91-4617-b750-774f115f15e8.png
+interact_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a22c-f8c1-7fc0-b103-be888bdcc755/exec-96d740fd-b674-4f76-97e4-e2e6cc00a376.png
+interact_NE-Na /Users/itaegjin/.codex/generated_images/01a1a22c-f8c6-7ed0-8335-1520c396f6bb/exec-e062935c-8222-4f20-9efa-a2971246a0db.png

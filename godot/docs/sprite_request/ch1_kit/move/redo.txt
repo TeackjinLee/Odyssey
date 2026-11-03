@@ -1,0 +1,2 @@
+run_Eb /Users/itaegjin/.codex/generated_images/01a1a21c-22b6-7f81-9a8e-73e75d009c3c/exec-eef82a8e-7a76-4eb6-8c0b-266096534332.png
+run_SEb /Users/itaegjin/.codex/generated_images/01a1a21c-22b3-71b1-b4bf-afdd139a2d6c/exec-a2e33c57-0056-4457-81d8-e0fac5f53676.png
