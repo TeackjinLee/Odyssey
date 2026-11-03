@@ -83,7 +83,11 @@ func _showcase() -> void:
 		var n := Npc.new()
 		n.setup("odysseus", "오디세우스", func(_b): pass)
 		n.fixed_dir = d
-		n.fixed_anim = String(args.get("anim", "idle"))
+		n.cycle = String(args.get("anim", "idle")).split(",")
+		n.fixed_anim = n.cycle[0]
+		n.play_speed = float(args.get("speed", 1.0))
+		n.freeze_frame = int(args.get("frame", -1))
+		n.cycle_time = float(args.get("hold", 0.9))
 		n.position = base + Vector2(d * 38, (d % 2) * 6)
 		lv.world.add_child(n)
 		n.talk.enabled = false

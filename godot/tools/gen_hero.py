@@ -175,6 +175,8 @@ ATTACK_LEFT = {
     "heavy": {2: (160, 115), 1: (150, 110), 0: (165, 125), 7: (120, 125), 6: (100, 130)},
 }
 
+SHOULDER_AT = 0.40   # 칼끝 각도를 잴 때 어깨 높이(키 비율)
+
 # 그림이 어색한 방향은 다른 방향 줄을 가져다 쓴다: 방향 → (가져올 방향, 좌우 뒤집기)
 STRIP_REUSE = {}
 
@@ -259,6 +261,10 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
                 r = tracked[0][col] if tracked[0] else (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
                 l = tracked[1][col] if tracked[1] else (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
+            if anim in ATTACK_HANDS:
+                # 칼끝 각도(도, 화면 좌표): 어깨 → 치는 주먹 방향. 어깨는 머리 가운데 x, 키의 40% 높이로 잡는다
+                sx, sy = hx, bb[1] + SHOULDER_AT * (bb[3] - bb[1])
+                hands.append(round(math.degrees(math.atan2(r[1] - sy, r[0] - sx)), 1))
             frames.append((frame, hands))
         out[d] = frames
     for d, (src_d, flip) in STRIP_REUSE.get(anim, {}).items():

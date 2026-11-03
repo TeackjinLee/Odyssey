@@ -7,16 +7,17 @@ extends RefCounted
 
 # 방향: 0 동 1 남동 2 남 3 남서 4 서 5 북서 6 북 7 북동
 const MAIN_FRONT := [0, 1, 2, 3, 6, 7]
-const OFF_FRONT := [2, 3, 4, 5, 6]
+const OFF_FRONT := [0, 1, 2, 3, 4]
 const SHIELD_VIEW := {
-	0: ["back", false], 1: ["side", false], 2: ["three_quarter", false], 3: ["front", false],
-	4: ["front", false], 5: ["three_quarter", true], 6: ["side", true], 7: ["back", true],
+	0: ["side", false], 1: ["three_quarter", false], 2: ["front", false], 3: ["three_quarter", true],
+	4: ["side", true], 5: ["back", true], 6: ["back", false], 7: ["back", false],
 }
 # 휘두르는 각도(도, 바라보는 쪽 기준): 시작 → 끝
 const SWINGS := {
 	"attack1": [-125.0, 75.0], "attack2": [125.0, -75.0], "attack3": [-175.0, 15.0], "heavy": [-170.0, 190.0],
 }
 const SWEEP_TIME := 0.08
+const SHIELD_SCALE := 0.8   # 방패를 머리 크기에 맞게 줄인다(그려 받은 기준 그림의 크기)
 const ARM_FACE_BIAS := 6.0   # 주먹이 가슴 가까이 있을 때 칼끝이 바라보는 쪽으로 기울게
 
 var actor: Actor
@@ -97,7 +98,8 @@ func update() -> void:
 			if anim in AssetLibrary.character_drawn(actor.sheet):
 				# 그려 받은 공격 그림: 주먹에 붙이고 칼끝은 팔이 뻗은 쪽(가슴 → 주먹)으로 — 팔을 뻗으면 앞을 향한다
 				pos = rh
-				ang = (rh - chest + fv * ARM_FACE_BIAS).angle()
+				# 시트가 프레임마다 재 둔 칼끝 각도(어깨→주먹)가 있으면 그것을, 없으면 가슴→주먹 방향을 쓴다
+				ang = deg_to_rad(float(h[4])) if h.size() > 4 else (rh - chest + fv * ARM_FACE_BIAS).angle()
 				front = true
 			elif SWINGS.has(anim):
 				var t := actor.state_time
@@ -124,6 +126,8 @@ func update() -> void:
 
 	# ── 왼손: 방패 또는 활 ──
 	off.visible = true
+	off.scale = Vector2(_k, _k) * (1.0 if bow_mode else SHIELD_SCALE)
+	slung.scale = Vector2(_k, _k) * SHIELD_SCALE
 	if bow_mode:
 		_tex_set(off, _meta["bow"]["file"], _meta["bow"]["grip"])
 		if actor.state == Actor.St.BOW:
@@ -147,7 +151,7 @@ func update() -> void:
 		else:
 			var sv: Array = SHIELD_VIEW[d]
 			_tex_set(off, _meta["shield"]["views"][sv[0]], _meta["shield"]["grip"], sv[1])
-			off.position = lh + Vector2(0, -3)
+			off.position = lh + Vector2(0, 2)
 			_order(off, d in OFF_FRONT)
 		off.rotation = 0.0
 
