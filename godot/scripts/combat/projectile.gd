@@ -31,6 +31,14 @@ func _physics_process(delta: float) -> void:
 		Fx.spark(position + Vector2(0, -16), Color(0.8, 0.7, 0.5), 3)
 		queue_free()
 		return
+	# 방패벽(부대 특수 명령의 검병): 앞쪽에서 날아온 화살을 막는다
+	for w in get_tree().get_nodes_in_group("shield_wall"):
+		if w.team != team and Combat.ground_dist(position, w.global_position) < 20.0 \
+				and w.facing.dot(-velocity.normalized()) > 0.1:
+			Fx.spark(position + Vector2(0, -16), Color(1, 0.95, 0.75), 5)
+			Sfx.play("block", -8.0)
+			queue_free()
+			return
 	for a in get_tree().get_nodes_in_group("actors"):
 		if a.team == team or not a.is_alive():
 			continue

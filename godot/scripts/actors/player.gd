@@ -17,9 +17,12 @@ const TAKEDOWN := {"anim": "attack3", "dur": 0.42, "hit": 99.0, "quiet": true}
 const SWING_NOISE := 95.0
 const SWING_SUSPICION := 0.55
 const SKILL_CD := 20.0
+## 미끼 던지기(C): 쿨타임, 던질 수 있는 가장 먼 거리
+const DECOY_CD := 6.0
+const DECOY_RANGE := 170.0
 const HEAVY_CD := 1.2
-## 이 키를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
-const KEY_AIM_KEYS := [KEY_Z, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
+## 이 키(+ 공격·방패 키)를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
+const KEY_AIM_KEYS := [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 ## 키보드 조준이 적을 찾는 거리와 반각(검 / 활·부대 명령)
 const KEY_AIM_NEAR := [60.0, 70.0]
 const KEY_AIM_FAR := [320.0, 40.0]
@@ -34,6 +37,7 @@ var hit_done := false
 var buffered := 0.0
 var heavy_cd := 0.0
 var skill_cd := 0.0
+var decoy_cd := 0.0
 var bow_draw := 0.0
 var dodge_dir := Vector2.ZERO
 var interact_target: Interactable = null
@@ -47,6 +51,8 @@ var aim_lock: Actor = null
 ## 판정 직후 남는 범위: [spec, 남은 시간, 위치, 바라보는 방향]
 var _reach_flash: Array = []
 var weapons: WeaponLayer
+## 연출(Game.cutscene)에서 걸어갈 자리 (INF면 제자리)
+var script_goal := Vector2.INF
 
 
 func _ready() -> void:
@@ -86,11 +92,18 @@ func _input(event: InputEvent) -> void:
 			aim_mouse = true
 	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O:
 		Game.set_outfit(Game.next_outfit())
-	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in KEY_AIM_KEYS:
+	elif event is InputEventKey and event.pressed and not event.echo \
+			and (event.physical_keycode in KEY_AIM_KEYS or event.is_action("attack") or event.is_action("block")):
 		aim_mouse = false
 
 
 func _read_input() -> void:
+	if Game.cutscene:
+		inp = _idle_input()
+		if script_goal != Vector2.INF:
+			var v := nav_velocity(script_goal, 1.0, get_physics_process_delta_time(), 6.0)
+			inp["move"] = v.normalized() if v.length() > 0.01 else Vector2.ZERO
+		return
 	if Game.autoplay:
 		inp = _bot_input()
 		return
@@ -112,16 +125,20 @@ func _read_input() -> void:
 		"interact": Input.is_action_just_pressed("interact"),
 		"interact_held": Input.is_action_pressed("interact"),
 		"skill": Input.is_action_just_pressed("skill"),
+		"decoy": Input.is_action_just_pressed("decoy"),
 		"aim": aim,
 	}
-	var cmds := ["cmd_follow", "cmd_hold", "cmd_focus", "cmd_regroup"]
+	var cmds := ["cmd_follow", "cmd_hold", "cmd_focus", "cmd_regroup", "cmd_special"]
 	for i in cmds.size():
 		if Input.is_action_just_pressed(cmds[i]) and Game.squad:
 			var at := aim
 			if not aim_mouse:
 				var far := _assist_target(mv, true)
 				at = far.global_position if far else global_position + _key_dir(mv) * 90.0
-			Game.squad.command(i, at)
+			if i == 4:
+				Game.squad.special(at)
+			else:
+				Game.squad.command(i, at)
 
 
 func _key_dir(mv: Vector2) -> Vector2:
@@ -155,6 +172,7 @@ func think(delta: float) -> void:
 	_read_input()
 	heavy_cd = max(0.0, heavy_cd - delta)
 	skill_cd = max(0.0, skill_cd - delta)
+	decoy_cd = max(0.0, decoy_cd - delta)
 	buffered = max(0.0, buffered - delta)
 	if state == St.IDLE or state == St.MOVE:
 		combo_window -= delta
@@ -164,6 +182,8 @@ func think(delta: float) -> void:
 			_switch_weapon()
 	if inp["skill"] and skill_cd <= 0.0 and state != St.INTERACT:
 		_war_cry()
+	if inp.get("decoy", false) and decoy_cd <= 0.0 and (state == St.IDLE or state == St.MOVE):
+		_throw_decoy()
 	match state:
 		St.IDLE, St.MOVE:
 			_free_move(delta)
@@ -381,6 +401,24 @@ func _war_cry() -> void:
 			e.stagger(0.6)
 
 
+## 미끼 던지기: 조준한 쪽(가장 멀리 DECOY_RANGE)으로 돌멩이를 던진다. 막힌 칸이면 그 앞에 떨어진다.
+func _throw_decoy() -> void:
+	decoy_cd = DECOY_CD
+	var to: Vector2 = inp["aim"]
+	var v := to - global_position
+	if v.length() < 30.0:
+		v = facing * 110.0
+	to = global_position + v.limit_length(DECOY_RANGE)
+	var steps := 12
+	for i in range(1, steps + 1):
+		var p := global_position.lerp(to, float(i) / steps)
+		if Game.level.is_blocked_world(p):
+			to = global_position.lerp(to, float(i - 1) / steps)
+			break
+	face(to - global_position)
+	Skills.throw_decoy(global_position + Vector2(0, -2), to)
+
+
 func _update_visual() -> void:
 	super._update_visual()
 	if weapons:
@@ -485,10 +523,15 @@ func _die() -> void:
 
 
 # ── 자동 플레이(검증용: --auto) ──────────────────────
-func _bot_input() -> Dictionary:
-	var out := {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
+## 아무것도 누르지 않은 입력
+func _idle_input() -> Dictionary:
+	return {"move": Vector2.ZERO, "run": false, "attack": false, "attack_held": false, "block": false,
 		"dodge": false, "heavy": false, "switch": false, "interact": false, "interact_held": false, "skill": false,
-		"aim": global_position + facing * 20.0}
+		"decoy": false, "aim": global_position + facing * 20.0}
+
+
+func _bot_input() -> Dictionary:
+	var out := _idle_input()
 	if Game.stealth_bot:
 		var sneak := _bot_sneak(out)
 		if not sneak.is_empty():
@@ -507,6 +550,11 @@ func _bot_input() -> Dictionary:
 			foe = e
 	if foe:
 		out["aim"] = foe.global_position
+		# 알아챈 적이 셋 이상 모이면 부대 특수 명령을 쓴다(봇 검증용으로 기술 경로를 돌려 봄)
+		if Game.squad and Game.squad.special_cd <= 0.0 and not Game.squad.members.is_empty():
+			var crowd: Array = Game.level.enemies().filter(func(e): return e.alerted and e.global_position.distance_to(foe.global_position) < 90.0)
+			if crowd.size() >= 3:
+				Game.squad.special(foe.global_position)
 		if best > 24.0:
 			out["move"] = nav_velocity(foe.global_position, 1.0, get_physics_process_delta_time()).normalized()
 		else:

@@ -1,0 +1,15 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) layout.png = the layout reference: pixel-art isometric chibi hero ODYSSEUS (bare head, gold bronze armor) with EMPTY HANDS, in a grid on magenta. 19 columns x 8 rows. Columns = animation frames: columns 1-4 = SLASH 1 (forehand), 5-8 = SLASH 2 (backhand), 9-13 = SLASH 3 (overhead chop), 14-19 = HEAVY spin-jump slash. Rows top to bottom = facing directions: row 1 EAST (right side), row 2 SOUTH-EAST (front-right), row 3 SOUTH (front, facing viewer), row 4 SOUTH-WEST (front-left), row 5 WEST (left side), row 6 NORTH-WEST (back-left), row 7 NORTH (back, facing away), row 8 NORTH-EAST (back-right).
+2) weapons.png = the weapon designs: a short bronze sword with a gold hilt, and a round bronze shield with a red center disk, shown from front, three-quarter, side and back.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+TASK: redraw the EXACT same grid (19 columns x 8 rows), every figure in the same cell, same position, same size, same body pose, same face/hair/armor/colors, same pixel style, same magenta #FF00FF background - but now the hero HOLDS THE WEAPONS in every cell, drawn as ONE piece with the body (the weapons are part of the sprite, not floating stickers):
+- RIGHT hand = the striking fist: it GRIPS the sword hilt INSIDE the closed fist. The fingers wrap around the grip, the hilt crossguard sits right at the fist, the pommel sticks out on the other side. The blade is the straight continuation of the forearm direction and follows the swing: wind-up = blade back/up, strike = blade forward-and-across in the direction the fist travels, overhead = up then down, heavy = blade sweeping around the body. The sword must NEVER float beside or above the hand.
+- LEFT hand: the round shield is STRAPPED onto the left forearm, its center over the forearm, held close in front of the chest/side at guard height (never in front of the face, never detached from the arm). It moves with the left arm.
+- DEPTH: if the shield or sword is on the far side of the body from the camera, it is PARTLY HIDDEN behind the torso/head/legs. In back views (rows 6, 7, 8) the shield is mostly hidden behind the body; show its plain back or rim only. The blade passes behind the body when it points away from the camera.
+- Shield facing: front/three-quarter views show its red-centered face; side views show its thin edge; back views show the plain back with the strap.
+- Sizes: blade length about the hero's torso height; shield diameter about 1.3x the head.
+- Nothing else changes: no labels, no text, no numbers, no grid lines, no shadows, no motion blur, no speed lines, no effects.
+- Pixel art, crisp 1px dark outlines, hard pixel clusters, no anti-aliasing.
+
+Output: ONE image 2560x1536 with the same 19 x 8 grid as layout.png, every figure exactly in its cell, nothing cut off (leave room for sword tips inside each cell).

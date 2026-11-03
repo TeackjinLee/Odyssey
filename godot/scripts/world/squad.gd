@@ -17,6 +17,9 @@ var regroup_time := 0.0
 var trail: Array = []
 var heading := Vector2(0, 1)
 var narrow := false
+## 부대 특수 명령(5): 검병 방패벽 · 창병 창 던지기 · 궁병 일제 사격. 셋이 쿨타임 하나를 같이 쓴다
+const SPECIAL_CD := 18.0
+var special_cd := 0.0
 
 
 func add_member(c: Companion) -> void:
@@ -25,6 +28,7 @@ func add_member(c: Companion) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	special_cd = maxf(0.0, special_cd - delta)
 	var p: Player = Game.player
 	if p == null:
 		return
@@ -65,6 +69,28 @@ func command(m: int, aim_pos: Vector2) -> void:
 	set_mode(m)
 	Fx.text(p.global_position + Vector2(0, -60), MODE_SHOUTS[m], Color(0.7, 0.85, 1.0))
 	Sfx.play("ui")
+
+
+## 부대 특수 명령: 서 있는 부하마다 병과 기술을 쓴다(aim_pos = 조준한 곳).
+func special(aim_pos: Vector2) -> void:
+	var p: Player = Game.player
+	var ready := members.filter(func(c): return c.state != Actor.St.DOWNED)
+	if ready.is_empty():
+		return
+	if special_cd > 0.0:
+		Game.show_hint("부대 특수 명령 준비 중 (%d초)" % ceili(special_cd))
+		return
+	special_cd = SPECIAL_CD
+	var shouts := {}
+	for c in ready:
+		shouts[c.role] = true
+		c.special(aim_pos)
+	var words := []
+	for r in ["sword", "spear", "archer"]:
+		if shouts.has(r):
+			words.append({"sword": "방패벽!", "spear": "창을 던져라!", "archer": "일제 사격!"}[r])
+	Fx.text(p.global_position + Vector2(0, -60), " ".join(words), Color(0.7, 0.85, 1.0))
+	Sfx.play("cry", -12.0)
 
 
 func _pick_focus(aim_pos: Vector2, from: Vector2) -> Actor:

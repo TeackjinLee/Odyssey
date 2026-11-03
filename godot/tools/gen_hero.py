@@ -19,8 +19,8 @@ from pathlib import Path
 
 from PIL import Image
 
-FRAME = 128
-ANCHOR = (64, 120)
+FRAME = 144             # 투구 볏·점프 동작이 잘리지 않게 위쪽 여유를 둔 정사각 칸
+ANCHOR = (72, 136)
 TARGET_H = 104          # 시트 안 캐릭터 키(px). 게임에서는 scale배로 그린다
 DISPLAY_SCALE = 0.5     # 640×360 기준 화면에서 키 약 52px, 1280×720 창에서는 시트 픽셀 1:1
 
@@ -130,9 +130,10 @@ def load_gear(root, gear, body):
     return out
 
 
-def put_gears(cell, d, gears):
-    """cell 위에 장비들을 그 칸의 머리 위치·폭에 맞춰 얹은(또는 몸 뒤에 깐) 새 그림. gears = [(장비 dict, 방식)]."""
-    bb, head = head_box(cell)
+def put_gears(cell, d, gears, hb=None):
+    """cell 위에 장비들을 그 칸의 머리 위치·폭에 맞춰 얹은(또는 몸 뒤에 깐) 새 그림. gears = [(장비 dict, 방식)].
+    hb = (bb, head)를 주면 그 머리 상자를 쓴다(칼을 머리 위로 든 그림처럼 맨 윗선이 머리가 아닐 때)."""
+    bb, head = hb or head_box(cell)
     hx = (head[0] + head[2]) / 2
     out = cell.copy()
     for g, mode in gears:
@@ -363,6 +364,62 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
     return out, k, head_w
 
 
+# 칼·방패를 든 공격 그림 한 장: 19칸(공격1 4·공격2 4·공격3 5·강공격 6) × 8줄(게임 방향 0 동 ~ 7 북동 순서).
+# 무기가 몸과 함께 그려져 있어 이 동작들 동안 게임은 따로 그린 칼·방패를 숨긴다(시트 json "armed")
+ARMED_SRC = "assets/source/{}_attacks_armed.webp"
+ARMED_COLS = [("attack1", 4), ("attack2", 4), ("attack3", 5), ("heavy", 6)]
+
+
+# 받은 그림은 기준 격자(시트의 공격 프레임을 칸마다 LK배로 줄여 칸 아래·가운데에 붙인 그림) 위에 다시 그린 것이라,
+# 칸 위치를 그대로 시트 프레임으로 되돌린다. 머리 위치(투구 얹기)도 칼이 없는 기준 격자에서 잰다
+ARMED_LAYOUT = "docs/sprite_request/weapon_requests/full/layout.png"
+ARMED_LAYOUT_K = 0.912   # 기준 격자를 만들 때 프레임(144)을 줄인 배율
+
+
+def armed_frames(root, body, gear, old):
+    """칼·방패를 든 공격 그림 → {동작: {방향: [(FRAME 그림, 손 값)]}}. 없으면 {}.
+    손 값은 예전 줄(old)의 것을 그대로 둔다(무기를 따로 안 그리므로 쓰이지 않음)."""
+    path = root / ARMED_SRC.format(body)
+    if not path.exists():
+        return {}
+    src = Image.open(path).convert("RGB")
+    lay = Image.open(root / ARMED_LAYOUT).convert("RGB")
+    ncol = sum(n for _, n in ARMED_COLS)
+    cw, ch = lay.width // ncol, lay.height // 8   # 기준 격자 칸
+    sw, sh = src.width / ncol, src.height / 8     # 받은 그림 칸
+    fw = round(FRAME * ARMED_LAYOUT_K)
+    foot = ((cw - fw) // 2 + ANCHOR[0] * ARMED_LAYOUT_K, (ch - fw) + ANCHOR[1] * ARMED_LAYOUT_K)
+
+    def cut(img, x0, y0, x1, y1, size=None):
+        cell = img.crop((round(x0), round(y0), round(x1), round(y1)))
+        if size:
+            cell = cell.resize(size, Image.LANCZOS)
+        cell = cell.convert("RGBA")
+        px = cell.load()
+        for y in range(cell.height):
+            for x in range(cell.width):
+                if is_bg(px[x, y]):
+                    px[x, y] = (0, 0, 0, 0)
+        return cell
+
+    out, c0 = {}, 0
+    for anim, n in ARMED_COLS:
+        out[anim] = {}
+        for d in range(8):
+            frames = []
+            for i in range(n):
+                c = c0 + i
+                cell = cut(src, c * sw, d * sh, (c + 1) * sw, (d + 1) * sh, (cw, ch))
+                if gear:
+                    cell = put_gears(cell, d, gear, head_box(cut(lay, c * cw, d * ch, (c + 1) * cw, (d + 1) * ch)))
+                frame, _, _ = to_pose(cell, foot, 0, 1 / ARMED_LAYOUT_K)
+                h = old[anim][d][i][1] if old.get(anim) else [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
+                frames.append((frame, h))
+            out[anim][d] = frames
+        c0 += n
+    return out
+
+
 # ── 동작 = 포즈 변형 ──────────────────────────────────
 def params(anim, i, n, d):
     """프레임 변형: dx, dy, sx, sy, shear(위로 갈수록 바라보는 쪽으로), rot(도, 발 기준)."""
@@ -466,10 +523,12 @@ def build(root, name="odysseus"):
     for anim in ATTACK_HANDS:
         if strips["walk"]:
             strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=body, gear=gear)
+    armed = armed_frames(root, body, gear, strips)
+    strips.update(armed)
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
-            "drawn": [a for a, s in strips.items() if s]}
+            "drawn": [a for a, s in strips.items() if s], "armed": list(armed)}
     col = 0
     for anim, n, fps, loop in ANIMS:
         meta["anims"][anim] = {"start": col, "frames": n, "fps": fps, "loop": loop}

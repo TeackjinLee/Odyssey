@@ -1,9 +1,19 @@
 # ODYSSEY — 오디세우스의 귀환 (Godot 4)
 
 호메로스 《오디세이아》를 바탕으로 한 2.5D 쿼터뷰 액션 RPG. 오디세우스를 조종하고 부하를 지휘하며
-6개 챕터의 신화 속 사건을 겪는다. 기획 전체는 [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md)에 있다.
+6개 챕터의 신화 속 사건을 겪는다.
 
-현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 끝까지 플레이할 수 있다.
+| 문서 | 내용 |
+|---|---|
+| [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) | 게임 기획 (6챕터) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 개발 계획 — 마일스톤·다음 할 일 |
+| [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
+| [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
+| [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
+| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`) |
+
+현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지 플레이할 수 있다. 진행은 체크포인트마다 저장되어
+타이틀의 "이어 하기"로 이어서 한다.
 
 ## 실행
 
@@ -29,13 +39,20 @@ godot -e --path .             # 에디터로 열기
 | Q | 검 ↔ 활. 활은 공격 키(Z/좌클릭)를 누르고 있다가 놓으면 발사(오래 당길수록 강함) |
 | E | 대화·조사. 쓰러진 부하 일으키기·포로 풀기·불 지르기는 길게, 권양기는 누르고 있는 동안만 돈다. 적 뒤에서 조용히 처치, 횃불대 옆에서 횃불 끄기 |
 | R | 전투의 함성 — 주변 아군 회복과 8초 공격력 증가, 가까운 적 경직 (20초) |
+| C | 미끼 던지기 — 조준한 쪽(최대 170px)으로 돌멩이, 떨어진 곳 둘레의 보초가 살피러 간다(알아채지는 않음, 6초) |
 | 1 2 3 4 | 부대 명령: 따라오기 · 위치 사수 · 집중 공격(조준한 적) · 후퇴·집결 |
+| 5 | 부대 특수 명령(조준한 곳, 18초): 검병 방패벽(5초간 제자리에서 앞쪽 화살·공격을 막음) · 창병 창 던지기 · 궁병 일제 사격(원 안 화살비, 무기고를 태웠으면 불화살) |
 | F1 / Tab | 조작법 |
+| Esc | 일시정지 메뉴: 계속하기 · 설정(음량·전체 화면·키 바꾸기) · 체크포인트에서 다시 · 처음부터 · 타이틀로 |
 | 방향키·WASD + Enter/E | 메뉴·결과 화면 버튼 고르기·누르기. 대화는 E / Space / Z / 클릭으로 넘김 |
 
 **조준**: 마우스를 움직이거나 누르면 마우스 쪽을 노린다. Z·K·방향키를 누르면 키보드 조준으로 바뀌어,
 이동 방향(서 있으면 바라보는 방향)으로 노리고 그쪽 가까운 적(검 60px·70°, 활·부대 명령 320px·40°이고 가로막히지 않은 적)에
-맞춘다. 맞춘 적 발밑에 붉은 고리가 뜬다. WASD·F는 둘 다에서 쓰므로 조준 방식을 바꾸지 않는다(`player.gd`의 `KEY_AIM_KEYS`).
+맞춘다. 맞춘 적 발밑에 붉은 고리가 뜬다. WASD·F는 둘 다에서 쓰므로 조준 방식을 바꾸지 않는다(`player.gd`의 `KEY_AIM_KEYS` + 공격·방패 키).
+
+**설정·키 바꾸기**: Esc → 설정(타이틀의 "설정 · 키 바꾸기"도 같은 화면). 음량은 전체·음악·효과음 세 가지(10% 단위, 오디오 버스
+Master/Music/SFX), 전체 화면, 키 바꾸기(동작을 누르고 새 키, Esc 취소, "키 기본값으로"). 바꾼 키는 하단 슬롯·조작법(F1)에 그대로 보이고,
+튜토리얼 안내 글은 기본 키로 적혀 있다. 위 표의 키는 기본값이다.
 
 **공격 범위**: 공격하는 동안 바닥에 실제 판정 모양을 그린다(`player.gd`의 `draw_reach`, `Combat.melee`와 같은 계산).
 검은 땅 거리 reach+5 안의 부채꼴(가로 베기·되베기 150°/27, 내려찍기 120°/31, 회전 베기(강공격 F) 220°/35, 주황) +
@@ -49,26 +66,42 @@ godot -e --path .             # 에디터로 열기
 
 ## 챕터 1 진행
 
-맵은 35×50칸, 위(북)부터 성문 광장 · 북쪽 가로 · 세 갈래 길(횃불 늘어선 대로, 어두운 서쪽 뒷골목, 짐더미 쌓인 동쪽 시장) · 목마 광장.
+맵은 48×50칸(성 안 33×45 + 오른쪽 바다), 네 변이 성벽이다(화면 앞쪽 두 변은 오디세우스를 가리면 반투명).
+위(북)부터 성문 광장(서쪽 나무 종탑, 동쪽 언덕의 아테나 신전) · 북쪽 가로 · 세 갈래 길(횃불 늘어선 대로, 어두운 서쪽 뒷골목,
+위쪽은 불타는 구역·아래쪽은 시장인 동쪽 길 — 불빛이 밝아 빠르지만 들키기 쉽다) · 가운데 분수 광장 · 목마 광장(목마는 서쪽, 옆에 사다리).
+시장 남쪽 골목 끝의 **바다 문**을 나가면 부두와 갤리선이 있다. 자세한 배치는 [docs/maps/CH1_TROY.md](docs/maps/CH1_TROY.md).
 
-1. 목마 옆 첩자 **시논**과 대화 — 오디세우스 혼자 나와 잠입 규칙을 듣는다(부하는 목마 안에 대기)
+1. **튜토리얼(목마 광장)** — 화면 아래 튜토리얼 카드가 한 번에 하나씩 할 일을 알려 주고, 해내면 ✓로 바뀐다
+   (해당 하단 슬롯이 깜빡임). 이동 → 첩자 **시논**에게 말 걸기 → 연습 1 졸고 있는 보초 뒤에서 E 조용히 처치
+   (들키면 검 3연타 안내로 바뀜) → 연습 2 보초 옆 횃불 끄기 → 연습 3 활로 쏘기 → 시논이 세 갈래 길·골라서 하는 목표를 알려 줌.
+   그 뒤로는 처음 겪는 일마다 카드: 미끼 던지기 · 의심(?) · 첫 전투(연타·막기/패링·구르기·강공격) · 부하 합류(부대 명령·집중 공격·특수 명령·함성) ·
+   보스 패링 · 권양기 · 거점 사수
 2. 세 갈래 중 하나로 **몰래** 북쪽 가로까지 가서, 갈래 끝의 꺼진 횃불에 불을 붙여 **신호** → 부하 셋 합류.
    들키면 경보병이 갈래마다 하나 있는 **경보 종**으로 뛰고, 치기 전에 쓰러뜨리면 그만, 울리면 주변이 모두 알아채고 성문 경비가 2명 는다
-   골라서 하는 목표(미니맵의 하늘색 빈 원): 시장 동쪽 막다른 골목에 묶인 **정찰병**을 풀면 부하 +1,
+   골라서 하는 목표(미니맵의 하늘색 빈 원): 바다 문 밖 부두 끝에 묶인 **정찰병**(보초 하나가 지킴)을 풀면 부하 +1,
    뒷골목 성벽 밑(화로 불빛 안) **무기고**에 불을 지르면 마지막 반격에 궁수가 없다
 3. 성문 앞 광장의 **경비대** 6명(+경보마다 2명) 처치 — 수비대장 아게노르(보스 체력바).
    1페이즈는 3연타 → 내려찍기(크게 붉게 깜빡임, 막는 순간 패링하면 2초 무방비). 체력 절반 이하면 둘레를 방패로 밀쳐낸 뒤
    뿔나팔로 검병 둘을 부르고 방패 돌진(바닥의 붉은 띠로 예고, 옆으로 피함 — 벽에 박히면 2초 무방비)을 섞는다
 4. **권양기**를 E를 누르고 있는 동안만 돌려(12초) 성문 개방. 손을 떼면 다시 내려가고(초당 4%), 15%·55%에서 트로이군이
-   몰려오므로(두 번째엔 궁수도) 2(위치 사수)로 부하를 곁에 세워 둔다 → 아카이아 증원군 4명 입장
-5. 붉은 원(성문 거점)을 **사수** — 원 안에 적이 있으면 점령 정지(알아챈 적이 없으면 빨리 참). 반격 3파:
-   방패벽(정면은 늘 막음, F 강공격에 방패가 부서짐) → 짐더미 위 궁수(제자리에서 멀리 쏨) →
-   권양기 돌격병(권양기 앞에 4초 붙어 있으면 성문이 닫혀 점령이 멈추고, 5초 돌려 다시 열어야 함)
-6. 클리어 화면 — 시간·처치(조용히)·들킨 횟수·경보·부하가 쓰러진 횟수·체크포인트에서 다시 한 횟수·골라서 하는 목표.
-   경보 0이면 칭호 「밤의 그림자」, 한 번도 안 들키면 「보이지 않는 자」
+   몰려오므로(두 번째엔 궁수도) 2(위치 사수)로 부하를 곁에 세워 둔다
+5. **트로이 함락** — 성문이 열리면 「아카이아 대군 입성」: 선봉 4명에 이어 대군 24명이 성문 밖에서 줄지어 들어와
+   북쪽 가로·세 갈래 입구에 자리 잡고, 불이 도시로 번진다(집 10채). 붉은 원(성문 거점)을 **사수** — 원 안에 적이 있으면
+   점령 정지. 트로이군은 세 갈래에서 한꺼번에 반격 4파 + 파마다 정해진 수만큼 더 몰려온다(물결):
+   방패벽(F 강공격으로 부숨) → 짐더미·신전 계단 위 궁수 → 권양기 돌격병(4초 붙으면 성문이 닫혀 점령이 멈추고 5초 돌려 다시 엶) →
+   **트로이 왕자 데이포보스**의 총공세(보스: 아게노르처럼 패링·뿔나팔·방패 돌진). 왕자가 살아 있으면 점령이 95%에서 멈추고,
+   쓰러뜨리면 남은 트로이군이 무너진다. 2파부터 파마다 오디세우스 체력 50 회복·함성 쿨타임 초기화
+6. **엔딩** — 화면이 어두워졌다 밝아지면 바다 문 밖 부두. 불타는 트로이를 뒤로 부하들과 대화 → 부두를 따라 걸어 갤리선에 오름 →
+   배가 바다로 나아가고 자막 세 줄 → 「CHAPTER 2 귀환의 시작」 예고. E / Space / 클릭으로 건너뛴다(`chapter1_troy.gd`의 `_play_ending`)
+7. 클리어 화면 — 시간·처치(조용히)·들킨 횟수·경보·부하가 쓰러진 횟수·체크포인트에서 다시 한 횟수·골라서 하는 목표.
+   경보 0이면 칭호 「밤의 그림자」, 한 번도 안 들키면 「보이지 않는 자」. 타이틀의 챕터 이름 옆에 ✓
 
 **체크포인트**: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 쓰러지면 "체크포인트에서 다시"로 그 단계부터 하고,
 골라서 하는 목표(정찰병·무기고)와 경보로 는 경비는 그대로, 기록은 체크포인트 때 값으로 돌아간다(`chapter1_troy.gd`의 `restore_checkpoint`).
+
+**저장**: 체크포인트가 생기거나 골라서 하는 목표를 이루면 `user://save.json`(깬 챕터·마지막 체크포인트)에 쓰고,
+게임을 껐다 켜면 타이틀 맨 위 "이어 하기"로 그 자리부터 한다. 설정은 `user://settings.json`.
+macOS에서 `user://`는 `~/Library/Application Support/Godot/app_userdata/ODYSSEY - 오디세우스의 귀환/`. 검증용 봇(`--auto`)은 파일을 쓰지 않는다.
 
 ## 구조
 
@@ -76,7 +109,7 @@ godot -e --path .             # 에디터로 열기
 project.godot          640×360 기준, canvas_items 확대, 픽셀 필터(nearest)
 scenes/main.tscn       → scripts/main.gd (타이틀·챕터 시작·재시작·검증용 인자)
 scripts/
-  autoload/game.gd     입력 키 등록, 히트스톱·화면 흔들림, HUD로 가는 신호, 통계
+  autoload/game.gd     입력 키 등록, 히트스톱·화면 흔들림, HUD로 가는 신호, 통계, 설정·저장(음량 버스·전체 화면·키 바꾸기·진행)
   world/
     iso.gd             격자↔화면 좌표, 8방향
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
@@ -90,8 +123,9 @@ scripts/
     companion.gd       부하 AI (검병·창병·궁병, 쓰러짐·부활)
     enemy.gd           트로이 병사 AI (검병·창병·궁수·수비대장)
     npc.gd             대화 인물
-  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 합성 효과음(sfx.gd)
-  ui/hud.gd            HUD 전부
+  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 기술 효과(skills.gd: 미끼·일제 사격), 합성 효과음(sfx.gd)
+  ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드)
+  ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
 assets/                생성된 임시 그림 (sprites/, env/, ui/)
 tools/                 임시 그림 생성기 (Python + Pillow)
 ```
@@ -116,9 +150,14 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   - 동작: idle walk run attack1 attack2 attack3 heavy block bow hit dodge death interact downed
   - `frame`(한 칸 크기)과 `anchor`(발 위치)를 `.json`에 적는다. 크기는 64×64가 아니어도 된다
 - **환경** `assets/env/env.json`의 `props`: 소품마다 `file`·`anchor`(발자국 중심 지점)·`footprint`(칸 수)
-- **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = cobble plaza dirt grass road ash, 열 = 변형 4개
+- **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = `env.json`의 `floor_atlas.rows` 순서
+  (cobble plaza dirt grass road ash + water sand planks), 열 = 변형 4개. `water`·`sand` 칸은 챕터가 막힌 칸으로 둔다
 
-다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py .`
+다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .`
+
+- 맵 개편용 소품·바닥은 받기 전이라 `tools/gen_env_extra.py`의 임시 생성 그림이다:
+  temple · steps · lion · fountain · stall_red/white · bell_tower · ladder · column_broken · cypress · pine · pot · rock ·
+  galley · boat · pier_post, 바닥 water · sand · planks. `troy_city`·`troy_coast` 그림(ART_PLAN §4.4)을 받으면 같은 이름으로 덮어쓴다
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
   성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`
@@ -129,7 +168,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 ### 그려 받은 오디세우스와 무기
 
 - 원본 `assets/source/odysseus_8dir.webp`(마젠타 배경, 4×2 칸) → `python3 tools/gen_hero.py .` →
-  `assets/sprites/odysseus.png`(128×128 칸, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
+  `assets/sprites/odysseus.png`(144×144 칸 — 투구 볏·점프가 잘리지 않게 위 여유를 둠, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
 - 걷기·달리기는 그려 받은 그림(`assets/source/odysseus_{walk,run}_8dir.webp`, 줄 = 남→남동→…→남서)을 쓴다.
   걷기 12열(18fps), 달리기 12열(한 주기 = 두 걸음, 26fps). 첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`.
   둘 다 남·남동·동·북동·북을 방향마다 한 장(4×3 격자)씩 받아(`odysseus_<동작>_<방향>.webp`) `tools/pack_strip.py`가
@@ -142,7 +181,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   `.json`의 `drawn`에 든 공격은 검을 그 주먹에 붙이고 칼끝을 팔 방향(가슴 → 주먹)으로 세운다(`weapon_layer.gd`).
   어색한 방향 줄은 다른 줄을 가져다 쓴다(`STRIP_REUSE`: heavy의 동·서 = 동남, 서는 좌우 뒤집기)
 - 나머지 동작은 아직 기준 포즈를 기울이고 눌렀다 펴서 만든다. 받으면 같은 방식으로 바꾼다
-  (요청 프롬프트·참고 그림: `docs/sprite_request/`)
+  (요청 묶음: `docs/sprite_request/action_requests/` — idle hit death block dodge bow interact, `motion_request.py … rest`)
 - 시트 `.json`의 `hands[동작][프레임][방향]`이 오른손·왼손 위치. 원본 손 위치는 `gen_hero.py`의 `HANDS_SRC`
 - 무기는 `assets/weapons/`(`weapons.json`: 그림·`grip`) — `scripts/actors/weapon_layer.gd`가 손에 붙인다.
   검은 날 끝이 위로 서게, 방패는 front·three_quarter·side·back 네 장, 활은 세워서. 임시 무기는 `tools/gen_weapons.py`
@@ -153,13 +192,21 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 ## 검증용 실행 인자
 
 ```bash
-godot --headless --path . -- --auto --quit-after=220   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
-godot --headless --path . -- --auto=stealth --quit-after=300   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
+godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
+godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장
-godot --headless --path . -- --start=winch --auto --quit-after=150   # 권양기 앞에서 시작해 사수까지
+godot --headless --fixed-fps 60 --path . -- --start=winch --auto --quit-after=300   # 권양기 앞에서 시작해 사수까지
+godot --path . -- --start=ending                                  # 바로 엔딩(부두 → 출항 → 챕터 2 예고)
+godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기
+godot --path . -- --start=gate --menu=settings                    # 설정 화면을 띄운 채로(--menu=pause는 일시정지)
+godot --path . -- --continue                                      # 저장된 체크포인트에서 바로 이어 하기
 ```
 
-`--god`(무적), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어다.
+`--fixed-fps 60`(Godot 엔진 인자)을 주면 한 프레임을 늘 1/60초로 치고 실시간을 기다리지 않아 몇 배 빨리 끝난다.
+느린 컴퓨터에서 실시간으로 돌리면 프레임이 떨어져 봇이 지는 일이 있으니 봇 검증은 이 인자로 한다.
+마지막 대규모 전투에 무작위가 섞여 있으니 봇은 2~3번 돌려 본다.
+
+`--god`(무적), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
 
 ## 수치 조정
 
@@ -167,4 +214,9 @@ godot --headless --path . -- --start=winch --auto --quit-after=150   # 권양기
 - 부하: `companion.gd`의 `ROLES` / 트로이 병사: `enemy.gd`의 `KINDS`, 동시에 근접 공격하는 적 수 `MAX_ATTACKERS`
 - 아게노르: `enemy.gd`의 `COMBO_WINDUP`·`OPEN_TIME`·`CHARGE_*`·`SHOVE_*`
 - 거점 점령 속도·반격 시점: `chapter1_troy.gd`의 `CAPTURE_RATE`·`CAPTURE_CALM`·`_update_capture()`·`_send_wave()`
+- 대군·물결: `chapter1_troy.gd`의 `ARMY_SIZE`·`ARMY_INTERVAL`·`ARMY_POSTS`, `TIDE_MIN`·`TIDE_BUDGET`·`TIDE_INTERVAL`, `WAVE_HEAL`·`PRINCE_CAP`,
+  왕자 `enemy.gd`의 `KINDS["trojan_prince"]`
+- 기술: 미끼 `player.gd`의 `DECOY_CD`·`DECOY_RANGE`, `skills.gd`의 `DECOY_HEAR`·`VOLLEY_*`, 반응 `enemy.gd`의 `lure()`,
+  부대 특수 명령 `squad.gd`의 `SPECIAL_CD`, `companion.gd`의 `WALL_TIME`·`JAVELIN_*`
+- 튜토리얼 카드: `chapter1_troy.gd`의 `_tut()`(줄에 넣기)·`_tut_once()`(한 번만)·`_tut_urgent()`(바로 띄우기)·`_watch_firsts()`, 그리는 곳 `hud.gd`의 `_draw_tutorial()`
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`

@@ -4,44 +4,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트
 
-ODYSSEY: 귀환의 항해 — TypeScript + Three.js + Vite로 만든 브라우저용 2.5D 쿼터뷰(38°) 그리스 신화 액션 로그라이트. 게임 디자인과 8개 씬의 연출 명세는 `SPEC.md`, 마일스톤 진행은 `PLAN.md`에 있다. 문서·주석·UI 문구는 한국어로 쓴다.
+ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼터뷰 픽셀아트 액션 RPG(잠입·부하 지휘 + 6챕터).
+**개발 대상은 Godot 4 버전 `godot/`이다.** 루트의 `src/`·`index.html`·`public/`은 이전 웹 시제품(TypeScript + Three.js)으로
+보관만 한다 — 요청이 없으면 고치지 않는다(설명은 `docs/legacy-web/`).
 
+문서·주석·UI 문구·커밋 메시지는 한국어로 쓴다. 커밋 메시지 형식은 `feat : …`/`fix : …`/`docs : …`.
 이 폴더는 자체 git 저장소다(상위 `~/study` 저장소 안에 있지만 따로 관리).
 
-**새 버전(Godot 4)은 `godot/`에 있다** — 2D 픽셀아트 쿼터뷰 액션 RPG로 다시 만드는 중(챕터 1 플레이 가능). 실행·구조·그림 규칙은 `godot/README.md`, 6챕터 기획은 `godot/docs/GAME_DESIGN.md`. 확인은 `godot --headless --path godot -- --auto --quit-after=220`(봇이 챕터 1 끝까지 진행). 아래 내용은 기존 웹(Three.js) 버전 설명이다.
+## 문서 지도
 
-## 명령
+| 문서 | 내용 |
+|---|---|
+| `godot/README.md` | 실행·조작·챕터 1 진행·코드 구조·그림 교체 규칙(시트 `.json` 형식) — 코드 작업 전에 읽는다 |
+| `godot/docs/GAME_DESIGN.md` | 6챕터 기획, 조작감 원칙, 지킬 것 |
+| `godot/docs/ROADMAP.md` | 마일스톤·다음 할 일·완료 기준 |
+| `godot/docs/ART_PLAN.md` | 화풍 규칙·크기 규격·전체 그림 목록(ID·상태)·요청 순서 |
+| `godot/docs/sprite_request/` | 그림 요청: 오디세우스 차림(`OUTFIT.md`), 요청 키트(`motion_kit/`), 요청 묶음(`attack_requests/`·`action_requests/`), 병사·환경·UI 프롬프트 |
+| `godot/docs/references/` | 사용자가 준 참고 이미지와 `INDEX.md` |
+| `godot/docs/maps/` | 맵 설계(챕터 1 맵 `CH1_TROY.md` — 개편 반영, 배치도는 `tools/gen_map_plan.py`) |
+
+## 명령 (godot/ 안에서)
 
 ```bash
-npm run dev       # Vite 개발 서버, 포트 5173 (host: true)
-npm run build     # tsc 타입 검사 후 vite build → dist/
-npm run preview   # dist/ 미리보기
-npx tsc           # 타입 검사만 (noEmit, strict)
+godot --path .                                          # 타이틀부터
+godot --path . -- --play                                # 바로 챕터 1
+godot --headless --path . --import                      # 그림 가져오기(처음 한 번)
+godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
+godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
+godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
+godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음)
+godot --path . -- --play --god --at=37,38                # 오디세우스를 그 칸에 옮겨 맵 보기 (--menu=pause|settings, --continue)
+python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
+python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로)
+python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
+python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일
+python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장
 ```
 
-테스트·린터는 없다. 변경 확인은 `npx tsc`와 개발 서버에서 직접 플레이로 한다(타이틀의 씬 이동 버튼 `#scene-nav`·훈련장 바로가기로 원하는 씬에 바로 들어갈 수 있다).
+테스트 프레임워크는 없다. 변경 확인은 `--auto` 봇 클리어(일반·잠입)와 직접 플레이·`--shot` 화면 저장으로 한다.
+봇 결과 `REPORT`의 `ending`이 true면 엔딩(부두 → 출항)까지 끝난 것. 봇은 `user://` 저장 파일을 쓰지 않는다.
+`--fixed-fps 60`을 붙이면 실시간을 기다리지 않아 빠르고, 느린 기계에서 프레임이 떨어져 봇이 지는 일이 없다. 마지막 전투에 무작위가 있으니 2~3번 돌린다.
+화면이 없는 곳에서 `--shot`은 `xvfb-run -a godot --path . --rendering-driver opengl3 ...`로 찍는다.
 
-## 구조
+## 핵심 규칙 (자세한 것은 godot/README.md)
 
-`src/main.ts`가 하나의 `requestAnimationFrame` 루프를 돌린다. 매 프레임 순서:
+- 기준 해상도 640×360, 정수배 확대, 픽셀 필터 nearest. 바닥 칸 64×32 마름모(2:1), 위치는 화면(월드) 좌표, 인물은 발 밑.
+- 로직과 그림 분리: AI·판정은 `scripts/`, 생김새는 `assets/`의 그림 + `.json`이 전부. 그림을 바꿀 때 코드는 고치지 않는 게 원칙.
+- 캐릭터 시트: 한 줄 = 한 방향(0 동 1 남동 2 남 3 남서 4 서 5 북서 6 북 7 북동), 열 = 동작 프레임. `.json`에 `frame`·`anchor`·동작별 `start`/`frames`/`fps`/`loop`.
+- 그려 받은 원본은 `assets/source/`에 두고 `tools/`의 변환 스크립트로 `assets/sprites/`·`assets/env/`를 만든다. 생성물을 손으로 고치지 않는다.
+- 오디세우스는 치비 새 차림(맨머리·망토 없음 몸 + 투구·망토 레이어 예정, `docs/sprite_request/OUTFIT.md`). 방향은 S SE E NE N만 받고 서쪽 셋은 뒤집는다.
+- 새 챕터는 `IsoLevel`을 상속해 `build()`/`start()`를 만든다.
 
-1. `renderer.updateMouseGroundPosition()` — 마우스를 지면 좌표로 바꿔 `input.aimWorldPos`에 넣음
-2. `world.update(dt, input)` — 게임 로직 (dt는 0.05초로 상한)
-3. `renderer.render(world, dt)` — Three.js 그리기
-4. `hud.update(...)` — DOM HUD 갱신
-5. `input.consumeFrameTriggers()` — 한 프레임짜리 입력 소비
+## 그림 작업 흐름
 
-**로직과 렌더링이 분리되어 있다.** `WorldSimulation`(`src/combat/`)이 모든 게임 상태(player, enemies, projectiles, swings, shockwaves, telegraphs, lightningArcs, cameraShake, 씬 전환, 가호, 메타 성장)를 가지고, 렌더러와 HUD는 그 필드를 매 프레임 읽기만 한다. 좌표는 `Vec2 { x, z }`(지면 평면). 새 게임 동작은 `WorldSimulation`에, 보이는 것은 렌더러에 넣는다.
+1. `ART_PLAN.md`에서 다음 항목(ID)을 고른다 → `sprite_request/`의 해당 요청 묶음·프롬프트를 사용자에게 준다.
+2. 받은 그림을 검사(`sprite_request/README.md`) → `assets/source/`에 이름 규칙대로 저장.
+3. `split_rows.py`·`pack_strip.py`·`gen_hero.py` 등 변환 → `--showcase`·`--auto`로 확인.
+4. `ART_PLAN.md`의 상태를 ✅로, 끝난 작업은 `ROADMAP.md` 체크박스를 고친다.
 
-- `src/types/combat.ts` — 공유 타입. `SceneId`, `EnemyKind`, `EnemyState`(idle→chase→windup→attack, weak_open/staggered), `PlayerActionState`, `TelegraphShape`(circle/sector/line 공격 예고) 등. 적·씬을 추가하면 여기부터 고친다.
-- `src/data/combatConfig.ts` — 수치 조정은 `COMBAT_CONFIG`, 4신 가호 정의는 `OLYMPIAN_BOONS`.
-- `WorldSimulation.loadScene(sceneId)` — 씬별 적·지형(pillars, hubInteractables) 배치. 흐름: title → hub → cyclops_cave → polyphemus_boss → (가호 선택 `openBoonSelection`/`selectBoon`) → siren_reef → parthenope_boss → return. `training_grounds`는 별도 훈련장.
-- `src/rendering/SceneRenderer25D.ts` — 씬이 바뀌면(`renderedSceneId` 비교) 바이옴 지형·조명·수면을 다시 짓고, 엔티티는 빌보드 스프라이트로 그림. Bloom 후처리(EffectComposer + UnrealBloomPass).
-- `src/rendering/odysseus/` — 오디세우스 3D 모델(적·보스는 스프라이트). 렌더러는 `OdysseusAvatar` 하나만 쓴다: `public/assets/models/odysseus.glb`나 Mixamo `odysseus.fbx`(+`anims/<동작>.fbx`)가 있으면 `GltfOdysseus`(뼈대 모델, 설정은 `avatarConfig.ts`, 안내는 `docs/odysseus-model.md`), 없으면 도형 모델 `OdysseusModel`. 둘 다 `AvatarMotion`(몸 방향: 걸을 땐 가는 쪽, 공격 땐 조준 `facingAngle` 쪽·기울기·발 디딤)과 `PoseDriver`(상태별 `OdysseusPoses` 자세 섞기)를 공유한다. GLB는 상태에 맞는 동작이 없으면 이 자세로 상체·팔(IK)을 보완한다. `CapeCloth`는 도형 모델의 Verlet 망토, `SpearTrail`은 창끝 궤적, `Props`는 도형 무기(GLB 모델의 주무기는 청동 검, 도형 모델은 창), `ToonMaterials`는 고정 빛 툰 셰이더+외곽선. 모델은 +Z가 앞, -X가 오른쪽.
-- 창 공격 타이밍·내딛는 거리·히트스톱·입력 버퍼는 `COMBAT_CONFIG.player.spear`에 있고, 애니메이션은 `stateTimer`로 그 구간 진행도를 계산해 따라간다. 히트스톱 중엔 렌더러가 모델에 dt=0을 넘겨 동작도 멈춘다.
-- `src/rendering/ProceduralSprites.ts` — 적·보스 스프라이트를 캔버스로 절차 생성한 텍스처 아틀라스. `public/assets/`의 보스 이미지(polyphemus.svg, parthenope.svg)가 있으면 그걸 우선 쓴다.
-- `src/rendering/KeyArtRenderer.ts` — 타이틀 키아트(`#keyart-canvas`), `/assets/storyboard.png` 사용.
-- `src/ui/HudController.ts` — `index.html`에 미리 있는 DOM 요소(id로 찾음: 타이틀·허브 프롬프트·가호 모달·귀환 강화 화면·HUD 슬롯)를 갱신하고 버튼을 `world.loadScene` 등에 연결. HUD 마크업과 CSS는 전부 `index.html`에 있다.
-- `src/core/AudioSynth.ts` — WebAudio로 효과음 합성(오디오 파일 없음). `InputManager.ts` — WASD(화면 기준)·마우스 조준·Space 대시·Q 패링·E 권능.
-
-`dist/`는 빌드 결과물이므로 직접 고치지 않는다. 정적 이미지는 `public/assets/`에 두고 `/assets/...` 경로로 불러온다.
+사용자가 참고 이미지를 주면 `godot/docs/references/<분류>/`에 저장하고 `references/INDEX.md`에 한 줄 적는다.

@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = 64x32 px.
+2) city_layout.png = a reference picture of the whole city, for building SHAPES and MATERIALS only.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape).
+
+Pixel art isometric game buildings and props sprite sheet, matching EXACTLY the style, outline, palette, lighting (from the upper left)
+and pixel density of the FIRST attached image (isometric Greek city of Troy at night, one floor tile = 64x32 px).
+Use the SECOND attached image only as a reference for the SHAPES and MATERIALS of the buildings (light sandstone walls,
+red clay roof tiles, red banners with a gold emblem); do NOT copy its sunset lighting or its painting style.
+Night colors: blue-grey stone, warm orange light only where there are torches.
+Solid flat dark background #282B35. Every item separated by empty space. No text, no labels, no grid lines, no shadows on the ground.
+2:1 isometric view (camera looks down about 30 degrees), no perspective.
+
+Row 1 (big landmarks):
+- A Greek TEMPLE of Athena on a raised stone platform: six front columns, red tiled pediment roof, two red banners between columns,
+  a wide flight of stone steps in front, footprint about 3x3 floor tiles.
+- A round stone FOUNTAIN with a two-tier basin and blue water, footprint 2x2 floor tiles.
+- A wooden BELL TOWER: four tall posts, a small roofed platform on top with a bronze bell, a ladder on one side,
+  footprint 2x2 floor tiles, about 130 px tall.
+
+Row 2 (props, one floor tile each unless noted):
+- A seated stone LION statue on a square base (draw it once; the game mirrors it).
+- A MARKET STALL with a RED and WHITE striped cloth awning, wooden counter with baskets and jars, 2x1 floor tiles.
+- The same market stall with a plain RED awning.
+- A wooden LADDER leaning to the right (to lean against the Trojan horse), about 70 px tall.
+- A BROKEN marble COLUMN: standing lower half with a jagged top, plus the fallen drum pieces beside it.
+
+Row 3 (wall parts, same stone and size as the wall in the first image):
+- A RED cloth BANNER with a gold emblem hanging flat on a wall face, about 20x40 px, drawn for the left-facing wall face
+  (the game mirrors it for the right face).
+- A LOW city wall segment: the same wall as in the first image but only HALF its height, in both directions
+  (running to the lower right, and running to the lower left), plus a half-height corner tower.

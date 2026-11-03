@@ -21,7 +21,7 @@
 
 1. 전투 갑옷 기본 8방향(맨머리·망토 없음) → `assets/source/odysseus_8dir.webp`
 2. 같은 차림 걷기 12프레임, 다섯 방향을 따로 받아 묶기(아래 2)
-3. 달리기 12프레임(아래 3), 공격 4종 (`ATTACK_PROMPTS.md`의 인물 설명 두 줄을 아래 [인물]로 바꿔서)
+3. 달리기 12프레임(아래 3), 공격 4종 (`archive_caped/ATTACK_PROMPTS.md`의 인물 설명 두 줄을 아래 [인물]로 바꿔서)
 4. 투구·망토 레이어, 코드 작업
 5. 항해복·거지 변장은 챕터 2·6을 만들 때
 
@@ -156,3 +156,11 @@ Style에 `no dust, no speed lines`를 더한다.
 요청 9개(`pose.png`·`guide.png`·`prompt.txt`, 안내 그림은 `tools/attack_guide.py`)를 만든 뒤 `run.sh`를 돌린다.
 받은 그림은 `tools/split_rows.py`로 방향별로 자르고 `tools/pack_strip.py . <동작> <프레임 수> 1`로 묶는다.
 주먹·방패 손 위치는 `gen_hero.py`의 `ATTACK_HANDS`·`ATTACK_LEFT`(동·남동·남·북동·북 다섯 방향만, 서쪽은 뒤집어 씀).
+
+## 칼·방패를 든 공격 그림 (한 장)
+
+칼·방패를 손 위치에 따로 붙이면 칼이 손 옆에 뜨거나 손 위에 올라와 보여서, 공격 동작은 무기를 몸과 함께 그려 받는다.
+- 기준 격자: 시트의 공격 프레임(공격1 4·공격2 4·공격3 5·강공격 6 = 19칸 × 8방향, 줄은 게임 방향 0 동 ~ 7 북동)을 칸마다 0.912배로 줄여 붙인 `weapon_requests/full/layout.png`. 요청 글은 `full/prompt.txt`
+- 받은 그림은 `assets/source/odysseus_attacks_armed.webp`. `gen_hero.py`의 `armed_frames`가 기준 격자와 같은 칸 위치로 시트 프레임에 되돌려 넣고, 투구 위치는 칼이 없는 기준 격자에서 잰다
+- 시트 json의 `"armed"`에 든 동작 동안 `weapon_layer.gd`는 따로 그린 칼·방패를 숨긴다. 몸 그림이 `odysseus`인 옷(갑옷·투구·왕)에만 적용되고, 항해복·거지는 예전 방식
+- 남은 점: 받은 그림이 1619×972로 작게 와서 조금 흐리고, 일부 칸은 머리 위치가 기준과 달라 투구 옆으로 머리카락이 보인다. 칼을 머리 위로 든 칸은 칼끝이 칸 위에서 잘린다

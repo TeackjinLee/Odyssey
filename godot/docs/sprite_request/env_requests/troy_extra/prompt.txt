@@ -1,0 +1,35 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = 64x32 px.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape).
+
+Pixel art isometric game props sprite sheet, matching EXACTLY the style, outline, palette, lighting (from the upper left)
+and pixel density of the attached reference image (isometric Greek city of Troy at night, one floor tile = 64x32 px).
+Solid flat dark background #282B35. Every item separated by empty space. No text, no labels, no grid lines, no shadows on the ground.
+2:1 isometric view (camera looks down about 30 degrees), no perspective.
+
+Row 1:
+- An ALARM BELL stand: two wooden posts with a crossbar, a bronze bell hanging in the middle with a rope, on a small stone base,
+  about 30x58 px, standing on one floor tile.
+- A wooden city-gate WINCH: a heavy horizontal wooden drum on two thick posts with a big four-spoke crank wheel on its side,
+  thick rope wound on the drum, about 46x50 px, standing on one floor tile.
+- A bronze BRAZIER on three legs, a shallow bowl full of glowing red-orange coals (no tall flames; flames are added by the game),
+  about 30x31 px.
+- A tall cloth BANNER on a wooden pole, teal-blue cloth with a white owl emblem (the Greek side), same size and shape as the
+  red Trojan banner in the reference, about 32x70 px.
+- One flying ARROW drawn horizontally pointing RIGHT: thin wooden shaft, bronze head, white feather fletching, about 24x5 px.
+
+Row 2 (stealth map props, each standing on one floor tile unless noted):
+- A small ARMORY STORE: a lean-to wooden shed roof over stacked spears, shields and amphorae against a wall, about 2x1 floor tiles.
+- The same armory store BURNT: charred black planks, collapsed roof, glowing embers (no tall flames; flames are added by the game).
+- A MARKET STALL with a striped cloth awning and baskets of fruit, about 2x1 floor tiles.
+- A tall PILE OF SACKS AND CRATES that an archer can stand on, about 1 floor tile, about 60 px tall.
+- A wooden POST with loose ropes on the ground around it (where a prisoner was tied).
+
+Row 3 (optional):
+- The same city gate as in the reference in 3 states side by side: closed, half open (doors swung inward a little), fully open
+  (dark passage visible), each the same size as the reference gate.
+
+Row 4 (optional, flat ground decals that lie on one floor tile, 64x32 diamond shape):
+- a black scorch mark with a few glowing embers, a broken round bronze shield lying flat, a dropped spear lying on the ground,
+  three arrows stuck in the ground.

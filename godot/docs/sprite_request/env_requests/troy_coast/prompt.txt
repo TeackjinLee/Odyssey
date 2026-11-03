@@ -1,0 +1,29 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = 64x32 px.
+2) city_layout.png = a reference picture of the whole city, for building SHAPES and MATERIALS only.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape).
+
+Pixel art isometric game tiles and props sprite sheet, matching EXACTLY the style, outline, palette, lighting
+and pixel density of the FIRST attached image (isometric Greek city of Troy at night, one floor tile = 64x32 px).
+Use the SECOND attached image only as a reference for the harbor, rocks, trees and ships; do NOT copy its sunset lighting.
+Night colors: deep blue sea, moonlit highlights, warm orange only on torches.
+Solid flat dark background #282B35. Every item separated by empty space. No text, no labels, no grid lines.
+2:1 isometric view, no perspective.
+
+Row 1 (floor tiles, each exactly one 64x32 diamond, seamless when tiled):
+- 4 variants of deep night SEA water with small wave highlights.
+- 4 variants of ROCKY SHORE (grey rocks with white foam on the water side).
+- 4 variants of wooden DOCK planks.
+- 4 variants of a round MOSAIC stone floor (pieces of one large circle pattern: center, edge, edge, plain).
+
+Row 2 (props):
+- A wooden dock POST sticking out of the water, about 12x40 px.
+- A Greek GALLEY ship with one mast and a square sail with a dark horse emblem, seen from the side at the isometric angle,
+  footprint about 5x2 floor tiles.
+- A small rowing BOAT, footprint about 2x1 floor tiles.
+- 3 sizes of grey sea ROCKS.
+
+Row 3 (plants, each standing on one floor tile):
+- A tall thin dark green CYPRESS tree about 80 px tall, an OLIVE tree with a twisted trunk about 70 px tall,
+  a PINE tree about 80 px tall, a clay POT with flowers about 24 px tall, a low green BUSH.

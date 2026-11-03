@@ -1,26 +1,9 @@
-# GEMINI.md — Odyssey Project Guide
+# GEMINI.md
 
-## 1. Project Identity & Scope
-- **Title**: **ODYSSEY (오디세이: 귀환의 항해)**
-- **Standalone Project**: Completely independent from any existing Godot projects (such as the Seoul Street Godot project).
-- **Tech Stack**: TypeScript + Three.js + Vite (Browser-first; desktop packaging evaluated post-MVP).
-- **Key Documents**:
-  - [`SPEC.md`](./SPEC.md): Game design, combat mechanics, and visual/architectural rules.
-  - [`PLAN.md`](./PLAN.md): Milestone roadmap starting with the combined M1+M2 playable combat prototype.
+이 저장소의 작업 규칙은 [`CLAUDE.md`](CLAUDE.md)와 같다. 요약:
 
-## 2. Core Design & Engineering Rules
-1. **Strict Separation of Combat Logic and Visuals**:
-   - `src/combat/` and `src/entities/` contain pure game state, timers, hitboxes, and AI state machines (`Windup/Telegraph -> Active -> Recovery`) without coupling to specific image assets.
-   - `src/rendering/` renders entities using procedural 2D silhouette sprites and clear geometric indicators now, allowing drop-in image sprite replacements later.
-2. **Controls & Combat Rules**:
-   - **Movement**: Screen-space `WASD` (`W` = up/-Z, `S` = down/+Z, `A` = left/-X, `D` = right/+X).
-   - **Aiming**: Always toward the mouse cursor projected onto the ground plane (`Y = 0`).
-   - **Primary Weapon (`Left Click`)**: Fixed to **Bronze Spear (청동 창)** with a 3-hit combo.
-   - **Secondary Weapon (`Right Click Hold`)**: **Bow of Eurytus (강궁)** with unlimited arrows, reduced movement speed while charging, dash-cancel support (`Space`), full-charge piercing (`Power Shot`), and boss weak-point sniping.
-   - **Shield Parry (`Q`)**: Reflects enemy projectiles toward the cursor and staggers melee attackers.
-   - **Divine Power (`E`)**: Reserved slot for M3 Olympian Boon active skill.
-3. **Readability & Boss Gimmick Learning**:
-   - Strong enemy attacks must display both a **ground telegraph indicator** and a **body wind-up motion**.
-   - Boss mechanics must be naturally introduced in pre-boss rooms through weaker enemies or interactive contraptions.
-4. **Performance Telemetry**:
-   - Target 60FPS and expose real-time measured FPS and frame time (`ms`) on screen.
+- **개발 대상은 Godot 4 버전 `godot/`** (2D 픽셀아트 쿼터뷰 액션 RPG). 루트의 웹 시제품(TypeScript + Three.js)은 보관용이다 → `docs/legacy-web/`.
+- 문서·주석·UI 문구·커밋 메시지는 한국어.
+- 코드 구조·그림 규칙: `godot/README.md` / 기획: `godot/docs/GAME_DESIGN.md` / 계획: `godot/docs/ROADMAP.md` / 그림 목록: `godot/docs/ART_PLAN.md`.
+- 변경 확인: `godot --headless --path godot -- --auto --quit-after=220` (봇이 챕터 1 클리어), 잠입 봇은 `--auto=stealth --quit-after=300`.
+- 로직(`scripts/`)과 그림(`assets/` + `.json`)을 섞지 않는다. 그려 받은 원본은 `assets/source/`, 변환은 `tools/`.
