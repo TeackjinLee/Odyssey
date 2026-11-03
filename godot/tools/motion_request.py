@@ -110,6 +110,14 @@ ACTIONS = {
 - Frame 4 fists coming back up toward the chest.
 - Legs braced wide and still, body leaning slightly forward with effort.""",
                  "- EMPTY HANDS: no sword, no shield, no crank. Both fists clearly visible in EVERY frame."),
+    "throw": (4, "OVERHAND THROW of a small stone toward the facing direction (decoy skill)", """- Frame 1 wind-up: weight on the back foot, RIGHT arm raised back behind the head, a small grey stone (pebble, about 10px)
+  held in the right fist; left arm pointing forward toward the facing direction for aim.
+- Frame 2 throwing: body twisting forward, right arm whipping over the shoulder, the stone still in the fist.
+- Frame 3 release: right arm fully extended forward and down toward the facing direction, hand OPEN, the stone has just left
+  (do NOT draw the stone in this frame), weight on the front foot.
+- Frame 4 follow-through: right arm swinging down across the body, settling back toward a ready stance.
+- In-place: feet stay in the same spot of the cell (one small step forward in frame 3 is fine).""",
+              "- NO sword, NO shield, NO bow. Only the small grey stone in the right fist in frames 1-2; both hands clearly visible."),
 }
 
 

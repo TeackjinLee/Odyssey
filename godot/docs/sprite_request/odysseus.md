@@ -21,6 +21,7 @@
 | dodge 구르기 | 4 | action_requests/ 2장 | `odysseus_dodge_<방향>.webp` | 요청 준비됨 |
 | bow 활 당겨 쏘기 | 4 | action_requests/ 2장 | `odysseus_bow_<방향>.webp` | 요청 준비됨 |
 | interact 권양기·불 붙이기 | 4 | action_requests/ 2장 | `odysseus_interact_<방향>.webp` | 요청 준비됨 |
+| throw 돌 던지기(미끼) | 4 | [skill_requests/](skill_requests/README.md) 2장 | `odysseus_throw_<방향>.webp` | 요청 준비됨 (지금은 동작 없이 던짐) |
 | 머리 장식: 코린트 투구 | 방향당 1 | OUTFIT.md "정한 것" (프롬프트는 아직) | — | ⬜ |
 | 망토 | 방향당 1 | OUTFIT.md "정한 것" (프롬프트는 아직) | — | ⬜ |
 | 항해복·거지 변장 | — | 챕터 2·6 때 | — | ⬜ |

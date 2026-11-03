@@ -1,0 +1,39 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) layout.png = the EXACT LAYOUT to fill: a 1536x1024 sheet split into cells. Each gray shape is only a PLACEHOLDER that shows
+   what goes in that cell, where, and how big. Replace every gray placeholder with the finished pixel-art effect in the same
+   place and at the same size. Do NOT draw the thin cell borders and do NOT keep any gray placeholder lines.
+2) style_fire.png = STYLE reference for effects (flame colors, outline, pixel density).
+3) style_hero.png = STYLE reference for objects and icons (chibi Greek hero; bronze, gold, teal, crimson palette).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art skill-effect sprite sheet for an isometric (2:1, camera looking down about 30 degrees) action game set in ancient Troy at night.
+ONE image exactly 1536x1024. Solid flat dark background #282B35 everywhere (no gradient, no vignette, no ground texture).
+Keep EXACTLY the same cell layout as layout.png. Frames go left to right. Each frame stays inside its own cell.
+No text, no letters, no numbers, no labels, no grid lines, no cell borders.
+
+Row 1 (y 0-192), 6 frames, each cell 256x192 — ARROW VOLLEY (arrows raining onto the ground):
+  a flat isometric ellipse on the ground near the bottom of each cell marks the target area (faint dusty ring, not a solid disc).
+  Frames 1-4: about 8 wooden arrows with bronze heads and white fletching fall diagonally from the upper-left toward the ellipse,
+  lower in each frame. Frame 5: the arrows hit — small dirt puffs and sparks inside the ellipse.
+  Frame 6: the arrows are stuck in the ground at a slight angle, the dust settling.
+Row 2 (y 192-384), 6 frames, each cell 256x192 — FIRE ARROW VOLLEY: exactly the same as row 1 but every arrow head burns with a
+  small orange-yellow flame (style_fire.png colors), and frame 5-6 have small flames and embers where they hit.
+Row 3 (y 384-512):
+  - x 0-512, 4 frames, cells 128x128 — THROWN STONE: one small grey pebble (about 28x22px) in the center, rotating a quarter turn
+    per frame, crisp dark outline.
+  - x 512-1024, 4 frames, cells 128x128 — STONE LANDING DUST: a low flat grey-brown dust puff hugging the ground in the lower part
+    of the cell, spreading sideways and fading by frame 4. The pebble is visible in frame 1 only.
+  - x 1024-1536, 2 frames, cells 256x128 — THROWN SPEAR: frame 1 a Greek spear flying horizontally pointing RIGHT
+    (long wooden shaft, leaf-shaped bronze head); frame 2 the same spear stuck diagonally into the ground with a little dirt.
+Row 4 (y 512-768):
+  - x 0-1024, 4 frames, cells 256x256 — SHIELD WALL GLINT: a curved bronze-gold shield rim glow (arc) with a four-point star glint
+    on top, appearing (frame 1), brightest (frame 2), fading (frames 3-4). Light only — no soldier, no full shield body.
+  - x 1024-1536, 2 frames, cells 256x256 — ARROWS STUCK IN THE GROUND: frame 1 three arrows stuck at a slant in a small dirt patch;
+    frame 2 the same arrows with small burning flames on them.
+Row 5 (y 768-1024), 6 frames, cells 256x256 — SKILL ICONS for the HUD, each a chunky readable symbol centered on a dark rounded
+  square badge with a bronze rim (they will be shrunk to 48x48, so use bold shapes and few details):
+  1 decoy: a hand tossing a small grey stone, 2 shield wall: three overlapping round bronze shields,
+  3 spear throw: a spear flying diagonally up-right, 4 arrow volley: several arrows raining down,
+  5 war cry: a bronze Corinthian helmet with golden sound waves, 6 squad command: a crimson pennant on a spear.
+
+2D pixel art, crisp 1px dark outline on objects, no anti-aliasing blur, no soft glow halo baked in, no blood, no people.
