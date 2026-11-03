@@ -1,7 +1,15 @@
 # ODYSSEY — 오디세우스의 귀환 (Godot 4)
 
 호메로스 《오디세이아》를 바탕으로 한 2.5D 쿼터뷰 액션 RPG. 오디세우스를 조종하고 부하를 지휘하며
-6개 챕터의 신화 속 사건을 겪는다. 기획 전체는 [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md)에 있다.
+6개 챕터의 신화 속 사건을 겪는다.
+
+| 문서 | 내용 |
+|---|---|
+| [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) | 게임 기획 (6챕터) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 개발 계획 — 마일스톤·다음 할 일 |
+| [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
+| [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
+| [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
 
 현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 끝까지 플레이할 수 있다.
 
@@ -142,7 +150,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   `.json`의 `drawn`에 든 공격은 검을 그 주먹에 붙이고 칼끝을 팔 방향(가슴 → 주먹)으로 세운다(`weapon_layer.gd`).
   어색한 방향 줄은 다른 줄을 가져다 쓴다(`STRIP_REUSE`: heavy의 동·서 = 동남, 서는 좌우 뒤집기)
 - 나머지 동작은 아직 기준 포즈를 기울이고 눌렀다 펴서 만든다. 받으면 같은 방식으로 바꾼다
-  (요청 프롬프트·참고 그림: `docs/sprite_request/`)
+  (요청 묶음: `docs/sprite_request/action_requests/` — idle hit death block dodge bow interact, `motion_request.py … rest`)
 - 시트 `.json`의 `hands[동작][프레임][방향]`이 오른손·왼손 위치. 원본 손 위치는 `gen_hero.py`의 `HANDS_SRC`
 - 무기는 `assets/weapons/`(`weapons.json`: 그림·`grip`) — `scripts/actors/weapon_layer.gd`가 손에 붙인다.
   검은 날 끝이 위로 서게, 방패는 front·three_quarter·side·back 네 장, 활은 세워서. 임시 무기는 `tools/gen_weapons.py`

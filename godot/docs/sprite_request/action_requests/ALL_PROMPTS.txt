@@ -1,0 +1,581 @@
+오디세우스 나머지 동작 이미지 요청 14개 — 요청마다 ① 폴더의 pose.png 한 장을 첨부 ② 아래 ▼▼ 와 ▲▲ 사이의 글을 통째로 복사해 붙여 넣기 ③ 결과를 results/<폴더이름>.png로 저장
+
+
+======================================================================
+[1/14] idle_E-SE-Sa   첨부: action_requests/idle_E-SE-Sa/pose.png   저장: results/idle_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (calm combat-ready BREATHING loop) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 ready stance: feet apart, knees slightly bent, right fist low in front of the right hip, left forearm in front of the belly.
+- Frame 2 breathing in: chest and shoulders rise 2 pixels.
+- Frame 3 top of the breath, the hair moves very slightly.
+- Frame 4 breathing out, almost back to frame 1 (frame 4 flows back into frame 1).
+- Very subtle: only a few pixels change between frames. The feet never move.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no bow. The RIGHT hand is a closed fist as if gripping a sword hilt and must be clearly visible
+  in EVERY frame (never hidden behind the body). The LEFT forearm is held as if a round shield were strapped on.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[2/14] idle_NE-Na   첨부: action_requests/idle_NE-Na/pose.png   저장: results/idle_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (calm combat-ready BREATHING loop) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 ready stance: feet apart, knees slightly bent, right fist low in front of the right hip, left forearm in front of the belly.
+- Frame 2 breathing in: chest and shoulders rise 2 pixels.
+- Frame 3 top of the breath, the hair moves very slightly.
+- Frame 4 breathing out, almost back to frame 1 (frame 4 flows back into frame 1).
+- Very subtle: only a few pixels change between frames. The feet never move.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no bow. The RIGHT hand is a closed fist as if gripping a sword hilt and must be clearly visible
+  in EVERY frame (never hidden behind the body). The LEFT forearm is held as if a round shield were strapped on.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[3/14] hit_E-SE-Sa   첨부: action_requests/hit_E-SE-Sa/pose.png   저장: results/hit_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 2-frame animation (HIT REACTION (struck from the front)) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 flinch: upper body snapped backward away from the facing direction, head tilted back, teeth clenched,
+  left forearm jerked up, right fist flung out to the side, weight on the back foot.
+- Frame 2 recovering: halfway back toward a ready stance, shoulders hunched, guard coming back up.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 2 columns x 3 rows, every cell 768x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no bow. The RIGHT hand is a closed fist as if gripping a sword hilt and must be clearly visible
+  in EVERY frame (never hidden behind the body). The LEFT forearm is held as if a round shield were strapped on.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[4/14] hit_NE-Na   첨부: action_requests/hit_NE-Na/pose.png   저장: results/hit_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 2-frame animation (HIT REACTION (struck from the front)) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 flinch: upper body snapped backward away from the facing direction, head tilted back, teeth clenched,
+  left forearm jerked up, right fist flung out to the side, weight on the back foot.
+- Frame 2 recovering: halfway back toward a ready stance, shoulders hunched, guard coming back up.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 2 columns x 3 rows, every cell 768x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no bow. The RIGHT hand is a closed fist as if gripping a sword hilt and must be clearly visible
+  in EVERY frame (never hidden behind the body). The LEFT forearm is held as if a round shield were strapped on.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[5/14] death_E-SE-Sa   첨부: action_requests/death_E-SE-Sa/pose.png   저장: results/death_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 5-frame animation (DEATH, falling backward) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 stagger: struck hard, torso bent, one step back, arms loose.
+- Frame 2 knees buckling, arms dropping, head lowering.
+- Frame 3 kneeling, upper body tipping backward away from the facing direction.
+- Frame 4 hitting the ground on his back.
+- Frame 5 lying still on his back, knees bent up, eyes closed (this frame is held). Keep the fallen body COMPACT so it fits inside the cell.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 5 columns x 3 rows, every cell 307x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Fists visible where possible.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[6/14] death_NE-Na   첨부: action_requests/death_NE-Na/pose.png   저장: results/death_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 5-frame animation (DEATH, falling backward) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 stagger: struck hard, torso bent, one step back, arms loose.
+- Frame 2 knees buckling, arms dropping, head lowering.
+- Frame 3 kneeling, upper body tipping backward away from the facing direction.
+- Frame 4 hitting the ground on his back.
+- Frame 5 lying still on his back, knees bent up, eyes closed (this frame is held). Keep the fallen body COMPACT so it fits inside the cell.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 5 columns x 3 rows, every cell 307x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Fists visible where possible.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[7/14] block_E-SE-Sa   첨부: action_requests/block_E-SE-Sa/pose.png   저장: results/block_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 2-frame animation (SHIELD BLOCK) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 braced guard: LEFT forearm raised in front of his chest toward the facing direction, fist up, as if a round shield
+  were strapped on it (leave room in front of the forearm, the game adds the shield); knees bent, wide stance, weight forward;
+  right fist pulled back beside the right hip.
+- Frame 2 absorbing a hit: the same pose pushed back 3 pixels, head ducked a little behind the left forearm.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 2 columns x 3 rows, every cell 768x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Both fists clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[8/14] block_NE-Na   첨부: action_requests/block_NE-Na/pose.png   저장: results/block_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 2-frame animation (SHIELD BLOCK) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 braced guard: LEFT forearm raised in front of his chest toward the facing direction, fist up, as if a round shield
+  were strapped on it (leave room in front of the forearm, the game adds the shield); knees bent, wide stance, weight forward;
+  right fist pulled back beside the right hip.
+- Frame 2 absorbing a hit: the same pose pushed back 3 pixels, head ducked a little behind the left forearm.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 2 columns x 3 rows, every cell 768x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Both fists clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[9/14] dodge_E-SE-Sa   첨부: action_requests/dodge_E-SE-Sa/pose.png   저장: results/dodge_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (quick forward DODGE ROLL toward the facing direction) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 dive: crouching low and leaning forward, arms tucking in.
+- Frame 2 tucked: curled into a tight ball mid-roll, head down.
+- Frame 3 rolling over: still a ball, his back on top.
+- Frame 4 rise: coming up into a low crouch facing the row direction, fists ready.
+- In-place: the game moves him, so the roll stays centered in the cell. The lowest point stays on the ground line.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Fists may be tucked against the body in frames 2-3.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[10/14] dodge_NE-Na   첨부: action_requests/dodge_NE-Na/pose.png   저장: results/dodge_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (quick forward DODGE ROLL toward the facing direction) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 dive: crouching low and leaning forward, arms tucking in.
+- Frame 2 tucked: curled into a tight ball mid-roll, head down.
+- Frame 3 rolling over: still a ball, his back on top.
+- Frame 4 rise: coming up into a low crouch facing the row direction, fists ready.
+- In-place: the game moves him, so the roll stays centered in the cell. The lowest point stays on the ground line.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield. Fists may be tucked against the body in frames 2-3.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[11/14] bow_E-SE-Sa   첨부: action_requests/bow_E-SE-Sa/pose.png   저장: results/bow_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (BOW SHOT (the bow itself is added by the game)) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 raise: LEFT arm extended straight forward toward the facing direction at shoulder height, left fist closed
+  vertically as if gripping a bow; right hand reaching to the left fist to nock an arrow.
+- Frame 2 draw: right hand pulling an invisible string back to the chest, torso turning sideways.
+- Frame 3 full draw: right hand at his jaw, right elbow high and back, left arm locked straight.
+- Frame 4 release: right hand opens and snaps back past the ear, left arm still extended.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no bow, no arrow, no string, no quiver, no sword. Both hands clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[12/14] bow_NE-Na   첨부: action_requests/bow_NE-Na/pose.png   저장: results/bow_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (BOW SHOT (the bow itself is added by the game)) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 raise: LEFT arm extended straight forward toward the facing direction at shoulder height, left fist closed
+  vertically as if gripping a bow; right hand reaching to the left fist to nock an arrow.
+- Frame 2 draw: right hand pulling an invisible string back to the chest, torso turning sideways.
+- Frame 3 full draw: right hand at his jaw, right elbow high and back, left arm locked straight.
+- Frame 4 release: right hand opens and snaps back past the ear, left arm still extended.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no bow, no arrow, no string, no quiver, no sword. Both hands clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[13/14] interact_E-SE-Sa   첨부: action_requests/interact_E-SE-Sa/pose.png   저장: results/interact_E-SE-Sa.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (turning a heavy winch crank in front of him (the crank is NOT drawn), loopable) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 both fists together forward at chest height, gripping an invisible crank handle.
+- Frame 2 fists pushing forward and down, leaning into it.
+- Frame 3 fists low near the knees, pulling back.
+- Frame 4 fists coming back up toward the chest.
+- Legs braced wide and still, body leaning slightly forward with effort.
+- No effect lines, no dust, no blood, no props.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no crank. Both fists clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲
+
+======================================================================
+[14/14] interact_NE-Na   첨부: action_requests/interact_NE-Na/pose.png   저장: results/interact_NE-Na.png
+======================================================================
+▼▼ 여기부터 복사 ▼▼
+
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (turning a heavy winch crank in front of him (the crank is NOT drawn), loopable) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall), bare curly dark-brown head, short dark beard,
+bronze muscle cuirass, leather pteruges with a crimson panel over a cream skirt, bronze bracers and greaves, sandals. NO cape, NO helmet.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 both fists together forward at chest height, gripping an invisible crank handle.
+- Frame 2 fists pushing forward and down, leaning into it.
+- Frame 3 fists low near the knees, pulling back.
+- Frame 4 fists coming back up toward the chest.
+- Legs braced wide and still, body leaning slightly forward with effort.
+- No effect lines, no dust, no blood, no props.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no crank. Both fists clearly visible in EVERY frame.
+
+▲▲ 여기까지 ▲▲

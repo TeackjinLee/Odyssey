@@ -4,3 +4,4 @@ dist/
 
 # Godot 프로젝트
 godot/.godot/
+__pycache__/

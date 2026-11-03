@@ -1,7 +1,7 @@
 /**
  * Meshy 등에서 만든 오디세우스 GLB 모델을 게임에 맞추는 설정.
  * 실제 모델을 넣은 뒤 브라우저 콘솔에 찍히는 [Odysseus GLB] 뼈·동작 이름을 보고 여기만 고치면 된다.
- * 자세한 순서: docs/odysseus-model.md
+ * 자세한 순서: docs/legacy-web/odysseus-model.md
  */
 
 export type BoneKey =
