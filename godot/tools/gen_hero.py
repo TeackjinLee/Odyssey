@@ -75,18 +75,32 @@ GEAR = {
 }
 GEAR_CUT = 0.172   # 투구: 앞쪽 방향은 앞 테두리를 머리 맨 위에서 키의 이만큼 아래까지만 남겨 눈·수염이 가려지지 않게
 GEAR_CUT_ARC = 0.008   # 자른 선을 가운데가 처지는 호로(키 비율) — 직선이 티 나지 않게
-CUT_GEARS = ("helm",)
+CUT_GEARS = ()   # 01번식 투구는 얼굴이 이미 열려 있어 자르지 않는다
 GEAR_TINT = {"hood": (1.08, 0.94, 0.74)}   # 받은 두건이 보랏빛이라 갈색 쪽으로
 BACK_DIRS = (5, 6, 7)
 # 투구 방향별 맞춤: 방향 → (크기 배율, 위로 올리는 양(머리 폭 비율)). 뒤쪽은 머리카락이 투구 위로 삐져나오지 않게 키우고 올린다
-GEAR_FIT = {0: (1.06, 0.04), 1: (1.06, 0.04), 2: (1.06, 0.04), 3: (1.06, 0.04), 4: (1.06, 0.04),
-            5: (1.05, 0.07), 6: (1.05, 0.07), 7: (1.05, 0.07)}
+GEAR_FIT = {d: (0.9, 0.17) for d in range(8)}
 
 
 def head_box(cell):
     bb = cell.getbbox()
     head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
     return bb, head
+
+
+METAL_GEARS = ("helm",)
+
+
+def metal_box(cell):
+    """장비 칸에서 금속(금색) 픽셀만의 바깥 상자 — 붉은 볏은 빼고 잰다."""
+    mask = Image.new("L", cell.size, 0)
+    mp, cp = mask.load(), cell.load()
+    for y in range(cell.height):
+        for x in range(cell.width):
+            r, g, b, a = cp[x, y]
+            if a > 200 and r > 140 and g > 90 and b < 120 and g > r * 0.45:
+                mp[x, y] = 255
+    return mask.getbbox()
 
 
 def load_gear(root, gear, body):
@@ -110,6 +124,9 @@ def load_gear(root, gear, body):
                 for y in range(y0, cell.height):
                     cell.putpixel((x, y), (0, 0, 0, 0))
         out[d] = (cell, hx, bb[1], head[2] - head[0])
+        if gear in METAL_GEARS:  # 볏이 맨 위라 맨 윗선 대신 금속 부분(투구 몸통)의 위·가운데·폭으로 맞춘다
+            m = metal_box(cell)
+            out[d] = (cell, (m[0] + m[2]) / 2, m[1], m[2] - m[0])
     return out
 
 

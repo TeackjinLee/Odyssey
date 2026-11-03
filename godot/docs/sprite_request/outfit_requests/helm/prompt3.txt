@@ -1,0 +1,12 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) base_armor.png = the 8-direction character sheet (bare head). Copy its layout and the position and size of every head EXACTLY.
+2) concepts.png = concept board; ONLY concept 01 CLASSIC KING's helmet matters. Copy that helmet's design as closely as possible.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Create a HELMET-ONLY overlay sheet: in each of the 8 cells draw ONLY the polished bronze/gold Greek Corinthian helmet exactly like concept 01 CLASSIC KING, positioned exactly where it would sit on that cell's head in base_armor.png (same facing, same size), so it can be pasted over the base sheet.
+Helmet design (copy concept 01): a smooth rounded dome that FULLY COVERS the whole top, back and sides of the head and the ears, so NO curly hair is visible above or beside the helmet. Gold scroll ornament on the brow and temple. A rounded cheek guard hugs each side of the face, framing it. The front rim sits just ABOVE the eyebrows; the eyes, nose, cheeks, mustache and beard stay completely uncovered (NO nose guard, NO face plate, NO eye holes). A tall, full, deep-red horsehair crest runs front-to-back along the top of the dome and sweeps down and back behind the head, as in concept 01 (crest about one head height tall, a flowing tail behind the neck).
+The helmet is only slightly wider than the head, fitting it snugly like concept 01, not a giant bucket. Show it from each cell's facing: back view for NORTH, back-right for NORTH-EAST, side for EAST, front-right for SOUTH-EAST, front for SOUTH, front-left for SOUTH-WEST, side for WEST, back-left for NORTH-WEST. In the back views the dome and the crest tail cover the whole back of the head.
+Draw NOTHING else: no head, no hair, no face, no beard, no body, no armor, no hands. Everything outside the helmet is flat magenta #FF00FF.
+
+Layout: ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512 like base_armor.png (top row N, NE, E, SE; bottom row S, SW, W, NW).
+Style: 2D pixel art matching base_armor.png, crisp 1px dark outline, hard pixel clusters, no anti-aliasing, no shadows, no labels, no text. Colors: polished bronze/gold with highlights, deep crimson crest.
