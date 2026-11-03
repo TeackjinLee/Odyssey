@@ -96,7 +96,8 @@ STRIP_HANDS = {
             6: (170, 83, 70, 137)},
 }
 # 좌우를 뒤집어 만든 줄(pack_strip.py): 방향 → 뒤집은 원래 방향. 손은 원래 줄의 손을 뒤집고 오른손·왼손을 바꾼다
-STRIP_MIRROR = {"walk": {5: 7, 4: 0, 3: 1}, "run": {5: 7, 4: 0, 3: 1}}
+_MIRROR = {5: 7, 4: 0, 3: 1}
+STRIP_MIRROR = {a: _MIRROR for a in ("walk", "run", "attack1", "attack2", "attack3", "heavy")}
 STRIP_SWING = {"walk": 3.0, "run": 3.5}   # 팔 흔들림(원본 픽셀): 손 위치를 한 주기 동안 앞뒤로
 # 보이는 주먹은 첫 프레임에서부터 프레임마다 그림 조각을 맞춰 따라간다: 방향 → (오른손, 왼손)
 STRIP_TRACK = {"walk": {d: (True, True) for d in range(8)}, "run": {d: (True, True) for d in range(8)}}
@@ -125,6 +126,20 @@ def track_hand(cells, start):
                     best, bp = err, (cx, cy)
         pts.append(bp)
     return pts
+
+def track_loop(cells, start):
+    """돌아가는 동작(걷기·달리기)용: 앞으로만 따라가면 뒤쪽 장면으로 갈수록 한 장씩 어긋남이 쌓이므로,
+    마지막 장이 첫 장으로 이어지는 것을 이용해 첫 장에서 거꾸로도 따라가고, 두 결과를 첫 장에서 가까운 쪽에 무게를 둬 섞는다."""
+    n = len(cells)
+    fwd = track_hand(cells, start)
+    back = track_hand([cells[0]] + cells[:0:-1], start)   # 첫 장, 마지막 장, ..., 둘째 장 순서
+    out = [fwd[0]]
+    for i in range(1, n):
+        b = back[n - i]
+        w = i / n   # 첫 장에서 멀수록 거꾸로 따라간 쪽을 믿는다
+        out.append(((1 - w) * fwd[i][0] + w * b[0], (1 - w) * fwd[i][1] + w * b[1]))
+    return out
+
 
 # 공격 줄: 프레임마다 검을 쥔 주먹(휘두르는 손) 위치, 방패 손은 방향마다 하나 (받은 그림의 칸 안 픽셀).
 # 그려 받은 그림이 방향마다 다른 손으로 칠 때가 있어 '오른손'이 아니라 '치는 주먹'을 따라간다
@@ -166,7 +181,7 @@ ATTACK_LEFT = {
 }
 
 # 그림이 어색한 방향은 다른 방향 줄을 가져다 쓴다: 방향 → (가져올 방향, 좌우 뒤집기)
-STRIP_REUSE = {"heavy": {0: (1, False), 4: (1, True)}}
+STRIP_REUSE = {}
 
 
 def strip_hand0(anim, d, cw):
@@ -225,7 +240,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
             row = [cells[d, c] for c in range(cols)]
             for j, on in enumerate(STRIP_TRACK[anim][d]):
                 if on:
-                    tracked[j] = track_hand(row, (h0[2 * j], h0[2 * j + 1]))
+                    tracked[j] = track_loop(row, (h0[2 * j], h0[2 * j + 1]))
         for col in range(cols):
             cell = cells[d, col]
             bb = cell.getbbox()
@@ -235,7 +250,12 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
                 hx0 = hx
             frame, _, (ox, oy) = to_pose(cell, (hx, base), 0, k)
             if anim in ATTACK_HANDS:
-                r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
+                src_d = STRIP_MIRROR.get(anim, {}).get(d)
+                if src_d is None:
+                    r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
+                else:   # 뒤집어 만든 줄: 원래 줄의 칠 주먹·방패 손을 칸 폭 기준으로 뒤집는다
+                    (rx, ry), (lx, ly) = ATTACK_HANDS[anim][src_d][col], ATTACK_LEFT[anim][src_d]
+                    r, l = (cw - rx, ry), (cw - lx, ly)
             else:
                 h0 = strip_hand0(anim, d, cw)
                 sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)

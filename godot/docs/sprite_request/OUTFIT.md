@@ -28,7 +28,7 @@
 진행(2026-11-03): 1·2를 받아 넣었다. 걷기는 처음 6프레임 8방향 한 장으로 받았다가, 참고 그림(12프레임·다섯 방향)처럼
 방향마다 12프레임으로 다시 받아 바꿨다 — 18fps(한 주기 0.67초, 보폭에 맞춤), 머리 높이 흔들림 1px 안, 주먹은 프레임마다 추적.
 동·남동·북동·북은 처음 받은 그림이 다리를 늘 벌리거나 거의 안 움직여 땅 위에서 발이 미끄러지고 팔도 가슴 앞에 굳어 있어,
-움직임 안내 그림(`outfit/walk12_guide_<방향>.png`, `tools/walk_guide.py`: 디딘 발이 한 장마다 같은 만큼 뒤로, 팔은 다리와 반대로)을 붙여 다시 받았다.
+움직임 안내 그림(`motion_kit/guides/walk12_<방향>.png`, `tools/walk_guide.py`: 디딘 발이 한 장마다 같은 만큼 뒤로, 팔은 다리와 반대로)을 붙여 다시 받았다.
 남동·북동은 몸 돌림이 장마다 달라져 "12장 모두 같은 만큼 돌린 채"를 덧붙여 한 번 더 받았다.
 남·북도 안내 그림을 붙여 다시 받았다(북은 "발을 크게 벌리고 든 발바닥이 보이게"를 덧붙임).
 달리기도 같은 방식(아래 3)으로 다섯 방향을 받아 바꿨다. 공격은 아직 옛 그림(망토 있음)이라 칠 때 옛 모습이 섞여 나온다.
@@ -75,9 +75,11 @@ Style rules:
 
 ## 2. 걷기 12프레임 (방향마다 한 장, 다섯 방향)
 
+다른 캐릭터에도 쓰는 틀·안내 그림·예시는 `motion_kit/`에 모아 두었다(`motion_kit/README.md`, 요청 폴더는 `tools/motion_request.py`로 만든다).
+
 남(S)·남동(SE)·동(E)·북동(NE)·북(N)을 따로 받고, 서쪽 셋은 뒤집어 만든다.
 첨부: 1의 기본 8방향에서 그 방향 칸을 잘라 낸 그림(`pose.png`), 움직임 참고 `outfit/walk12_motion_ref.webp`.
-다섯 방향 모두 움직임 안내 `outfit/walk12_guide_<방향>.png`도 `guide.png`로 붙이고, Motion 대신 아래를 넣는다:
+다섯 방향 모두 움직임 안내 `motion_kit/guides/walk12_<방향>.png`도 `guide.png`로 붙이고, Motion 대신 아래를 넣는다:
 "MOTION: put his legs, feet, arms and fists where guide.png shows them. The standing foot slides steadily BACKWARD every frame,
 legs pass each other in frames 3-4 and 9-10. Arms hang down and swing like a pendulum OPPOSITE to the legs, never held up at the chest."
 받은 그림: `assets/source/odysseus_walk_<방향>.webp` → `python3 tools/pack_strip.py . walk 4 3` → `python3 tools/gen_hero.py .`
@@ -118,7 +120,7 @@ Style rules:
 ## 3. 달리기 12프레임 (방향마다 한 장, 다섯 방향)
 
 걷기(2)와 같은 첨부·배치·뒷손질에 안내 그림만 `python3 tools/walk_guide.py <출력> <방향 값> run`
-(`outfit/run12_guide_<방향>.png`: 디딤 3장 + 두 발이 다 뜬 3장, 뒷발 차올림, 무릎 높이, 팔꿈치 직각으로 크게 젓기).
+(`motion_kit/guides/run12_<방향>.png`: 디딤 3장 + 두 발이 다 뜬 3장, 뒷발 차올림, 무릎 높이, 팔꿈치 직각으로 크게 젓기).
 받은 그림: `assets/source/odysseus_run_<방향>.webp` → `python3 tools/pack_strip.py . run 4 3` → `python3 tools/gen_hero.py .`
 걷기 프롬프트에서 바꾸는 곳: 첫 줄 `12-frame RUN CYCLE (fast sprint)`, `__FACING__`의 walking → running, MOTION을 아래로.
 ```
@@ -132,3 +134,11 @@ Style rules:
   in flight frames the whole body is a few pixels higher.
 ```
 Style에 `no dust, no speed lines`를 더한다.
+
+## 4. 공격 4종 (한 장에 여러 방향)
+
+한도를 아끼려고 방향마다가 아니라 **한 장에 3방향(heavy는 2방향)을 줄로 받는다**(`motion_kit/README.md` "한도 아끼기").
+`python3 tools/motion_request.py assets/source/odysseus_8dir.webp motion_kit/odysseus_character.txt <출력 폴더> attack1,attack2,attack3,heavy 1`로
+요청 9개(`pose.png`·`guide.png`·`prompt.txt`, 안내 그림은 `tools/attack_guide.py`)를 만든 뒤 `run.sh`를 돌린다.
+받은 그림은 `tools/split_rows.py`로 방향별로 자르고 `tools/pack_strip.py . <동작> <프레임 수> 1`로 묶는다.
+주먹·방패 손 위치는 `gen_hero.py`의 `ATTACK_HANDS`·`ATTACK_LEFT`(동·남동·남·북동·북 다섯 방향만, 서쪽은 뒤집어 씀).
