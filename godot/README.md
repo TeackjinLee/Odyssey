@@ -134,7 +134,7 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   걷기 12열(18fps), 달리기 12열(한 주기 = 두 걸음, 26fps). 첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`.
   둘 다 남·남동·동·북동·북을 방향마다 한 장(4×3 격자)씩 받아(`odysseus_<동작>_<방향>.webp`) `tools/pack_strip.py`가
   크기·발 기준선을 맞추고 머리를 칸 가운데 두어 묶고(걷기는 키가 1% 넘게 튀는 장면만 키를 맞추고, 달리기는 두 발이 뜬 높이를 살림),
-  서쪽 셋은 좌우로 뒤집는다(손은 `STRIP_MIRROR`). 요청 프롬프트는 `docs/sprite_request/OUTFIT.md`,
+  서쪽 셋은 좌우로 뒤집는다(손은 `STRIP_MIRROR`). 요청 프롬프트·안내 그림·예시는 다른 캐릭터용으로 `docs/sprite_request/motion_kit/`에 모아 두었다(요청 폴더는 `tools/motion_request.py`),
   붙이는 움직임 안내 그림은 `tools/walk_guide.py`(달리기는 끝에 `run`)
   걷기·달리기의 보이는 주먹은 그림 조각을 프레임마다 맞춰 따라가고(`STRIP_TRACK`), 가려진 손은 팔 흔들림으로 어림한다
 - 공격 4종(attack1·2·3·heavy)도 그려 받은 8방향 한 장(`odysseus_<동작>_8dir.webp`, 열 = 프레임 수)을 쓴다.

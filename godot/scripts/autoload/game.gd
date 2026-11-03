@@ -80,6 +80,11 @@ func _register_input() -> void:
 	var k := InputEventKey.new()
 	k.physical_keycode = KEY_K
 	InputMap.action_add_event("block", k)
+	# 메뉴·결과 화면 버튼: 방향키 외에 WASD로 고르고 E로도 누른다
+	for pair in [["ui_up", KEY_W], ["ui_down", KEY_S], ["ui_left", KEY_A], ["ui_right", KEY_D], ["ui_accept", KEY_E]]:
+		var ev := InputEventKey.new()
+		ev.physical_keycode = pair[1]
+		InputMap.action_add_event(pair[0], ev)
 
 
 func reset_run() -> void:

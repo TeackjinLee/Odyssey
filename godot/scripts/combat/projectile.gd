@@ -6,7 +6,10 @@ var shooter: Actor
 var team := 0
 var damage := 8.0
 var velocity := Vector2.ZERO
-var life := 1.4
+## 화살이 날아가는 시간(사거리 = 속도 × LIFE)
+const LIFE := 1.4
+
+var life := LIFE
 var _sprite: Sprite2D
 
 

@@ -346,7 +346,7 @@ func _set_step(s: int) -> void:
 		2:
 			Game.set_objective(chapter_title, "성문 앞 광장의 경비대를 처치하라  (0/%d)" % guard_group.size() + _side_text())
 			Game.quest_marker = Iso.grid_to_world(Vector2(18, 7))
-			Game.show_hint("부대 명령  1 따라오기 · 2 위치 사수 · 3 집중 공격(마우스 근처 적) · 4 후퇴·집결   R 전투의 함성 · Q 활")
+			Game.show_hint("부대 명령  1 따라오기 · 2 위치 사수 · 3 집중 공격(조준한 적) · 4 후퇴·집결   R 전투의 함성 · Q 활")
 		3:
 			winch_point.enabled = true
 			Game.quest_marker = winch_point.global_position
@@ -543,7 +543,7 @@ func _process(delta: float) -> void:
 		return
 	if not _combat_hint and step in [1, 2] and enemies().any(func(e): return e.alerted):
 		_combat_hint = true
-		Game.show_hint("들켰다! 좌클릭 검 3연타 · F 강공격 · 우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
+		Game.show_hint("들켰다! J/좌클릭 검 3연타 · F 강공격 · K/우클릭 방패(막는 순간 패링) · Space 구르기 · Shift 달리기")
 	match step:
 		2:
 			if not _boss_hint and is_instance_valid(captain) and captain.alerted:

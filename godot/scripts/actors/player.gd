@@ -2,6 +2,8 @@ class_name Player
 extends Actor
 ## 오디세우스. 이동·달리기, 검 3연타 + 강공격, 방패 막기(막기 직후 0.2초는 패링), 구르기, 활 조준·발사,
 ## 상호작용(E 길게), 전투의 함성(R), 부대 명령(1~4). 알아채지 못한 적의 뒤에서 E를 누르면 조용히 처치한다.
+## 조준은 마우스를 움직이거나 누르면 마우스 쪽, J·K·방향키를 누르면 키보드 조준(이동·바라보는 방향, 그쪽 가까운 적에 맞춤).
+## 공격하는 동안 실제 판정 범위(부채꼴·화살 길)를 바닥에 그린다(draw_reach, 레벨의 sight_layer).
 
 const SWORD_COMBO := [
 	{"anim": "attack1", "dur": 0.34, "hit": 0.11, "dmg": 11.0, "reach": 27.0, "arc": 150.0, "kb": 70.0, "lunge": 120.0, "stop": 0.05, "shake": 1.5},
@@ -16,6 +18,13 @@ const SWING_NOISE := 95.0
 const SWING_SUSPICION := 0.55
 const SKILL_CD := 20.0
 const HEAVY_CD := 1.2
+## 이 키를 누르면 키보드 조준으로 바뀐다(WASD·F는 마우스와 같이 쓰므로 넣지 않음)
+const KEY_AIM_KEYS := [KEY_J, KEY_K, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
+## 키보드 조준이 적을 찾는 거리와 반각(검 / 활·부대 명령)
+const KEY_AIM_NEAR := [60.0, 70.0]
+const KEY_AIM_FAR := [320.0, 40.0]
+## 판정이 난 뒤 범위가 남아 사라지는 시간
+const REACH_FLASH := 0.16
 
 var weapon := "sword"
 var combo_step := 0
@@ -32,6 +41,11 @@ var interact_progress := 0.0
 var move_vel := Vector2.ZERO
 var inp := {}
 var _bot_attack_toggle := false
+var aim_mouse := false
+## 키보드 조준이 맞춘 적(바닥에 표시)
+var aim_lock: Actor = null
+## 판정 직후 남는 범위: [spec, 남은 시간, 위치, 바라보는 방향]
+var _reach_flash: Array = []
 var weapons: WeaponLayer
 
 
@@ -61,12 +75,31 @@ func _ready() -> void:
 	add_child(light)
 
 
+func _input(event: InputEvent) -> void:
+	if Game.autoplay:
+		return
+	if event is InputEventMouseMotion:
+		if event.relative.length() > 1.5:
+			aim_mouse = true
+	elif event is InputEventMouseButton:
+		if event.pressed:
+			aim_mouse = true
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in KEY_AIM_KEYS:
+		aim_mouse = false
+
+
 func _read_input() -> void:
 	if Game.autoplay:
 		inp = _bot_input()
 		return
+	var mv := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var aim := get_global_mouse_position()
+	aim_lock = null
+	if not aim_mouse:
+		aim_lock = _assist_target(mv, weapon == "bow")
+		aim = aim_lock.global_position if aim_lock else global_position + _key_dir(mv) * 60.0
 	inp = {
-		"move": Input.get_vector("move_left", "move_right", "move_up", "move_down"),
+		"move": mv,
 		"run": Input.is_action_pressed("run"),
 		"attack": Input.is_action_just_pressed("attack"),
 		"attack_held": Input.is_action_pressed("attack"),
@@ -77,12 +110,43 @@ func _read_input() -> void:
 		"interact": Input.is_action_just_pressed("interact"),
 		"interact_held": Input.is_action_pressed("interact"),
 		"skill": Input.is_action_just_pressed("skill"),
-		"aim": get_global_mouse_position(),
+		"aim": aim,
 	}
 	var cmds := ["cmd_follow", "cmd_hold", "cmd_focus", "cmd_regroup"]
 	for i in cmds.size():
 		if Input.is_action_just_pressed(cmds[i]) and Game.squad:
-			Game.squad.command(i, inp["aim"])
+			var at := aim
+			if not aim_mouse:
+				var far := _assist_target(mv, true)
+				at = far.global_position if far else global_position + _key_dir(mv) * 90.0
+			Game.squad.command(i, at)
+
+
+func _key_dir(mv: Vector2) -> Vector2:
+	return mv.normalized() if mv.length() > 0.1 else facing
+
+
+## 키보드 조준: 이동(없으면 바라보는) 방향 부채꼴 안에서 가깝고 정면에 가까운 적. 멀리(활)는 가로막히지 않은 적만.
+func _assist_target(mv: Vector2, far: bool) -> Actor:
+	var dir := _key_dir(mv)
+	var lim: Array = KEY_AIM_FAR if far else KEY_AIM_NEAR
+	var best: Actor = null
+	var best_score := INF
+	for e in Game.level.enemies():
+		var to: Vector2 = e.global_position - global_position
+		var d := Combat.ground_dist(global_position, e.global_position)
+		if d > lim[0]:
+			continue
+		var ang := absf(rad_to_deg(dir.angle_to(to)))
+		if ang > lim[1] and d > 14.0:
+			continue
+		if far and not Game.level.line_clear(global_position, e.global_position, 2.0):
+			continue
+		var score := d * (1.0 + ang / 60.0)
+		if score < best_score:
+			best_score = score
+			best = e
+	return best
 
 
 func think(delta: float) -> void:
@@ -198,6 +262,7 @@ func _attack_update(_delta: float) -> void:
 	if not hit_done and t >= spec["hit"]:
 		hit_done = true
 		var hits := Combat.melee(self, spec["reach"], spec["arc"], spec["dmg"], spec["kb"], spec.get("heavy", false))
+		_reach_flash = [spec, REACH_FLASH, global_position, facing]
 		var col := Color(1, 0.95, 0.8) if not spec.get("heavy", false) else Color(1, 0.75, 0.35)
 		Fx.slash(self, spec["reach"], spec["arc"], col, spec.get("reverse", false), 7.0 if spec.get("heavy", false) else 5.0)
 		if hits.size() > 0:
@@ -321,6 +386,81 @@ func _draw() -> void:
 		var a := TAU * i / 24.0
 		pts.append(Vector2(cos(a) * 10.0, sin(a) * 4.5 + 1.0))
 	draw_polyline(pts, Color(1.0, 0.82, 0.35, 0.8), 1.0)
+
+
+# ── 공격 범위 그리기 ──────────────────────────────────
+## 레벨의 sight_layer(바닥 위, 인물 아래)가 매 프레임 부른다. Combat.melee와 같은 모양:
+## 땅 거리(reach + 5) 안의 부채꼴(arc) + 방향과 상관없이 맞는 발밑 9px. 판정 전에는 안쪽이 차오르고, 판정 순간 밝게 번쩍인다.
+func draw_reach(ci: CanvasItem) -> void:
+	if not is_alive():
+		return
+	if _reach_flash.size() > 0:
+		_reach_flash[1] -= get_process_delta_time()
+		if _reach_flash[1] <= 0.0:
+			_reach_flash = []
+		else:
+			var k: float = _reach_flash[1] / REACH_FLASH
+			_draw_fan(ci, _reach_flash[0], _reach_flash[2], _reach_flash[3], 1.0, 0.55 * k, 1.0 * k)
+	if state == St.ATTACK and current.has("reach") and not hit_done:
+		var p: float = clamp(state_time / float(current["hit"]), 0.0, 1.0)
+		_draw_fan(ci, current, global_position, facing, 1.0, 0.12, 0.85)
+		_draw_fan(ci, current, global_position, facing, p, 0.18 + 0.22 * p, 0.0)
+	if state == St.BOW:
+		_draw_arrow_path(ci)
+	if aim_lock and is_instance_valid(aim_lock) and aim_lock.is_alive():
+		var blink := 0.55 + 0.35 * sin(Time.get_ticks_msec() * 0.01)
+		_draw_ellipse(ci, aim_lock.global_position, 12.0, Color(1.0, 0.45, 0.25, blink), false)
+
+
+func _draw_fan(ci: CanvasItem, spec: Dictionary, o: Vector2, dir: Vector2, scale_k: float, fill_a: float, edge_a: float) -> void:
+	var heavy: bool = spec.get("heavy", false)
+	var col := Color(1.0, 0.62, 0.25) if heavy else Color(1.0, 0.9, 0.62)
+	var r: float = (float(spec["reach"]) + 5.0) * scale_k
+	var arc := deg_to_rad(float(spec["arc"]))
+	var n := int(ceil(spec["arc"] / 10.0))
+	var pts := PackedVector2Array([o])
+	for i in n + 1:
+		var a := dir.angle() + arc * (float(i) / n - 0.5)
+		var dv := Vector2(cos(a), sin(a))
+		pts.append(o + dv * r / Vector2(dv.x, dv.y * Combat.Y_STRETCH).length())
+	if fill_a > 0.0:
+		ci.draw_colored_polygon(pts, Color(col, fill_a))
+		_draw_ellipse(ci, o, 9.0 * scale_k, Color(col, fill_a), true)
+	if edge_a > 0.0:
+		# 밝은 바닥에서도 보이게 어두운 테두리를 먼저 깐다
+		pts.append(o)
+		ci.draw_polyline(pts, Color(0, 0, 0, 0.45 * edge_a), 2.5)
+		ci.draw_polyline(pts, Color(col, edge_a), 1.0)
+
+
+## 땅 거리 r인 타원(쿼터뷰라 세로가 1/Y_STRETCH)
+func _draw_ellipse(ci: CanvasItem, o: Vector2, r: float, col: Color, filled: bool) -> void:
+	var pts := PackedVector2Array()
+	for i in 21:
+		var a := TAU * i / 20.0
+		pts.append(o + Vector2(cos(a) * r, sin(a) * r / Combat.Y_STRETCH))
+	if filled:
+		ci.draw_colored_polygon(pts, col)
+	else:
+		ci.draw_polyline(pts, col, 1.0)
+
+
+## 활: 지금 놓으면 화살이 날아갈 길(속도 × 수명, 벽에서 끊김)과 맞는 폭(땅 거리 9px). 많이 당길수록 길고 진하다.
+func _draw_arrow_path(ci: CanvasItem) -> void:
+	var dir: Vector2 = (inp["aim"] - global_position).normalized()
+	if dir == Vector2.ZERO:
+		dir = facing
+	var o := global_position + dir * 8.0
+	var length: float = Game.level.ray_len(o, dir, (240.0 + 140.0 * bow_draw) * Projectile.LIFE)
+	var side := dir.orthogonal()
+	var w := 9.0 / Vector2(side.x, side.y * Combat.Y_STRETCH).length()
+	var col := Color(0.85, 0.85, 0.75).lerp(Color(1.0, 0.8, 0.35), bow_draw)
+	var end := o + dir * length
+	var strip := PackedVector2Array([o + side * w, end + side * w, end - side * w, o - side * w])
+	ci.draw_colored_polygon(strip, Color(col, 0.06 + 0.14 * bow_draw))
+	ci.draw_line(o + side * w, end + side * w, Color(col, 0.3 + 0.4 * bow_draw), 1.0)
+	ci.draw_line(o - side * w, end - side * w, Color(col, 0.3 + 0.4 * bow_draw), 1.0)
+	ci.draw_line(end + side * w, end - side * w, Color(col, 0.5 + 0.4 * bow_draw), 1.0)
 
 
 func on_interrupted() -> void:

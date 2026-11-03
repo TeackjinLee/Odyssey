@@ -529,16 +529,18 @@ func _draw_sight() -> void:
 			var a: float = e.facing.angle() + deg_to_rad(Enemy.VIEW_ARC * (float(i) / n - 0.5))
 			var dv := Vector2(cos(a), sin(a))
 			var k := 1.0 / Vector2(dv.x, dv.y * Combat.Y_STRETCH).length()
-			var reach := _ray_len(o, dv, e.vision * k)
+			var reach := ray_len(o, dv, e.vision * k)
 			far.append(o + dv * reach)
 			near.append(o + dv * minf(reach, Enemy.SIGHT_DARK * k))
 		sight_layer.draw_colored_polygon(far, Color(col, 0.1 + 0.08 * e.suspicion))
 		sight_layer.draw_colored_polygon(near, Color(col, 0.18 + 0.1 * e.suspicion))
 		far.append(o)
 		sight_layer.draw_polyline(far, Color(col, 0.35 + 0.3 * e.suspicion), 1.0)
+	if player:
+		player.draw_reach(sight_layer)
 
 
-func _ray_len(o: Vector2, dv: Vector2, max_len: float) -> float:
+func ray_len(o: Vector2, dv: Vector2, max_len: float) -> float:
 	var d := 8.0
 	while d < max_len:
 		if is_blocked_world(o + dv * d):
