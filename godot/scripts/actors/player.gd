@@ -50,7 +50,7 @@ var weapons: WeaponLayer
 
 
 func _ready() -> void:
-	sheet = "odysseus" if ResourceLoader.exists("res://assets/sprites/odysseus.png") else "odysseus_sword"
+	sheet = Game.outfit if ResourceLoader.exists("res://assets/sprites/%s.png" % Game.outfit) else "odysseus_sword"
 	team = Team.GREEK
 	display_name = "오디세우스"
 	max_hp = 140.0
@@ -84,6 +84,8 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		if event.pressed:
 			aim_mouse = true
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O:
+		Game.set_outfit(Game.next_outfit())
 	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in KEY_AIM_KEYS:
 		aim_mouse = false
 
@@ -347,6 +349,13 @@ func takedown(e: Enemy) -> void:
 	face(e.global_position - global_position)
 	_start_attack(TAKEDOWN)
 	e.silent_kill(true)
+
+
+## 옷 갈아입기: 몸 시트만 바꾼다(손 위치 표·무기 겹치기는 시트에서 읽는다)
+func wear(outfit: String) -> void:
+	if weapons != null:
+		set_sheet(outfit)
+		Fx.text(global_position + Vector2(0, -head_height), "옷 갈아입음", Color(1, 0.9, 0.6))
 
 
 func _switch_weapon() -> void:

@@ -8,7 +8,9 @@
 출력(assets/sprites/): <이름>.png + .json (gen_characters.py와 같은 시트 규칙 + scale·hands)
   hands[동작][프레임][방향] = [오른손 x, y, 왼손 x, y]  (프레임 안 픽셀 좌표)
 
-사용: python3 gen_hero.py <godot 프로젝트 폴더>
+사용: python3 gen_hero.py <godot 프로젝트 폴더> [옷 이름=odysseus]
+  옷 이름이 odysseus_sea면 assets/source/odysseus_sea_8dir.webp(+있으면 _walk/_run/_attack…)를 읽어 assets/sprites/odysseus_sea.png/.json을 만든다.
+  걷기·달리기·공격 그림이 없는 옷은 기본 8방향 한 장에서 움직임을 만든다(칼 쥔 손 위치만 HANDS_SRC를 쓴다).
 """
 import json
 import math
@@ -201,11 +203,11 @@ def head_width(cells, cols):
     return sorted(ws)[len(ws) // 2]
 
 
-def strip_frames(root, anim, k=None, cols=6, ref=None):
+def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus"):
     """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율, 머리 폭. 없으면 None.
     가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로).
     ref = (걷기 배율, 걷기 머리 폭)을 주면 머리 폭 비율로 배율을 맞춘다(공격 그림)."""
-    path = root / f"assets/source/odysseus_{anim}_8dir.webp"
+    path = root / f"assets/source/{name}_{anim}_8dir.webp"
     if not path.exists():
         return None, k, None
     src = Image.open(path).convert("RGB")
@@ -352,8 +354,8 @@ def affine(p):
     return fwd, coeffs
 
 
-def build(root):
-    src = Image.open(root / "assets/source/odysseus_8dir.webp").convert("RGB")
+def build(root, name="odysseus"):
+    src = Image.open(root / f"assets/source/{name}_8dir.webp").convert("RGB")
     cells = cut_cells(src)
     poses, hands0 = {}, {}
     for d, (cell, foot, height) in cells.items():
@@ -367,11 +369,11 @@ def build(root):
     strips = {}
     k = None
     n_frames = {a[0]: a[1] for a in ANIMS}
-    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"])
-    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head))
+    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"], name=name)
+    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head), name=name)
     for anim in ATTACK_HANDS:
         if strips["walk"]:
-            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head))
+            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=name)
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
@@ -399,9 +401,9 @@ def build(root):
             meta["hands"][anim].append(row_hands)
         col += n
     out = root / "assets/sprites"
-    sheet.save(out / "odysseus.png")
-    (out / "odysseus.json").write_text(json.dumps(meta, ensure_ascii=False))
-    if (root / PORTRAIT_SRC).exists():
+    sheet.save(out / f"{name}.png")
+    (out / f"{name}.json").write_text(json.dumps(meta, ensure_ascii=False))
+    if name == "odysseus" and (root / PORTRAIT_SRC).exists():
         make_portrait(root)
     else:
         # 초상화: 남쪽 포즈 머리
@@ -410,7 +412,7 @@ def build(root):
         head_w = int(height * 0.36)
         cx = (bb[0] + bb[2]) // 2
         crop = cell.crop((cx - head_w // 2, bb[1] - 4, cx + head_w // 2, bb[1] - 4 + head_w))
-        crop.resize((40, 40), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
+        crop.resize((40, 40), Image.LANCZOS).save(root / f"assets/ui/portrait_{name}.png")
     return poses
 
 
@@ -441,5 +443,6 @@ def make_portrait(root):
 
 
 if __name__ == "__main__":
-    build(Path(sys.argv[1]))
-    print("odysseus 시트 생성")
+    outfit = sys.argv[2] if len(sys.argv) > 2 else "odysseus"
+    build(Path(sys.argv[1]), outfit)
+    print(f"{outfit} 시트 생성")

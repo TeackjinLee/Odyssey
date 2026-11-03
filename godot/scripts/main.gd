@@ -81,7 +81,7 @@ func _showcase() -> void:
 	var base := lv.player.position + Vector2(-150, -40)
 	for d in 8:
 		var n := Npc.new()
-		n.setup("odysseus", "오디세우스", func(_b): pass)
+		n.setup(Game.outfit, "오디세우스", func(_b): pass)
 		n.fixed_dir = d
 		n.cycle = String(args.get("anim", "idle")).split(",")
 		n.fixed_anim = n.cycle[0]

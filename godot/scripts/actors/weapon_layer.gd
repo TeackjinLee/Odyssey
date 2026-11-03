@@ -12,6 +12,11 @@ const SHIELD_VIEW := {
 	0: ["side", false], 1: ["three_quarter", false], 2: ["front", false], 3: ["three_quarter", true],
 	4: ["side", true], 5: ["back", true], 6: ["back", false], 7: ["back", false],
 }
+# 방패 위치 미세 조정(방향별, 손 점 기준 px): 앞쪽 방향은 몸 쪽으로 붙이고 조금 올려 팔에 매달려 보이게
+const SHIELD_NUDGE := {
+	0: Vector2(-1, -2), 1: Vector2(-3, -3), 2: Vector2(-2, -3), 3: Vector2(3, -3),
+	4: Vector2(1, -2), 5: Vector2(0, -1), 6: Vector2(0, -1), 7: Vector2(0, -1),
+}
 # 휘두르는 각도(도, 바라보는 쪽 기준): 시작 → 끝
 const SWINGS := {
 	"attack1": [-125.0, 75.0], "attack2": [125.0, -75.0], "attack3": [-175.0, 15.0], "heavy": [-170.0, 190.0],
@@ -151,7 +156,7 @@ func update() -> void:
 		else:
 			var sv: Array = SHIELD_VIEW[d]
 			_tex_set(off, _meta["shield"]["views"][sv[0]], _meta["shield"]["grip"], sv[1])
-			off.position = lh + Vector2(0, 2)
+			off.position = lh + Vector2(0, 2) + SHIELD_NUDGE[d]
 			_order(off, d in OFF_FRONT)
 		off.rotation = 0.0
 
