@@ -1,0 +1,10 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) base_armor.png = the 8-direction character sheet (bare head). Copy its layout and the position and size of every head EXACTLY.
+2) concepts.png = concept board; only concept 01 CLASSIC KING's raised Corinthian helmet matters (bronze helmet pushed up on the forehead, face fully visible, with a red horsehair crest).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Create a HELMET-ONLY overlay sheet: in each of the 8 cells draw ONLY the raised bronze Corinthian helmet with a red horsehair crest, positioned exactly where it would sit on that cell's head in base_armor.png (same facing, same size), so it could be pasted over the base sheet. The helmet is pushed UP like a cap: it covers ONLY the hair on the top and back of the head, and its front rim ends ABOVE the eyebrows, so the forehead-line, eyes, nose, cheeks and beard are completely uncovered (nothing in front of the face). NO nose guard, NO cheek plates, NO face plate, NO eye holes. The helmet is only slightly wider than the head, hugging it. The red crest is a LOW short strip, its top at most HALF a head height above the helmet dome. Show the helmet from that cell's facing: back view for NORTH, back-right for NORTH-EAST, side for EAST, front-right for SOUTH-EAST, front for SOUTH, front-left for SOUTH-WEST, side for WEST, back-left for NORTH-WEST.
+Whatever part of the original curly hair/face is not under the helmet is NOT drawn at all (leave it magenta). Draw NOTHING else: no head, no hair, no face, no body, no armor, no hands. Everything outside the helmet is flat magenta #FF00FF.
+
+Layout: ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512 like base_armor.png (top row N, NE, E, SE; bottom row S, SW, W, NW).
+Style: 2D pixel art matching base_armor.png, crisp 1px dark outline, hard pixel clusters, no anti-aliasing, no shadows, no labels, no text. Colors: polished bronze/gold with highlights, deep crimson crest.

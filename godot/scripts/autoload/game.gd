@@ -20,7 +20,7 @@ var autoplay := false
 ## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
 var stealth_bot := false
 ## 오디세우스가 입은 옷(= assets/sprites/<이름>.png). 시트가 없는 이름은 기본 옷으로 돌아간다
-const OUTFITS := ["odysseus", "odysseus_sea", "odysseus_beggar"]
+const OUTFITS := ["odysseus", "odysseus_helm", "odysseus_sea", "odysseus_beggar"]
 var outfit := "odysseus"
 var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
 ## 마지막 체크포인트: {"id", "stats", "scout", "armory", "guards"} — 챕터를 처음 시작하면 비운다(레벨이 채움)

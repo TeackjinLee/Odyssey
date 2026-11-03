@@ -65,6 +65,50 @@ def cut_cells(src):
     return out
 
 
+# 장비 겹치기: 옷 이름 → (몸 시트 이름, 장비 이름). 장비 그림 assets/source/odysseus_<장비>_gear.webp는 기본 8방향 시트(odysseus_8dir)와
+# 같은 칸 배치에서 그 장비만 마젠타 위에 그린 것. 머리를 찾아 프레임마다 머리 위치·폭에 맞춰 붙인다(걷기·공격 줄에도 같은 방식)
+GEAR = {"odysseus_helm": ("odysseus", "helm")}
+GEAR_CUT = 0.18   # 앞쪽 방향은 투구 앞 테두리를 머리 맨 위에서 키의 이만큼 아래까지만 남겨 눈·수염이 가려지지 않게
+BACK_DIRS = (5, 6, 7)
+
+
+def head_box(cell):
+    bb = cell.getbbox()
+    head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
+    return bb, head
+
+
+def load_gear(root, gear, body):
+    """방향 → (장비 RGBA, 기준 머리 가운데 x, 기준 머리 위 y, 기준 머리 폭)."""
+    src = Image.open(root / f"assets/source/odysseus_{gear}_gear.webp").convert("RGB")
+    base = cut_cells(Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB"))
+    cells = cut_cells(src)
+    out = {}
+    for d, (cell, _, _) in cells.items():
+        height = base[d][2]
+        bb, head = head_box(base[d][0])
+        if d not in BACK_DIRS:
+            for y in range(bb[1] + int(GEAR_CUT * height), cell.height):
+                for x in range(cell.width):
+                    cell.putpixel((x, y), (0, 0, 0, 0))
+        out[d] = (cell, (head[0] + head[2]) / 2, bb[1], head[2] - head[0])
+    return out
+
+
+def put_gear(cell, g):
+    """cell 위에 장비 g를 그 칸의 머리 위치·폭에 맞춰 얹은 새 그림."""
+    img, hx0, top0, hw0 = g
+    bb, head = head_box(cell)
+    s = (head[2] - head[0]) / hw0
+    hx = (head[0] + head[2]) / 2
+    sized = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+    out = cell.copy()
+    layer = Image.new("RGBA", cell.size, (0, 0, 0, 0))
+    layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s)))
+    out.alpha_composite(layer)
+    return out
+
+
 def to_pose(cell, foot, height, k=None):
     """원본 칸 → FRAME 크기 포즈 (발이 ANCHOR). 축소 배율도 돌려준다."""
     k = k or TARGET_H / height
@@ -203,7 +247,7 @@ def head_width(cells, cols):
     return sorted(ws)[len(ws) // 2]
 
 
-def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus"):
+def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=None):
     """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율, 머리 폭. 없으면 None.
     가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로).
     ref = (걷기 배율, 걷기 머리 폭)을 주면 머리 폭 비율로 배율을 맞춘다(공격 그림)."""
@@ -228,6 +272,9 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus"):
     elif k is None:
         hs = sorted(c.getbbox()[3] - c.getbbox()[1] for c in cells.values())
         k = TARGET_H / hs[len(hs) // 2]
+    if gear:
+        for (d, col), c in list(cells.items()):
+            cells[d, col] = put_gear(c, gear[d])
     out = {}
     for d in range(8):
         base = max(cells[d, c].getbbox()[3] for c in range(cols))
@@ -355,8 +402,12 @@ def affine(p):
 
 
 def build(root, name="odysseus"):
-    src = Image.open(root / f"assets/source/{name}_8dir.webp").convert("RGB")
+    body, gname = GEAR.get(name, (name, None))
+    src = Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB")
     cells = cut_cells(src)
+    gear = load_gear(root, gname, body) if gname else None
+    if gear:
+        cells = {d: (put_gear(c, gear[d]), foot, h) for d, (c, foot, h) in cells.items()}
     poses, hands0 = {}, {}
     for d, (cell, foot, height) in cells.items():
         pose, k, (ox, oy) = to_pose(cell, foot, height)
@@ -369,11 +420,11 @@ def build(root, name="odysseus"):
     strips = {}
     k = None
     n_frames = {a[0]: a[1] for a in ANIMS}
-    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"], name=name)
-    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head), name=name)
+    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"], name=body, gear=gear)
+    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head), name=body, gear=gear)
     for anim in ATTACK_HANDS:
         if strips["walk"]:
-            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=name)
+            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=body, gear=gear)
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
