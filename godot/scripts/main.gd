@@ -50,6 +50,7 @@ func start_chapter(from_checkpoint := false) -> void:
 	if not cp.is_empty():
 		Game.stats = cp["stats"].duplicate()
 		Game.stats["retries"] = Game.stats.get("retries", 0) + 1
+	Game.apply_chapter_outfit(1)
 	level = Chapter1Troy.new()
 	add_child(level)
 	hud = Hud.new()

@@ -71,7 +71,7 @@ func _order(s: Sprite2D, front: bool) -> void:
 func update() -> void:
 	var hands := AssetLibrary.character_hands(actor.sheet)
 	var down := actor.state == Actor.St.DEAD or actor.state == Actor.St.DOWNED
-	if hands.is_empty() or down:
+	if hands.is_empty() or down or actor.sheet in Game.UNARMED_OUTFITS:
 		main.visible = false
 		off.visible = false
 		slung.visible = false

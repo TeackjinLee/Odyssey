@@ -1,0 +1,12 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) base_armor.png = the 8-direction character sheet. Copy its layout and the position and size of every figure EXACTLY.
+2) concepts.png = concept board; concept 01 CLASSIC KING's long red cape is the style reference.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Create a HOOD-ONLY overlay sheet: in each of the 8 cells draw ONLY a dull brown-grey cloth hood PULLED BACK so it hangs down behind the neck: a soft bunched collar of cloth around the back of the neck and shoulders plus a short drooping hood tip on the back. The head, hair and face are NOT covered (the hood is behind the head).
+- NORTH, NORTH-EAST, NORTH-WEST (back views): the bunched hood lies on the upper back below the hair.
+- other views: the hood only shows as the cloth bunched behind the neck and at the shoulders., positioned exactly where it belongs on that cell's character in base_armor.png (same facing, same size), so it could be pasted over (or under) the base sheet.
+Draw NOTHING else: no head, no hair, no face, no body, no armor, no legs, no hands. Everything outside the item is flat magenta #FF00FF.
+
+Layout: ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512 like base_armor.png (top row N, NE, E, SE; bottom row S, SW, W, NW).
+Style: 2D pixel art matching base_armor.png, crisp 1px dark outline, hard pixel clusters, no anti-aliasing, no shadows, no labels, no text. No fine patterns.

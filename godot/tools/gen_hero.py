@@ -65,10 +65,18 @@ def cut_cells(src):
     return out
 
 
-# 장비 겹치기: 옷 이름 → (몸 시트 이름, 장비 이름). 장비 그림 assets/source/odysseus_<장비>_gear.webp는 기본 8방향 시트(odysseus_8dir)와
-# 같은 칸 배치에서 그 장비만 마젠타 위에 그린 것. 머리를 찾아 프레임마다 머리 위치·폭에 맞춰 붙인다(걷기·공격 줄에도 같은 방식)
-GEAR = {"odysseus_helm": ("odysseus", "helm")}
-GEAR_CUT = 0.18   # 앞쪽 방향은 투구 앞 테두리를 머리 맨 위에서 키의 이만큼 아래까지만 남겨 눈·수염이 가려지지 않게
+# 장비 겹치기: 옷 이름 → (몸 시트 이름, [(장비 이름, 방식), ...]). 장비 그림 assets/source/odysseus_<장비>_gear.webp는 기본 8방향 시트(odysseus_8dir)와
+# 같은 칸 배치에서 그 장비만 마젠타 위에 그린 것. 머리를 찾아 프레임마다 머리 위치·폭에 맞춰 붙인다(걷기·달리기·공격 줄에도 같은 방식)
+#  방식 "over" = 몸 위에(투구), "cape" = 북·북동·북서에서만 몸 위, 나머지 방향은 몸 뒤(망토·두건). 앞에서부터 차례로 쌓는다
+GEAR = {
+    "odysseus_helm": ("odysseus", [("helm", "over")]),
+    "odysseus_king": ("odysseus", [("cape", "cape"), ("helm", "over")]),
+    "odysseus_beggar_hood": ("odysseus_beggar", [("hood", "cape")]),
+}
+GEAR_CUT = 0.172   # 투구: 앞쪽 방향은 앞 테두리를 머리 맨 위에서 키의 이만큼 아래까지만 남겨 눈·수염이 가려지지 않게
+GEAR_CUT_ARC = 0.008   # 자른 선을 가운데가 처지는 호로(키 비율) — 직선이 티 나지 않게
+CUT_GEARS = ("helm",)
+GEAR_TINT = {"hood": (1.08, 0.94, 0.74)}   # 받은 두건이 보랏빛이라 갈색 쪽으로
 BACK_DIRS = (5, 6, 7)
 
 
@@ -85,27 +93,39 @@ def load_gear(root, gear, body):
     cells = cut_cells(src)
     out = {}
     for d, (cell, _, _) in cells.items():
+        if gear in GEAR_TINT:
+            t = GEAR_TINT[gear]
+            cell.putdata([(min(255, int(r * t[0])), min(255, int(g * t[1])), min(255, int(b * t[2])), a) for r, g, b, a in cell.getdata()])
         height = base[d][2]
         bb, head = head_box(base[d][0])
-        if d not in BACK_DIRS:
-            for y in range(bb[1] + int(GEAR_CUT * height), cell.height):
-                for x in range(cell.width):
+        hx = (head[0] + head[2]) / 2
+        if gear in CUT_GEARS and d not in BACK_DIRS:
+            hw = head[2] - head[0]
+            for x in range(cell.width):
+                t = max(0.0, 1 - ((x - hx) / (hw * 0.5)) ** 2)
+                y0 = bb[1] + int((GEAR_CUT + GEAR_CUT_ARC * t) * height)
+                for y in range(y0, cell.height):
                     cell.putpixel((x, y), (0, 0, 0, 0))
-        out[d] = (cell, (head[0] + head[2]) / 2, bb[1], head[2] - head[0])
+        out[d] = (cell, hx, bb[1], head[2] - head[0])
     return out
 
 
-def put_gear(cell, g):
-    """cell 위에 장비 g를 그 칸의 머리 위치·폭에 맞춰 얹은 새 그림."""
-    img, hx0, top0, hw0 = g
+def put_gears(cell, d, gears):
+    """cell 위에 장비들을 그 칸의 머리 위치·폭에 맞춰 얹은(또는 몸 뒤에 깐) 새 그림. gears = [(장비 dict, 방식)]."""
     bb, head = head_box(cell)
-    s = (head[2] - head[0]) / hw0
     hx = (head[0] + head[2]) / 2
-    sized = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
     out = cell.copy()
-    layer = Image.new("RGBA", cell.size, (0, 0, 0, 0))
-    layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s)))
-    out.alpha_composite(layer)
+    for g, mode in gears:
+        img, hx0, top0, hw0 = g[d]
+        s = (head[2] - head[0]) / hw0
+        sized = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+        layer = Image.new("RGBA", cell.size, (0, 0, 0, 0))
+        layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s)))
+        if mode == "cape" and d not in BACK_DIRS:
+            layer.alpha_composite(out)
+            out = layer
+        else:
+            out.alpha_composite(layer)
     return out
 
 
@@ -274,7 +294,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
         k = TARGET_H / hs[len(hs) // 2]
     if gear:
         for (d, col), c in list(cells.items()):
-            cells[d, col] = put_gear(c, gear[d])
+            cells[d, col] = put_gears(c, d, gear)
     out = {}
     for d in range(8):
         base = max(cells[d, c].getbbox()[3] for c in range(cols))
@@ -402,12 +422,12 @@ def affine(p):
 
 
 def build(root, name="odysseus"):
-    body, gname = GEAR.get(name, (name, None))
+    body, gnames = GEAR.get(name, (name, []))
     src = Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB")
     cells = cut_cells(src)
-    gear = load_gear(root, gname, body) if gname else None
+    gear = [(load_gear(root, g, body), mode) for g, mode in gnames]
     if gear:
-        cells = {d: (put_gear(c, gear[d]), foot, h) for d, (c, foot, h) in cells.items()}
+        cells = {d: (put_gears(c, d, gear), foot, h) for d, (c, foot, h) in cells.items()}
     poses, hands0 = {}, {}
     for d, (cell, foot, height) in cells.items():
         pose, k, (ox, oy) = to_pose(cell, foot, height)
