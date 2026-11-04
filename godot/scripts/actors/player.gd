@@ -31,6 +31,12 @@ const REACH_FLASH := 0.16
 
 ## 발소리 간격 남은 시간
 var _step_t := 0.0
+## 영양(탄수화물·단백질·지방, docs/NUTRITION.md): 체력 회복·공격력·속도에 걸린다
+var nutrition := Nutrition.new()
+## 달리는 중(동물이 더 멀리서 놀람, 탄수화물이 더 줆)
+var running := false
+## 처음 걸린 영양 효과 알림을 한 번만
+var _food_warned := {}
 var weapon := "sword"
 var combo_step := 0
 var combo_window := 0.0
@@ -172,6 +178,7 @@ func _assist_target(mv: Vector2, far: bool) -> Actor:
 
 func think(delta: float) -> void:
 	_read_input()
+	_update_nutrition(delta)
 	heavy_cd = max(0.0, heavy_cd - delta)
 	skill_cd = max(0.0, skill_cd - delta)
 	decoy_cd = max(0.0, decoy_cd - delta)
@@ -242,8 +249,8 @@ func _free_move(delta: float) -> void:
 				face(it.global_position - global_position)
 				play("interact")
 				return
-	var running: bool = inp["run"] and mv.length() > 0.1 and stamina > 1.0
-	var speed := run_speed if running else walk_speed
+	running = inp["run"] and mv.length() > 0.1 and stamina > 1.0
+	var speed := (run_speed if running else walk_speed) * nutrition.speed_mult()
 	if running:
 		stamina = max(0.0, stamina - 16.0 * delta)
 		stamina_rest = 0.0
@@ -279,6 +286,10 @@ func _start_attack(spec: Dictionary) -> void:
 	var idx := SWORD_COMBO.find(spec)
 	if idx >= 0:
 		combo_step = (idx + 1) % SWORD_COMBO.size()
+	if spec.get("heavy", false):
+		nutrition.spend("protein", Nutrition.PROTEIN_HEAVY)
+	elif spec["anim"] != "" and spec.get("dmg", 0.0) > 0.0:
+		nutrition.spend("protein", Nutrition.PROTEIN_SWING)
 
 
 func _attack_update(_delta: float) -> void:
@@ -337,9 +348,9 @@ func _start_dodge() -> bool:
 
 func _dodge_update(_delta: float) -> void:
 	var k: float = clamp(state_time / 0.36, 0.0, 1.0)
-	desired_velocity = dodge_dir * 235.0 * (1.0 - k * k)
+	desired_velocity = dodge_dir * 235.0 * nutrition.speed_mult() * (1.0 - k * k)
 	if state_time >= 0.36:
-		move_vel = dodge_dir * walk_speed
+		move_vel = dodge_dir * walk_speed * nutrition.speed_mult()
 		set_state(St.IDLE)
 
 
@@ -357,6 +368,7 @@ func _bow_update(delta: float) -> void:
 	if not inp["attack_held"]:
 		if bow_draw > 0.2:
 			Combat.shoot(self, inp["aim"], 7.0 + 17.0 * bow_draw, 240.0 + 140.0 * bow_draw)
+			nutrition.spend("protein", Nutrition.PROTEIN_SHOT)
 		body.frame = 3
 		_start_attack(BOW_RECOVER)
 
@@ -373,6 +385,53 @@ func _interact_update(delta: float) -> void:
 		interact_target = null
 		set_state(St.IDLE)
 		it.use(self)
+
+
+# ── 영양 ──────────────────────────────────────────────
+func _update_nutrition(delta: float) -> void:
+	if not is_alive() or Game.cutscene:
+		return
+	var fighting := since_hurt < 4.0 or state in [St.ATTACK, St.BLOCK, St.DODGE, St.BOW]
+	nutrition.tick(delta, running and state == St.MOVE, fighting)
+	if nutrition.starving() and hp > max_hp * Nutrition.STARVE_FLOOR:
+		hp = maxf(max_hp * Nutrition.STARVE_FLOOR, hp - Nutrition.STARVE_HP * delta)
+	for eff in nutrition.effects():
+		if not _food_warned.has(eff):
+			_food_warned[eff] = true
+			Game.show_hint(Lines.t("food.warn_" + {"굶주림": "starve", "배고픔": "hungry", "힘 빠짐": "weak", "무거움": "heavy"}[eff]))
+
+
+## 음식 먹기(FoodSource가 부른다): 오른 양을 머리 위에 띄운다
+func eat(food_id: String) -> void:
+	var f := Nutrition.food(food_id)
+	if f.is_empty():
+		return
+	var r := nutrition.eat(f)
+	var parts := []
+	for k in [["carb", "탄"], ["protein", "단"], ["fat", "지"]]:
+		if r[k[0]] > 0.0:
+			parts.append("+%s %d" % [k[1], roundi(r[k[0]])])
+	Fx.text(global_position + Vector2(0, -head_height - 4), " · ".join(parts), Color(0.95, 0.9, 0.6))
+	if r["to_fat"] >= 1.0:
+		Fx.text(global_position + Vector2(0, -head_height - 16), "넘쳐서 지방 +%d" % roundi(r["to_fat"]), Color(0.95, 0.85, 0.7))
+	Sfx.play("eat", -6.0)
+	Game.stats["meals"] = Game.stats.get("meals", 0) + 1
+
+
+func use_stamina(amount: float) -> bool:
+	var ok := super.use_stamina(amount)
+	if ok:
+		nutrition.spend("carb", amount * Nutrition.CARB_PER_STAMINA)
+	return ok
+
+
+func regen_mult() -> float:
+	return nutrition.regen_mult()
+
+
+func update_buff(delta: float) -> void:
+	super.update_buff(delta)
+	damage_mult *= nutrition.power_mult()
 
 
 func takedown(e: Enemy) -> void:

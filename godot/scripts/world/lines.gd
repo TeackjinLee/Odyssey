@@ -2,6 +2,7 @@ class_name Lines
 ## 챕터 글(대사·튜토리얼 카드·목표·알림·이름): data/dialogue/<챕터>.json에서 읽는다. 글을 고칠 때 코드는 건드리지 않는다.
 ## 이름은 "묶음.이름" (예: "tut.move", "hint.waves"). 글 속 {동작}은 화면에 그릴 때 Game.keys_text가 지금 묶인 키로 바꾼다.
 
+const COMMON := "res://data/dialogue/common.json"
 static var _data := {}
 static var _path := ""
 
@@ -15,7 +16,16 @@ static func use(path: String) -> void:
 		_data = {}
 		return
 	var d: Variant = JSON.parse_string(f.get_as_text())
-	_data = d if d is Dictionary else {}
+	_data = {}
+	# 모든 챕터가 같이 쓰는 글(영양 등) 위에 챕터 글을 얹는다(같은 묶음은 합침)
+	var common: Variant = JSON.parse_string(FileAccess.get_file_as_string(COMMON))
+	for src in [common, d]:
+		if src is Dictionary:
+			for k in src:
+				if _data.has(k) and _data[k] is Dictionary and src[k] is Dictionary:
+					_data[k].merge(src[k], true)
+				else:
+					_data[k] = src[k].duplicate(true) if src[k] is Dictionary or src[k] is Array else src[k]
 	_path = path
 
 

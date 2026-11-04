@@ -246,7 +246,7 @@ func _draw_hud() -> void:
 
 
 func _draw_player(p: Player) -> void:
-	_panel(Rect2(6, 6, 178, 48))
+	_panel(Rect2(6, 6, 178, 60))
 	var tex := _portrait("res://assets/ui/portrait_%s.png" % p.sheet)   # 입은 옷의 초상화가 있으면 그것
 	if tex == null:
 		tex = _portrait("res://assets/ui/portrait_odysseus.png")
@@ -261,14 +261,33 @@ func _draw_player(p: Player) -> void:
 	_text(Vector2(56, 29), "%d / %d" % [ceili(p.hp), int(p.max_hp)], 6, Color(1, 1, 1, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 122)
 	_bar(Rect2(56, 33, 122, 4), p.stamina / p.max_stamina, Color(0.35, 0.7, 0.95))
 	var buff := "  ·  함성 효과" if p.buff_time > 0.0 else ""
-	_text(Vector2(56, 47), ("검과 방패" if p.weapon == "sword" else "활") + buff, 7, Color(0.85, 0.85, 0.85))
+	_text(Vector2(56, 45), ("검과 방패" if p.weapon == "sword" else "활") + buff, 7, Color(0.85, 0.85, 0.85))
+	_draw_food(p.nutrition)
+
+
+## 영양 막대 셋(docs/NUTRITION.md §8): 탄(체력 회복) · 단(힘) · 지(완충, 60 넘으면 느려짐) + 걸린 효과
+func _draw_food(n: Nutrition) -> void:
+	var rows := [["탄", n.carb, Color(0.95, 0.75, 0.3)], ["단", n.protein, Color(0.9, 0.42, 0.4)], ["지", n.fat, Color(0.95, 0.9, 0.72)]]
+	for i in rows.size():
+		var x := 10.0 + i * 58.0
+		_text(Vector2(x, 57), rows[i][0], 6, rows[i][2])
+		var r := Rect2(x + 9, 53, 44, 3)
+		_bar(r, rows[i][1] / 100.0, rows[i][2])
+		if i == 2:   # 지방: 60 눈금(넘으면 느려짐)
+			canvas.draw_rect(Rect2(r.position.x + r.size.x * Nutrition.FAT_HEAVY / 100.0, r.position.y - 1, 1, r.size.y + 2), Color(1, 0.45, 0.35))
+		elif i == 0 and n.carb < Nutrition.LOW or i == 1 and n.protein < Nutrition.PROTEIN_OK:
+			var a := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 150.0)
+			canvas.draw_rect(r.grow(1), Color(1, 0.3, 0.25, a), false, 1.0)
+	var eff := n.effects()
+	if not eff.is_empty():
+		_text(Vector2(10, 64), " · ".join(eff), 6, Color(1, 0.55, 0.45))
 
 
 func _draw_squad() -> void:
 	var sq: Squad = Game.squad
 	if sq == null or sq.members.is_empty():
 		return
-	var y := 60.0
+	var y := 72.0
 	_panel(Rect2(6, y, 150, 14 + sq.members.size() * 27))
 	var mode_colors := [Color(0.6, 0.85, 1), Color(0.95, 0.85, 0.4), Color(1, 0.45, 0.35), Color(0.6, 1, 0.6)]
 	_text(Vector2(11, y + 10), "부대 명령: " + Squad.MODE_NAMES[sq.mode], 8, mode_colors[sq.mode])
@@ -298,7 +317,7 @@ func _draw_squad() -> void:
 func _draw_quest() -> void:
 	if objective_text == "":
 		return
-	var y: float = 72.0 + Game.squad.members.size() * 27 + 12
+	var y: float = 84.0 + Game.squad.members.size() * 27 + 12
 	_panel(Rect2(6, y, 200, 36 + objective_text.count("\n") * 10))
 	_text(Vector2(11, y + 11), objective_title, 8, GOLD)
 	canvas.draw_multiline_string(Game.ui_font, Vector2(11, y + 23), "▸ " + Game.keys_text(objective_text), HORIZONTAL_ALIGNMENT_LEFT, 192, 8, 2 + objective_text.count("\n"), Color(1, 1, 1))

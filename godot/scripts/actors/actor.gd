@@ -144,7 +144,7 @@ func _physics_process(delta: float) -> void:
 	update_buff(delta)
 	since_hurt += delta
 	if team == Team.GREEK and since_hurt > 5.0 and is_alive():
-		hp = min(max_hp, hp + max_hp * 0.04 * delta)
+		hp = min(max_hp, hp + max_hp * 0.04 * regen_mult() * delta)
 	if stamina_rest > 0.7:
 		stamina = min(max_stamina, stamina + 28.0 * delta)
 	desired_velocity = Vector2.ZERO
@@ -308,6 +308,11 @@ func nav_velocity(goal: Vector2, speed: float, delta: float, stop_dist := 4.0) -
 	if _path.is_empty():
 		return to / dist * arrive
 	return (_path[0] - global_position).normalized() * speed
+
+
+## 체력 회복 배율 (오디세우스는 탄수화물에 따라 — Player가 바꿈)
+func regen_mult() -> float:
+	return 1.0
 
 
 func update_buff(delta: float) -> void:

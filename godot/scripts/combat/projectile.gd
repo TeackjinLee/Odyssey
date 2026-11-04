@@ -40,7 +40,7 @@ func _physics_process(delta: float) -> void:
 			Sfx.at("block", position, -8.0)
 			queue_free()
 			return
-	for a in get_tree().get_nodes_in_group("actors"):
+	for a in Combat.targets(get_tree(), team):
 		if a.team == team or not a.is_alive():
 			continue
 		if Combat.ground_dist(position, a.global_position) < 9.0:

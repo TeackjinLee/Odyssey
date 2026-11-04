@@ -642,6 +642,57 @@ def sfx_switch():
     return y
 
 
+def sfx_eat(seed=0):
+    """먹기: 아삭·쩝쩝 씹는 소리 세 번"""
+    r = np.random.default_rng(seed)
+    y = np.zeros(int(0.75 * SR))
+    for i, t0 in enumerate([0.0, 0.22, 0.45]):
+        n = int(0.12 * SR)
+        c = fft_filter(r.standard_normal(n), lo=500, hi=4000, peaks=[(r.uniform(900, 1600), 400, 1)]) * env_exp(n, 0.03, 0.003)
+        c += crackle(n, 120, seed * 10 + i, 2000, 7000) * env_exp(n, 0.05) * 1.5
+        at(y, c * (1.0 - i * 0.2), t0)
+    return y
+
+
+def sfx_cluck(seed=0):
+    """닭: 놀란 꼬꼬댁 (짧은 높은 소리 여러 번)"""
+    r = np.random.default_rng(seed)
+    y = np.zeros(int(0.8 * SR))
+    tc = 0.0
+    for i in range(5):
+        d = r.uniform(0.05, 0.09) if i < 4 else 0.22
+        b = r.uniform(620, 760) * (1.25 if i == 4 else 1.0)
+        v = voice(lambda t, b=b, d=d: b * (1.0 + 0.4 * t / d), [(1100, 200, 1.0), (2400, 300, 0.6), (3300, 300, 0.3)], d, seed=seed * 9 + i, breath=0.3)
+        v *= np.minimum(1, tt(d) / 0.005) * np.exp(-tt(d) / (d * 0.5))
+        at(y, v, tc)
+        tc += d + r.uniform(0.02, 0.05)
+    return sat(y * 0.8, 1.5)
+
+
+def sfx_bleat(seed=0):
+    """염소·양: 떨리는 '매에에'"""
+    d = 0.75
+    t = tt(d)
+    v = voice(lambda t: (300 + seed * 25) * (1 + 0.06 * np.sin(2 * np.pi * 22 * t)) * (1.05 - 0.15 * t), [(800, 130, 1.0), (1300, 160, 0.6), (2600, 250, 0.3)], d, seed=seed, breath=0.25)
+    v *= np.minimum(1, t / 0.04) * np.clip((d - t) / 0.25, 0, 1) * (0.8 + 0.2 * np.sin(2 * np.pi * 22 * t))
+    return reverb(sat(v, 1.6), wet=0.15, dur=0.8)
+
+
+def sfx_splash():
+    """낚시: 물 튀기는 소리 + 물방울"""
+    n = int(0.8 * SR)
+    t = tt(0.8)
+    body = ola_filter(noise(n), lambda s: (300 + 2000 * min(1, s * 4), 2500 + 5000 * min(1, s * 4)), block=1024) * np.minimum(1, t / 0.01) * np.exp(-t / 0.18)
+    drops = np.zeros(n)
+    r = np.random.default_rng(3)
+    for i in range(6):
+        t0 = r.uniform(0.1, 0.6)
+        f = r.uniform(900, 1800)
+        m = int(0.06 * SR)
+        drops[int(t0 * SR):int(t0 * SR) + m] += np.sin(2 * np.pi * np.cumsum(f * (1 + 2 * np.arange(m) / m)) / SR) * env_exp(m, 0.015) * 0.3
+    return body + drops
+
+
 SFX = {
     "swing": [lambda s=s: sfx_swing(False, s) for s in range(3)],
     "swing_heavy": [lambda s=s: sfx_swing(True, 10 + s) for s in range(2)],
@@ -669,6 +720,10 @@ SFX = {
     "fire_burst": [sfx_fire_burst],
     "stone": [lambda s=s: sfx_stone(s) for s in range(2)],
     "switch": [sfx_switch],
+    "eat": [lambda s=s: sfx_eat(s) for s in range(2)],
+    "cluck": [lambda s=s: sfx_cluck(s) for s in range(2)],
+    "bleat": [lambda s=s: sfx_bleat(s) for s in range(2)],
+    "splash": [sfx_splash],
 }
 
 

@@ -18,6 +18,7 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 | `godot/README.md` | 실행·조작·챕터 1 진행·코드 구조·그림 교체 규칙(시트 `.json` 형식) — 코드 작업 전에 읽는다 |
 | `godot/docs/GAME_DESIGN.md` | 6챕터 기획, 조작감 원칙, 지킬 것 |
 | `godot/docs/ROADMAP.md` | 마일스톤·다음 할 일·완료 기준 |
+| `godot/docs/NUTRITION.md` | 영양(탄수화물·단백질·지방)·채집·사냥·낚시 — 모든 챕터 공통 규칙과 챕터별 음식원 |
 | `godot/docs/ART_PLAN.md` | 화풍 규칙·크기 규격·전체 그림 목록(ID·상태)·요청 순서 |
 | `godot/docs/sprite_request/` | 그림 요청: 오디세우스 차림(`OUTFIT.md`), 요청 키트(`motion_kit/`), 요청 묶음(`attack_requests/`·`action_requests/`), 병사·환경·UI 프롬프트 |
 | `godot/docs/references/` | 사용자가 준 참고 이미지와 `INDEX.md` |
@@ -56,6 +57,7 @@ python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려
 - 그려 받은 원본은 `assets/source/`에 두고 `tools/`의 변환 스크립트로 `assets/sprites/`·`assets/env/`를 만든다. 생성물을 손으로 고치지 않는다.
 - 오디세우스는 치비 새 차림(맨머리·망토 없음 몸 + 투구·망토 레이어 예정, `docs/sprite_request/OUTFIT.md`). 방향은 S SE E NE N만 받고 서쪽 셋은 뒤집는다.
 - 새 챕터는 `IsoLevel`을 상속해 `build()`/`start()`를 만든다. 글(대사·카드·목표·알림)은 `data/dialogue/<챕터>.json` + `Lines`로, 키 이름은 글에 `{동작}`으로 쓴다.
+- 영양: 오디세우스는 `player.nutrition`(탄 = 체력 회복 · 단 = 힘 · 지 = 완충/과하면 느림). 새 챕터는 채집 지점(`FoodSource`)·사냥감(`Animal`)을 배치한다 — `docs/NUTRITION.md`.
 - 소리: `Sfx.play/at`(효과음), `Bgm.play/sting/amb`(음악·환경음). 파일이 있으면 파일, 없으면 효과음은 합성음. 느낌은 영화 《오디세이》(2026)처럼 — 오케스트라 없이 고대 악기·징·쇠붙이·일그러진 신시·목소리(README "소리").
 
 ## 그림 작업 흐름

@@ -115,6 +115,7 @@ scripts/
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
     chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
+    food_source.gd     먹을 것이 있는 지점(채집·고기·낚시터) — 음식 값은 data/food.json
     lines.gd           챕터 글 읽기(Lines): data/dialogue/<챕터>.json의 대사·튜토리얼 카드·목표·알림·이름
     squad.gd           부대 명령과 진형(넓으면 V자, 좁으면 한 줄)
     interactable.gd    E로 쓰는 지점
@@ -124,11 +125,15 @@ scripts/
     companion.gd       부하 AI (검병·창병·궁병, 쓰러짐·부활)
     enemy.gd           트로이 병사 AI (검병·창병·궁수·수비대장)
     npc.gd             대화 인물
+    nutrition.gd       영양(탄수화물·단백질·지방) 규칙·수치 — docs/NUTRITION.md
+    animal.gd          사냥감(닭·염소…): 달아나고 놀라면 울고, 잡으면 고기를 남김
   combat/              판정(combat.gd), 화살, 이펙트(fx.gd — 그림 이펙트가 있으면 그림), 기술 효과(skills.gd: 미끼·일제 사격)
   audio/sfx.gd         효과음: assets/audio/sfx 파일이 있으면 파일(변형 무작위), 없으면 코드 합성. at()은 거리로 줄임
   audio/bgm.gd         배경 음악 교차 페이드·짧은 곡(승리·패배)·환경음 층
   ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드)
   ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
+data/food.json         음식 표(탄·단·지, 먹는 횟수, 다시 열리는 시간)
+data/dialogue/common.json 모든 챕터가 같이 쓰는 글(영양 안내 등)
 data/dialogue/ch1.json 챕터 1 글 — 대사·튜토리얼 카드·목표·알림. 글 속 {동작}(예: {interact})은 지금 묶인 키로 보인다
 assets/                생성된 임시 그림 (sprites/, env/, ui/) · 소리 (audio/sfx·amb·music)
 tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 소리는 ffmpeg)

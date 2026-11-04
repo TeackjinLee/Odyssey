@@ -376,7 +376,38 @@ func start() -> void:
 	winch_point.enabled = false
 	winch_point.position = Iso.grid_to_world(Vector2(20.5, 5.5)) + Vector2(0, 10)
 	world.add_child(winch_point)
+	_place_food()
 	_set_step(0)
+
+
+# ── 음식(docs/NUTRITION.md): 좌판·항아리·나무 채집, 닭·염소 사냥, 부두 낚시터 ───────
+## 좌판·항아리는 이미 놓인 소품 앞에, 올리브나무·덤불은 목마 광장 가장자리에 새로 심는다.
+## 동물은 경보를 울리지 않는 연습 보초가 있는 목마 광장에만 둔다(놀라 울어도 잠입 경보로 번지지 않게).
+func _place_food() -> void:
+	var spots := [
+		["fig", Vector2(12, 22), "fruit", Color(0.55, 0.2, 0.45)], ["bread", Vector2(24, 25), "", Color.WHITE],
+		["fig", Vector2(31, 25), "fruit", Color(0.4, 0.55, 0.2)], ["bread", Vector2(32, 37), "", Color.WHITE],
+		["olive", Vector2(30, 24), "", Color.WHITE], ["olive", Vector2(29, 35), "", Color.WHITE], ["olive", Vector2(12, 47), "", Color.WHITE],
+	]
+	add_prop("olive", Vector2i(33, 44), true, false)
+	spots.append(["olive", Vector2(33, 44), "fruit", Color(0.35, 0.45, 0.2)])
+	for c in [Vector2i(32, 40), Vector2i(6, 44)]:
+		add_prop("bush", c, false, false)
+		spots.append(["berry", Vector2(c), "fruit", Color(0.8, 0.15, 0.2)])
+	for s in spots:
+		var fs := FoodSource.new().setup(s[0], s[2])
+		fs.fruit_color = s[3]
+		fs.position = Iso.grid_to_world(s[1] + Vector2(0.5, 1.15))
+		world.add_child(fs)
+	var fish := FoodSource.new().setup("fish", "bob")
+	fish.radius = 34.0
+	fish.position = Iso.grid_to_world(Vector2(41.15, 34.0))
+	world.add_child(fish)
+	for a in [["chicken", Vector2(30.5, 41.5)], ["chicken", Vector2(32.5, 42.5)], ["goat", Vector2(17.0, 46.0)]]:
+		var an := Animal.new().setup(a[0])
+		an.position = Iso.grid_to_world(a[1])
+		an.wander_radius = 30.0 if a[0] == "chicken" else 40.0
+		world.add_child(an)
 
 
 ## 격자 방향 → 화면 방향 (적이 바라볼 쪽)
@@ -410,7 +441,7 @@ func _spawn_crew(at: Vector2) -> void:
 # ── 체크포인트 ──────────────────────────────────────
 func _save_checkpoint(id: String) -> void:
 	Game.checkpoint = {"id": id, "stats": Game.stats.duplicate(), "scout": scout_freed, "armory": armory_burned,
-		"guards": guard_group.size()}
+		"guards": guard_group.size(), "food": player.nutrition.state()}
 	Game.save_progress()
 	if id != "stealth":
 		Sfx.play("checkpoint", -8.0)
@@ -420,6 +451,8 @@ func _save_checkpoint(id: String) -> void:
 ## 체크포인트에서 다시: 그 단계의 시작으로 옮기고, 그 뒤에 이룬 골라서 하는 목표·경보로 는 경비도 되살린다.
 func restore_checkpoint(cp: Dictionary) -> void:
 	sinon.talk.enabled = false
+	if cp.has("food"):
+		player.nutrition.load_state(cp["food"])
 	if cp.get("armory", false):
 		_burn_armory(true)
 	_end_drill()
@@ -658,6 +691,17 @@ func _update_tutorial(delta: float) -> void:
 
 ## 처음 겪는 일마다 카드: 의심 · 첫 전투(연타 → 막기 → 구르기 → 강공격) · 보스
 func _watch_firsts() -> void:
+	# 먹을 것·사냥감을 처음 만나면 (연습 중이 아니고 싸우는 중이 아닐 때)
+	if not _tut_seen.has("food") and step in [0, 1, 2] and drill_phase != 1 and player.since_hurt > 4.0:
+		for f in get_tree().get_nodes_in_group("food"):
+			if f.enabled and f.global_position.distance_to(player.global_position) < 80.0:
+				_tut_once("food", Lines.t("food.tut"), func(): return Game.stats.get("meals", 0) > 0, -1, 14.0, true)
+				break
+	if not _tut_seen.has("hunt") and step in [0, 1, 2] and player.since_hurt > 4.0:
+		for an in get_tree().get_nodes_in_group("animals"):
+			if an.global_position.distance_to(player.global_position) < 110.0:
+				_tut_once("hunt", Lines.t("food.tut_hunt"), Callable(), -1, 8.0, true)
+				break
 	if step == 1 and not _tut_seen.has("sus"):
 		for e in enemies():
 			if not e.alerted and e.suspicion > 0.3 and e not in drill:

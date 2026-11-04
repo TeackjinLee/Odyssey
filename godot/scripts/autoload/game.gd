@@ -32,7 +32,7 @@ var outfit := "odysseus"
 var outfit_locked := false   # --outfit으로 골랐으면 챕터가 바꾸지 않는다
 ## 연출 중: 오디세우스가 입력을 받지 않는다(Player.script_goal이 있으면 그리로 걷는다)
 var cutscene := false
-var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
+var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0, "meals": 0}
 ## 마지막 체크포인트: {"id", "stats", "scout", "armory", "guards"} — 챕터를 처음 시작하면 비운다(레벨이 채움)
 var checkpoint: Dictionary = {}
 
@@ -272,7 +272,7 @@ func _register_input() -> void:
 
 
 func reset_run() -> void:
-	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
+	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0, "meals": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	side_markers = []

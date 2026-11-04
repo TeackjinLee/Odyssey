@@ -151,6 +151,18 @@
 | horn · charge (아게노르) | idle · run |
 | dodge | 병사는 쓰지 않음 ➖ |
 
+### 4.2b 동물·음식 `C-ANI` (영양 — [NUTRITION.md](NUTRITION.md))
+
+지금은 코드로 그린 임시 그림(`scripts/actors/animal.gd` · `scripts/world/food_source.gd`). 크기는 사람 키(약 52px) 기준.
+
+| ID | 내용 | 챕터 | 동작 | 상태 |
+|---|---|---|---|---|
+| `C-ANI-chicken` | 닭 (키 약 16px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
+| `C-ANI-goat` | 염소 (키 약 28px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
+| `C-ANI-sheep` | 양 | 3 | 같음 | ⬜ |
+| `C-ANI-boar` `C-ANI-deer` | 멧돼지·사슴 | 4 | 같음 | ⬜ |
+| `C-ANI-food` | 고기 한 점 · 낚시찌 · 열매 달린 덤불/올리브나무 표시 | 1~ | 1장 | ⬜ (코드 그림) |
+
 ### 4.3 무기 `W`
 
 `assets/weapons/` + `weapons.json`(그림·`grip`). 지금은 `tools/gen_weapons.py`의 아주 작은 임시 그림. 프롬프트 odysseus.md §무기
