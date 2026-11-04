@@ -4,10 +4,14 @@ extends IsoLevel
 ## 트로이를 떠난 갤리선. 항해 모드로 이스마로스 해안까지 배를 몰고(바람·돛·노 단계·암초) → 상륙해 키코네스 마을의
 ## 곡식 창고 셋을 털고(양·염소 사냥, 채집한 음식은 짧게 눌러 배 창고에) → 내륙에서 몰려오는 반격을 막으며 배로 물러나
 ## 오르면(멀리서 쓰러진 부하는 두고 간다) → 해안에서 떠난 키코네스 배들을 따돌리거나 격침하며 남쪽 먼바다로 빠져나간다.
+## 먼바다에 닿으면 제우스의 북풍에 여러 날 밀려(식량 창고에서 며칠 치가 빠짐) 남쪽의 로토스 섬에 닿는다 → 상륙하면 정찰 보낸
+## 부하 둘이 로토스 열매를 먹고 고향을 잊는다 → 붙잡아 끌고 와 배에 묶는다(다른 부하도 열매 곁에 오래 두면 끌려간다 — 해안에
+## 위치 사수) → 섬을 떠나면 클리어. 오디세우스가 열매를 먹으면 잠시 고향을 잊는다(걸음이 흐트러지고 목표 표시가 사라짐).
 ## 영양·부하는 챕터 1 끝에서 이어받는다(Game.carry_for(2)). 배의 식량 창고(Rations)는 항해 하루(50초)마다 부하 수만큼 준다.
-## 체크포인트: 상륙 · 반격 시작 · 출항.
+## 체크포인트: 상륙 · 반격 시작 · 출항 · 로토스 섬.
 ##
-## 격자(64×56): x는 화면 오른쪽 아래, y는 왼쪽 아래. 대부분 바다(물 칸 — 사람은 못 들어감, 배만 다님).
+## 격자(64×104): x는 화면 오른쪽 아래, y는 왼쪽 아래. 대부분 바다(물 칸 — 사람은 못 들어감, 배만 다님).
+## 위쪽(y 0~55)이 이스마로스 앞바다, 아래쪽(y 58~)이 로토스 섬(가운데 (38, 86)).
 ## 이스마로스 땅 = x ≥ coast_x(y) 이고 y ≤ coast_y(x) (오른쪽 위). 해안 두 칸은 모래밭. 상륙 지점은 서쪽 해안 (35, 20).
 ## 시작은 왼쪽 아래 (9, 45), 빠져나갈 곳은 화면 아래쪽 끝 (57~63, 49~55). 가운데 작은 섬과 암초들.
 
@@ -38,6 +42,28 @@ const REEFS := [Vector2i(14, 38), Vector2i(15, 38), Vector2i(20, 34), Vector2i(2
 	Vector2i(56, 46), Vector2i(38, 38), Vector2i(33, 43), Vector2i(60, 40)]
 const ISLET := Vector2(24.0, 30.0)
 const BOATS := [Vector2(44.0, 31.0), Vector2(52.0, 31.0), Vector2(57.0, 34.0)]
+## ── 로토스 섬 ──
+const LOTUS_C := Vector2(38.0, 86.0)
+## 폭풍이 끝나고 배가 있는 자리·방향(남남동 — 섬 쪽)
+const LOTUS_START := Vector2(27.0, 62.0)
+const LOTUS_START_HEADING := 1.15
+## 섬 북쪽 해안: 배를 대는 자리·사람이 내리는 자리·승선 지점(해안 첫 칸 y 74)
+const LOTUS_ANCHOR := Vector2(38.5, 71.6)
+const LOTUS_LAND_AT := Vector2(38.5, 75.4)
+const LOTUS_BOARD_AT := Vector2(38.5, 74.5)
+## 섬 가운데에서 이만큼(칸) 멀어지면 떠난 것. 표시는 서쪽 바다
+const LOTUS_EXIT_DIST := 22.0
+const LOTUS_EXIT_MARK := Vector2(14.0, 76.0)
+## 폭풍에 밀려 다닌 날(식량 창고에서 빠짐)
+const STORM_DAYS := 3
+## 로토스나무(열매)와 그 곁 앉을 자리. 부하가 열매에서 LURE_DIST(px) 안에 LURE_TIME초 넘게 있으면 끌려가 먹는다
+const LOTUS_TREES := [Vector2i(36, 88), Vector2i(41, 86), Vector2i(39, 92), Vector2i(33, 85)]
+const LURE_DIST := 120.0
+const LURE_TIME := 5.0
+## 상륙하면 정찰 보내는 부하 수(뒤에서부터)
+const SCOUTS := 2
+## 로토파고스 자리(앉을 자리와 떨어지게)
+const LOTOPHAGI := [Vector2(38.0, 84.5), Vector2(43.5, 90.5), Vector2(33.5, 92.0)]
 
 var step := -1
 var ship: Ship
@@ -64,6 +90,12 @@ var _tut_cur: Array = []
 var _tut_t := 0.0
 var _tut_gap := 0.0
 var _restored := false
+var _storming := false
+var lotus_fruits: Array = []
+var scouts: Array = []
+var bound := 0
+var _lure_t := {}
+var _canvas_base := Color(0.86, 0.82, 0.86)
 
 
 static func coast_x(y: float) -> int:
@@ -75,7 +107,17 @@ static func coast_y(x: float) -> int:
 
 
 static func is_land(c: Vector2i) -> bool:
-	return c.x >= coast_x(c.y) and c.y <= coast_y(c.x)
+	return c.y < 56 and c.x >= coast_x(c.y) and c.y <= coast_y(c.x)
+
+
+## 로토스 섬: 가운데에서 각도마다 다른 반지름 안
+static func lotus_r(a: float) -> float:
+	return 11.0 + 1.5 * sin(3.0 * a) + 0.8 * sin(5.0 * a + 1.0)
+
+
+static func is_lotus_land(c: Vector2i) -> bool:
+	var d := Vector2(c.x + 0.5, c.y + 0.5) - LOTUS_C
+	return d.length() < lotus_r(d.angle())
 
 
 func build() -> void:
@@ -84,14 +126,14 @@ func build() -> void:
 	area_name = Lines.t("meta.area")
 	minimap_land = true
 	W = 64
-	H = 56
-	canvas_mod.color = Color(0.86, 0.82, 0.86)
+	H = 104
+	canvas_mod.color = _canvas_base
 	fill(Rect2i(0, 0, W, H), "water")
-	# 이스마로스: 풀밭, 물가 두 칸은 모래
+	# 이스마로스·로토스 섬: 풀밭, 물가 두 칸은 모래
 	for x in W:
 		for y in H:
 			var c := Vector2i(x, y)
-			if is_land(c):
+			if is_land(c) or is_lotus_land(c):
 				floor_kind[c] = "grass"
 	for c in floor_kind.keys():
 		if floor_kind[c] != "grass":
@@ -99,7 +141,7 @@ func build() -> void:
 		for dx in range(-2, 3):
 			for dy in range(-2, 3):
 				var n: Vector2i = c + Vector2i(dx, dy)
-				if in_bounds(n) and not is_land(n):
+				if in_bounds(n) and not is_land(n) and not is_lotus_land(n):
 					floor_kind[c] = "sand"
 	# 가운데 작은 섬
 	for x in range(20, 29):
@@ -163,7 +205,28 @@ func build() -> void:
 		loot_points.append(it)
 	# 해안 승선 지점의 깃발
 	add_prop("banner_greek", Vector2i(36, 22), true, false)
+	_build_lotus_island()
 	_build_sea_astar()
+
+
+## 로토스 섬: 가운데 흙길 마을, 로토스나무(올리브 그림을 분홍빛으로 — 임시), 소나무·덤불·바위
+func _build_lotus_island() -> void:
+	_path_line(Vector2(38.5, 75.0), Vector2(38.0, 84.0))
+	_path_line(Vector2(38.0, 84.0), Vector2(36.0, 90.0))
+	_path_line(Vector2(38.0, 84.0), Vector2(42.0, 88.0))
+	fill(Rect2i(36, 86, 4, 3), "dirt")
+	for c in LOTUS_TREES:
+		_check_land(c)
+		var s := add_prop("olive", c, true, false)
+		s.modulate = Color(1.0, 0.74, 0.92)
+	for c in [Vector2i(30, 80), Vector2i(44, 80), Vector2i(31, 92), Vector2i(45, 93), Vector2i(43, 78)]:
+		_check_land(c)
+		add_prop("pine" if c.x < 40 else "cypress", c, true, c.x >= 40)
+	for c in [Vector2i(34, 79), Vector2i(44, 84), Vector2i(35, 94)]:
+		_check_land(c)
+		add_prop("bush", c, true, false)
+	add_prop("rock", Vector2i(28, 87), true, false)
+	add_prop("rock", Vector2i(48, 89), true, false)
 
 
 func _check_land(c: Vector2i) -> void:
@@ -265,6 +328,7 @@ func start() -> void:
 	board_point.on_use = func(_by): _board()
 	world.add_child(board_point)
 	_place_village()
+	_place_lotus()
 	Bgm.play("ending", 2.0)
 	Bgm.amb("sea", 1.0, 2.0)
 	Bgm.amb("wind", 0.5, 2.0)
@@ -304,6 +368,44 @@ func _place_village() -> void:
 		world.add_child(an)
 
 
+## 로토스 섬: 로토스 열매 넷(먹으면 고향을 잊음 — 배 창고에 못 넣음), 무화과·산딸기·잣, 해안 낚시터, 로토파고스 셋(말을 걸면 열매를 권함)
+func _place_lotus() -> void:
+	for c in LOTUS_TREES:
+		var fs := FoodSource.new().setup("lotus", "fruit")
+		fs.fruit_color = Color(0.98, 0.72, 0.3)
+		fs.position = Iso.grid_to_world(Vector2(c) + Vector2(0.5, 1.15))
+		world.add_child(fs)
+		lotus_fruits.append(fs)
+	for s in [["fig", Vector2(34, 79), Color(0.55, 0.2, 0.45)], ["berry", Vector2(44, 84), Color(0.8, 0.15, 0.2)],
+			["berry", Vector2(35, 94), Color(0.8, 0.15, 0.2)], ["nuts", Vector2(30, 80), Color.WHITE]]:
+		var fs := FoodSource.new().setup(s[0], "fruit" if s[0] != "nuts" else "")
+		fs.fruit_color = s[2]
+		fs.position = Iso.grid_to_world(s[1] + Vector2(0.5, 1.15))
+		world.add_child(fs)
+	var fish := FoodSource.new().setup("fish", "bob")
+	fish.radius = 34.0
+	fish.position = Iso.grid_to_world(Vector2(35.6, 73.6))
+	world.add_child(fish)
+	for i in LOTOPHAGI.size():
+		var n := Npc.new()
+		n.setup("greek_archer", Lines.t("names.lotophagi"), Callable())
+		var talk := n.talk
+		# 한 번 말하면 잠시 쉰다(붙어 서 있는 동안 대사가 되풀이되지 않게)
+		talk.on_use = func(_by):
+			talk.enabled = false
+			Game.say(Lines.say("lotophagi"))
+			get_tree().create_timer(12.0).timeout.connect(func(): talk.enabled = true)
+		n.tint = Color(1.05, 0.82, 1.0)
+		n.position = Iso.grid_to_world(LOTOPHAGI[i])
+		world.add_child(n)
+
+
+## 로토스 열매 곁에 앉을 자리(나무 i의 열매 남서쪽)
+func _seat(i: int) -> Vector2:
+	var c: Vector2i = LOTUS_TREES[i % LOTUS_TREES.size()]
+	return Iso.grid_to_world(Vector2(c) + Vector2(-0.2, 1.9))
+
+
 func _gdir(g: Vector2) -> Vector2:
 	return (Iso.grid_to_world(g) - Iso.grid_to_world(Vector2.ZERO)).normalized()
 
@@ -340,7 +442,7 @@ func _hide_member(c: Companion, aboard: bool) -> void:
 
 
 func _try_land() -> void:
-	if step != 0 or ship.rider == null:
+	if (step != 0 and step != 4) or ship.rider == null:
 		return
 	if absf(ship.speed) > LAND_SPEED:
 		Game.show_hint(Lines.t("hint.slow_down"))
@@ -349,8 +451,11 @@ func _try_land() -> void:
 
 
 func _land() -> void:
-	ship.gpos = ANCHOR
-	ship.heading = PI   # 고물을 해안 쪽으로 대 놓는다(떠날 때 바로 나감)
+	var lotus := step == 4
+	var at: Vector2 = LOTUS_LAND_AT if lotus else LAND_AT
+	var inland: Vector2 = Vector2(0, 1) if lotus else Vector2(1, 0)
+	ship.gpos = LOTUS_ANCHOR if lotus else ANCHOR
+	ship.heading = -PI * 0.5 if lotus else PI   # 고물을 해안 쪽으로 대 놓는다(떠날 때 바로 나감)
 	ship.speed = 0.0
 	ship.gear = 0
 	ship.set_sail(false)
@@ -358,15 +463,24 @@ func _land() -> void:
 	ship.crew = []
 	ship._sync()
 	player.set_riding(null)
-	player.position = Iso.grid_to_world(LAND_AT)
-	player.face(_gdir(Vector2(1, 0)))
+	player.position = Iso.grid_to_world(at)
+	player.face(_gdir(inland))
 	for i in squad.members.size():
 		var c: Companion = squad.members[i]
 		_hide_member(c, false)
-		c.position = Iso.grid_to_world(LAND_AT + Vector2(-0.4, -0.9 + i * 0.6))
-		c.face(_gdir(Vector2(1, 0)))
+		var side := Vector2(-0.9 + i * 0.6, -0.4) if lotus else Vector2(-0.4, -0.9 + i * 0.6)
+		c.position = Iso.grid_to_world(at + side)
+		c.hold_anchor = c.position
+		c.face(_gdir(inland))
 	land_point.enabled = false
 	Sfx.play("splash", -6.0)
+	if lotus:
+		area_name = Lines.t("meta.area_lotus_land")
+		if Game.hud:
+			Game.hud.show_title(Lines.list("title.lotus_land"))
+		_set_step(5)
+		Game.say(Lines.say("lotus_landed"))
+		return
 	area_name = Lines.t("meta.area_land")
 	if Game.hud:
 		Game.hud.show_title(Lines.list("title.land"))
@@ -376,6 +490,9 @@ func _land() -> void:
 
 ## 출항: 가까운(CARRY_DIST) 쓰러진 부하는 업어 태우고, 더 먼 부하는 두고 간다
 func _board() -> void:
+	if step == 6:
+		_board_lotus()
+		return
 	if step != 2:
 		return
 	var from := board_point.global_position
@@ -395,11 +512,31 @@ func _board() -> void:
 	Game.say(Lines.say("boarded"))
 
 
-func _lose(c: Companion) -> void:
+## 로토스 섬 출항: 고향을 잊은 채 남은 부하(끌고 오지 못한)는 섬에 남는다. 끌고 온 부하는 노 젓는 자리 밑에 묶는다
+func _board_lotus() -> void:
+	for c in squad.members.duplicate():
+		if c.lotus == Companion.Lotus.LURED or c.lotus == Companion.Lotus.DAZED:
+			_lose(c, "hint.lost_lotus")
+		else:
+			if c.state == Actor.St.DOWNED:
+				c.revive(0.4)
+			c.clear_lotus()
+	for i in squad.members.size():
+		squad.members[i].squad_index = i
+	_board_all()
+	board_point.enabled = false
+	ship.gear = 0
+	area_name = Lines.t("meta.area_lotus")
+	_set_step(7)
+	Game.say(Lines.say("lotus_board" if bound > 0 else "lotus_board_none"))
+
+
+func _lose(c: Companion, hint := "hint.lost") -> void:
 	squad.members.erase(c)
+	scouts.erase(c)
 	lost.append(c.display_name)
 	Game.stats["lost"] = Game.stats.get("lost", 0) + 1
-	Game.show_hint(Lines.t("hint.lost", c.display_name))
+	Game.show_hint(Lines.t(hint, c.display_name))
 	c.queue_free()
 
 
@@ -461,6 +598,156 @@ func _on_ship_sunk(_s: Ship) -> void:
 	Game.player_died.emit()
 
 
+# ── 폭풍 → 로토스 섬 ─────────────────────────────────
+## 이스마로스 먼바다에 닿음: 탈출 대사 뒤 폭풍
+func _escaped() -> void:
+	_storming = true
+	ship.gear = 0
+	Game.quest_marker = Vector2.INF
+	for b in boats:
+		if is_instance_valid(b):
+			b.target_ship = null
+	Bgm.sting("victory")
+	if Game.hud:
+		Game.hud.show_title(Lines.list("title.escaped"))
+	Game.say(Lines.say("escaped"), func(): _storm())
+
+
+## 북풍에 여러 날 밀려 로토스 섬 앞바다로. instant면 화면 연출·식량 소비 없이 바로(검증·체크포인트)
+func _storm(instant := false) -> void:
+	_storming = true
+	for b in boats:
+		if is_instance_valid(b):
+			b.queue_free()
+	boats.clear()
+	for e in enemies():
+		e.queue_free()
+	for n in fx_layer.get_children():
+		if n is Ship.Shot:
+			n.queue_free()
+	Game.quest_marker = Vector2.INF
+	if not instant:
+		Game.cutscene = true
+		Game.set_objective(chapter_title, Lines.t("objective.storm"))
+		Bgm.amb("wind", 1.0, 1.0)
+		Game.shake(5.0)
+		canvas_mod.color = Color(0.45, 0.48, 0.6)
+		if Game.hud:
+			Game.hud.fade_to(1.0, 1.6)
+		await get_tree().create_timer(1.8).timeout
+		var before := rations.store
+		var missed := 0
+		for i in STORM_DAYS:
+			missed += int(rations.pass_day(squad.members.size())["missed"])
+		if Game.hud:
+			Game.hud.show_title(Lines.list("title.storm"))
+		Game.show_hint(Lines.t("hint.storm_days" if missed == 0 else "hint.storm_days_miss",
+			[STORM_DAYS, before - rations.store, rations.store, roundi(rations.fullness)]))
+	ship.gpos = LOTUS_START
+	ship.heading = LOTUS_START_HEADING
+	ship.speed = 0.0
+	ship.gear = 0
+	ship.set_sail(false)
+	ship._wake.clear()
+	ship._sync()
+	player.global_position = ship.global_position
+	_cam_pos = ship.global_position
+	_wind_base = Vector2(-0.35, 0.94).normalized()
+	wind_strength = 0.45
+	_canvas_base = Color(1.0, 0.93, 0.86)
+	canvas_mod.color = _canvas_base
+	area_name = Lines.t("meta.area_lotus")
+	if instant and Game.hud:
+		Game.hud.clear_story()
+	_set_step(4)
+	if not instant:
+		await get_tree().create_timer(3.0).timeout
+		if Game.hud:
+			Game.hud.fade_to(0.0, 1.4)
+		Game.cutscene = false
+		Bgm.amb("wind", 0.35, 3.0)
+		if Game.hud:
+			Game.hud.show_title(Lines.list("title.lotus"))
+		Game.say(Lines.say("lotus_arrive"))
+	_storming = false
+
+
+## 상륙하자마자 뒤쪽 부하 둘을 정찰 보낸다 — 둘은 로토스 열매에 닿아 먹고 고향을 잊는다
+func _send_scouts() -> void:
+	scouts.clear()
+	var n := mini(SCOUTS, squad.members.size())
+	for i in n:
+		var c: Companion = squad.members[squad.members.size() - 1 - i]
+		c.lure(_seat(i))
+		scouts.append(c)
+	if n > 0:
+		Game.show_hint(Lines.t("hint.scouts", ", ".join(scouts.map(func(c): return c.display_name))))
+
+
+## 열매 곁에 오래 있는 부하는 끌려간다(정찰·묶인 부하·쓰러진 부하는 빼고)
+func _update_lure(delta: float) -> void:
+	for c in squad.members:
+		if c.lotus != Companion.Lotus.NONE or c.state == Actor.St.DOWNED:
+			continue
+		var best := -1
+		var bd := LURE_DIST
+		for i in lotus_fruits.size():
+			var d: float = c.global_position.distance_to(lotus_fruits[i].global_position)
+			if d < bd:
+				bd = d
+				best = i
+		var id: int = c.get_instance_id()
+		if best < 0:
+			_lure_t[id] = 0.0
+			continue
+		_lure_t[id] = float(_lure_t.get(id, 0.0)) + delta
+		if _lure_t[id] > LURE_TIME:
+			_lure_t[id] = 0.0
+			c.lure(_seat(best))
+			Game.show_hint(Lines.t("hint.lured", c.display_name))
+
+
+func on_crew_dazed(c: Companion) -> void:
+	if step == 5 and c in scouts and scouts.all(func(s): return s.lotus == Companion.Lotus.DAZED):
+		_set_step(6)
+	elif step == 6:
+		Game.show_hint(Lines.t("hint.dazed", c.display_name))
+
+
+func on_crew_bound(c: Companion) -> void:
+	bound += 1
+	Game.stats["dragged"] = Game.stats.get("dragged", 0) + 1
+	Game.show_hint(Lines.t("hint.bound", c.display_name))
+	# 정찰이 아직 열매에 닿기 전에 붙잡았으면 바로 다음 단계
+	if step == 5 and scouts.all(func(s): return s.lotus != Companion.Lotus.LURED):
+		_set_step(6)
+
+
+## 오디세우스가 로토스를 먹음(Player.eat)
+func on_forget() -> void:
+	Game.say(Lines.say("forget"))
+
+
+func _dazed_left() -> Array:
+	return squad.members.filter(func(c): return c.lotus == Companion.Lotus.LURED or c.lotus == Companion.Lotus.DAZED)
+
+
+func _refresh_rescue_marker() -> void:
+	var left := _dazed_left()
+	var best: Node2D = board_point
+	var bd := INF
+	for c in left:
+		var d: float = c.global_position.distance_to(player.global_position)
+		if d < bd:
+			bd = d
+			best = c
+	Game.quest_marker = best.global_position
+	if left.is_empty():
+		Game.set_objective(chapter_title, Lines.t("objective.lotus_board"))
+	else:
+		Game.set_objective(chapter_title, Lines.t("objective.rescue", left.size()))
+
+
 # ── 단계 ──────────────────────────────────────────────
 func _set_step(s: int) -> void:
 	step = s
@@ -504,6 +791,36 @@ func _set_step(s: int) -> void:
 			canvas_mod.color = Color(0.66, 0.68, 0.8)
 			_launch_boats()
 			_tut(Lines.t("tut.ram"), func(): return Game.stats.get("sunk", 0) > 0, 14.0)
+		4:
+			_save_checkpoint("lotus")
+			Bgm.play("ending", 2.0)
+			land_point.position = Iso.grid_to_world(LOTUS_ANCHOR + Vector2(0, -0.6))
+			land_point.enabled = true
+			Game.quest_marker = land_point.global_position
+			Game.set_objective(chapter_title, Lines.t("objective.lotus_sail"))
+		5:
+			_send_scouts()
+			Game.quest_marker = Iso.grid_to_world(LOTUS_C + Vector2(0.0, 1.0))
+			Game.set_objective(chapter_title, Lines.t("objective.scout"))
+			_tut(Lines.t("tut.lure"), func(): return Game.squad.mode == Squad.Mode.HOLD, 18.0)
+			# 봇: 남은 부하는 해안에 세워 둔다(사람에게 권하는 방법 그대로)
+			if Game.autoplay:
+				Game.squad.command(Squad.Mode.HOLD, player.global_position)
+			if scouts.is_empty():
+				_set_step(6)
+		6:
+			board_point.position = Iso.grid_to_world(LOTUS_BOARD_AT)
+			board_point.label = Lines.t("label.board_lotus")
+			board_point.hold_time = 2.0
+			board_point.enabled = true
+			if not scouts.is_empty():
+				Game.say(Lines.say("lotus_missing"))
+			_tut(Lines.t("tut.drag"), func(): return bound > 0, 20.0)
+			_refresh_rescue_marker()
+		7:
+			Bgm.play("ending", 2.0)
+			Game.quest_marker = Iso.grid_to_world(LOTUS_EXIT_MARK)
+			Game.set_objective(chapter_title, Lines.t("objective.lotus_leave"))
 
 
 func _refresh_loot_marker() -> void:
@@ -530,7 +847,7 @@ func _save_checkpoint(id: String) -> void:
 
 
 func checkpoint_name(id: String) -> String:
-	return {"landing": "상륙", "retreat": "반격 시작", "escape": "출항"}.get(id, id)
+	return {"landing": "상륙", "retreat": "반격 시작", "escape": "출항", "lotus": "로토스 섬"}.get(id, id)
 
 
 func restore_checkpoint(cp: Dictionary) -> void:
@@ -549,6 +866,10 @@ func restore_checkpoint(cp: Dictionary) -> void:
 	ship.crew = squad.members.duplicate()
 	_restored = true
 	skip_to(String(cp["id"]))
+	if Game.hud:
+		Game.hud.clear_story()
+		if step == 4:
+			Game.hud.show_title(Lines.list("title.lotus"))
 	for i in mini(int(cp.get("looted", 0)), loot_points.size()):
 		if loot_points[i].enabled:
 			loot_points[i].enabled = false
@@ -558,7 +879,7 @@ func restore_checkpoint(cp: Dictionary) -> void:
 	Game.show_hint(Lines.t("hint.checkpoint"))
 
 
-## 검증용 --start=landing|retreat|escape
+## 검증용 --start=landing|retreat|escape|lotus|lotus_land
 func skip_to(id: String) -> void:
 	_tut_clear()
 	match id:
@@ -579,11 +900,18 @@ func skip_to(id: String) -> void:
 		"escape":
 			skip_to("retreat")
 			_board()
+		"lotus":
+			skip_to("escape")
+			_storm(true)
+		"lotus_land":
+			skip_to("lotus")
+			_land()
 
 
 func report() -> Dictionary:
 	return {"ending": ending_done, "hull": snappedf(ship.hull, 0.1), "rations": rations.store, "fullness": snappedf(rations.fullness, 0.1),
-		"day": rations.day, "crew": squad.members.size(), "lost": lost, "looted": looted,
+		"day": rations.day, "crew": squad.members.size(), "lost": lost, "looted": looted, "step": step,
+		"bound": bound, "lotus_eaten": Game.stats.get("lotus", 0),
 		"boats": boats.filter(func(b): return is_instance_valid(b) and not b.sunk_done).size(),
 		"ship_cell": ship.gpos.snapped(Vector2(0.1, 0.1)), "riding": player.riding != null}
 
@@ -592,13 +920,16 @@ func result_info(st: Dictionary) -> Dictionary:
 	var t: float = st.get("time", 0.0)
 	var badge := ""
 	if st.get("lost", 0) == 0:
-		badge = "칭호 「아무도 두고 오지 않은 자」 — 부하를 하나도 잃지 않고 이스마로스를 벗어남"
-	return {"head": "CHAPTER 2 클리어", "title": "이스마로스를 벗어났다", "badge": badge,
-		"badge_hint": "부하를 하나도 잃지 않고 벗어나면 칭호를 얻는다",
+		badge = "칭호 「아무도 두고 오지 않은 자」 — 이스마로스와 로토스 섬에서 부하를 하나도 잃지 않음"
+		if st.get("lotus", 0) == 0:
+			badge += " · 로토스도 입에 대지 않음"
+	return {"head": "CHAPTER 2 클리어", "title": "로토스 섬을 떠났다", "badge": badge,
+		"badge_hint": "이스마로스와 로토스 섬에서 부하를 하나도 잃지 않으면 칭호를 얻는다",
 		"rows": [
 			"시간 %d분 %02d초   ·   처치 %d   ·   격침 %d   ·   들이받기 %d" % [int(t) / 60, int(t) % 60, st.get("kills", 0), st.get("sunk", 0), st.get("rams", 0)],
 			"곡식 창고 %d/%d   ·   배 창고 %d몫   ·   부하 배부름 %d   ·   잃은 부하 %d" % [looted, loot_points.size(), rations.store, roundi(rations.fullness), st.get("lost", 0)],
 			"먹은 횟수 %d   ·   창고에 넣은 몫 %d   ·   남은 선체 %d%%" % [st.get("meals", 0), st.get("stored", 0), roundi(100.0 * ship.hull / ship.max_hull)],
+			"끌고 온 부하 %d   ·   %s" % [bound, "로토스를 먹지 않았다" if st.get("lotus", 0) == 0 else "로토스를 %d번 먹었다" % st.get("lotus", 0)],
 		],
 		"next": "다음: CHAPTER 3 — 외눈박이 거인 (준비 중). 영양·부하·식량 창고는 이어진다"}
 
@@ -624,12 +955,28 @@ func _process(delta: float) -> void:
 				_wave_t = COUNTER_INTERVAL
 				_send_wave()
 		3:
-			if EXIT_RECT.has_point(ship.gpos):
-				_finish()
+			if _storming:
+				pass
+			elif EXIT_RECT.has_point(ship.gpos):
+				_escaped()
 			elif ship.gpos.distance_to(ANCHOR) > 14.0:
 				# 해안에 남은 키코네스는 더 쫓지 못한다
 				for e in enemies():
 					e.queue_free()
+		5, 6:
+			_update_lure(delta)
+			if step == 6:
+				_refresh_rescue_marker()
+			else:
+				Game.quest_marker = Iso.grid_to_world(LOTUS_C + Vector2(0.0, 1.0))
+			# 오디세우스가 로토스를 먹고 고향을 잊은 동안: 목표 표시가 사라지고 화면이 흐려진다
+			var k := clampf(player.forget_t / 3.0, 0.0, 1.0)
+			if k > 0.0:
+				Game.quest_marker = Vector2.INF
+			canvas_mod.color = _canvas_base.lerp(Color(1.0, 0.72, 0.95), k * (0.7 + 0.3 * sin(_t * 2.0)))
+		7:
+			if ship.gpos.distance_to(LOTUS_C) > LOTUS_EXIT_DIST:
+				_finish()
 
 
 func _on_day(day: Dictionary) -> void:
@@ -655,7 +1002,7 @@ func _finish() -> void:
 	if Game.hud:
 		Game.hud.show_title(Lines.list("title.clear"))
 	Bgm.sting("victory")
-	Game.say(Lines.say("escaped"), _end_chapter)
+	Game.say(Lines.say("lotus_left"), _end_chapter)
 
 
 func _end_chapter() -> void:

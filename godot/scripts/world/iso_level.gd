@@ -513,11 +513,14 @@ func find_path(a: Vector2, b: Vector2) -> PackedVector2Array:
 	return out
 
 
-func find_interactable(pos: Vector2) -> Interactable:
+## skip_forget: 먹으면 고향을 잊는 음식(로토스)은 빼고 찾는다(봇)
+func find_interactable(pos: Vector2, skip_forget := false) -> Interactable:
 	var best: Interactable = null
 	var best_d := INF
 	for it in get_tree().get_nodes_in_group("interactable"):
 		if not it.enabled:
+			continue
+		if skip_forget and it is FoodSource and it.info.get("effect", "") == "forget":
 			continue
 		var d: float = it.global_position.distance_to(pos)
 		if d < it.radius and d < best_d:

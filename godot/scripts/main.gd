@@ -16,7 +16,7 @@ extends Node
 
 const CHAPTERS := [
 	["CHAPTER 1", "트로이의 목마", "트로이 성에 잠입하라", true],
-	["CHAPTER 2", "귀환의 시작", "이스마로스 약탈과 첫 항해", true],
+	["CHAPTER 2", "귀환의 시작", "이스마로스 약탈과 로토스 섬", true],
 	["CHAPTER 3", "외눈박이 거인", "폴리페모스의 동굴에서 탈출하라", false],
 	["CHAPTER 4", "키르케의 섬", "돼지가 된 부하들을 구하라", false],
 	["CHAPTER 5", "세이렌의 유혹", "노래를 견디고 해역을 빠져나가라", false],

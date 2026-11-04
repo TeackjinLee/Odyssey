@@ -29,11 +29,11 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 ```bash
 godot --path .                                          # 타이틀부터
 godot --path . -- --play                                # 바로 챕터 1
-godot --path . -- --chapter=2                           # 바로 챕터 2 (--start=landing|retreat|escape)
+godot --path . -- --chapter=2                           # 바로 챕터 2 (--start=landing|retreat|escape|lotus|lotus_land)
 godot --headless --path . --import                      # 그림 가져오기(처음 한 번)
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
-godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=300   # 챕터 2 봇, ending true면 클리어
+godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=400   # 챕터 2 봇(로토스 섬까지), ending true면 클리어
 godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음)
 godot --path . -- --play --god --at=37,38                # 오디세우스를 그 칸에 옮겨 맵 보기 (--menu=pause|settings, --continue)
