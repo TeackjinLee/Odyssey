@@ -25,6 +25,14 @@ ARCHER_BOW = ("- He holds his bow (exactly as in pose.png) in the LEFT fist with
               "frame 4 the arrow has left. The quiver stays on his back. NO shield, NO sword. Draw the bow and string crisply, never cut off.")
 UNARMED = ("- EMPTY HANDS in EVERY frame: no weapon, no shield; a loose rope hangs from both wrists and swings with the arms. "
            "Keep him slightly hunched and sly, exactly like pose.png.")
+SHEATHED = ("- In this action his weapon is NOT in his hands (a sword hangs in its scabbard at his hip, a spear is slung across his back); "
+            "his shield (exactly as in pose.png) stays strapped on the LEFT forearm. Both fists clearly visible in EVERY frame.")
+HORN_TITLE = "blowing a curved bronze WAR HORN raised to his mouth to call reinforcements"
+HORN_MOTION = """- Frame 1 lifting the horn: the RIGHT fist brings a curved bronze war horn up toward his mouth, chest swelling.
+- Frame 2 blowing: the horn at his lips, its bell pointing up and forward toward the facing direction, cheeks puffed, back arched.
+- Frame 3 full blast: same pose, head tilted further back, the cape flaring, a few short pale sound-wave arcs in front of the horn bell.
+- Frame 4 lowering: the horn coming down to chest height, stance wide and proud.
+- Legs braced wide and still."""
 HEAVY_LAYOUT = ("- ONE image 1536x1024, 3 columns x 2 rows, every cell 512x512: frames 1-3 in the top row, frames 4-6 in the bottom row "
                 "(guide.png shows the same 6 frames in one row, left to right), no gaps. \n"
                 "- All 6 cells show the SAME facing, frames in reading order (left to right, then the second row).")
@@ -50,6 +58,14 @@ def tweak(job: Path, kind: str):
     if kind == "sinon":
         t = t.replace(armed_patch.ARMED, UNARMED)
     t = t.replace("the bronze sword slipping", "his weapon slipping")
+    if anim == "interact":
+        t = t.replace(armed_patch.SHEATHED, SHEATHED.replace("(a sword hangs in its scabbard at his hip, a spear is slung across his back)",
+                      "(his spear is slung across his back)" if kind == "spear" else "(his sword hangs in its scabbard at his hip, NO spear)"))
+        if kind == "captain":   # 아게노르의 interact = 함성(뿔나팔)
+            t = t.replace("turning a heavy winch crank in front of him (the crank is NOT drawn, only his hands gripping the air), loopable", HORN_TITLE)
+            t = t.replace("- No effect lines, no dust, no blood.", "- No dust, no blood.")
+            t = re.sub(r"- Frame 1 both fists together.*?with effort\.", lambda m: HORN_MOTION, t, flags=re.S)
+            t = t.replace(SHEATHED, "- His sword hangs in its scabbard at his hip, the shield stays strapped on the LEFT forearm; the RIGHT fist holds the horn.")
     if kind == "spear" and anim.startswith("attack"):
         t = t.replace("- Do NOT draw the stick lines", THRUST + "\n- Do NOT draw the stick lines")
     if kind == "captain":
@@ -78,7 +94,7 @@ def portrait(name):
     job = HERE / "portrait" / name
     job.mkdir(parents=True, exist_ok=True)
     Image.open(ROOT / f"assets/source/{name}_8dir.webp").convert("RGB").crop((0, 512, 384, 1024)).save(job / "pose.png")
-    mood = "loyal determined" if name.startswith("greek") else "stern hostile"
+    mood = "loyal determined" if name.startswith("greek") else "sly but pitiful" if name == "sinon" else "stern hostile"
     (job / "prompt.txt").write_text(PORTRAIT.replace("__CHARACTER__", motion_text(name)).replace("__MOOD__", mood))
 
 

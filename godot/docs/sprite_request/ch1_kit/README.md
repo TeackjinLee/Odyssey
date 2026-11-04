@@ -51,7 +51,8 @@
 모두 받아 넣었다. Codex 한도에 걸린 요청은 `rerun_later.sh`가 한도가 풀린 뒤 다시 보낸다(그리스 궁수 달리기 SE는 다른 아이처럼 그려져 다시 받음).
 초상화는 `assets/source/<이름>_portrait.webp`로 두면 `gen_hero.py`가 부대 칸 초상화로 만든다(아게노르 초상화는 보스 체력바 왼쪽).
 **시논:** 기본 8방향(`units/sinon.txt`, 다른 7종처럼 `style_ref.png` 첨부)과 걷기(`make_motion.py sinon`, 빈손·손목 밧줄 문구)를 받아
-`ARMED_BODIES`에 넣고 1장 시논이 궁병 시트 대신 `sinon` 시트를 쓴다. 트로이 병사 상호작용은 적이 쓰지 않아 받지 않았다.
+`ARMED_BODIES`에 넣고 1장 시논이 궁병 시트 대신 `sinon` 시트를 쓴다. 트로이 검병·창병 상호작용(종 치기·권양기)과 아게노르 함성(interact 자리에 뿔나팔)도 `--anims=interact`로 받았다.
+대화창은 말하는 이 이름(대사 글의 names)으로 초상화를 찾아 왼쪽에 그린다(`hud.gd` `_speaker_portrait`).
 
 **HUD 초상화:** `extra/portrait`로 받은 그림을 `assets/source/odysseus_ch1_portrait.webp`로 두면 `gen_hero.py`가
 `portrait_odysseus_ch1.png`(80×80)를 만들고, HUD는 입은 옷의 초상화를 쓴다.

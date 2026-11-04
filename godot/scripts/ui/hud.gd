@@ -29,6 +29,7 @@ var show_help := false
 var overlay := ""
 var overlay_stats: Dictionary = {}
 var _portraits := {}
+var _speaker_sheets := {}
 var _buttons: Array = []
 ## 튜토리얼 카드: 글, ✓ 표시 남은 시간, 깜빡일 하단 슬롯
 var tut_text := ""
@@ -249,13 +250,32 @@ func _draw_hud() -> void:
 		_draw_overlay()
 
 
-func _draw_player(p: Player) -> void:
-	_panel(Rect2(6, 6, 178, 60))
+func _player_portrait(p: Player) -> Texture2D:
 	var tex := _portrait("res://assets/ui/portrait_%s.png" % p.sheet)   # 입은 옷의 초상화가 있으면 그것
 	if tex == null:
 		tex = _portrait("res://assets/ui/portrait_odysseus.png")
 	if tex == null:
 		tex = _portrait("res://assets/ui/portrait_odysseus_sword.png")
+	return tex
+
+
+## 대화창 초상화: 말하는 이 이름 → 시트 이름(대사 글의 names에서 만든다). 모르는 이름이면 초상화 없이
+func _speaker_portrait(speaker: String) -> Texture2D:
+	var p: Player = Game.level.player if Game.level else null
+	if p and speaker == "오디세우스":
+		return _player_portrait(p)
+	if _speaker_sheets.is_empty():
+		_speaker_sheets = {Lines.t("names.sinon"): "sinon", Lines.t("names.scout"): "greek_sword"}
+		for pair in Lines.list("names.crew"):
+			_speaker_sheets[pair[1]] = "greek_" + pair[0]
+	if not _speaker_sheets.has(speaker):
+		return null
+	return _portrait("res://assets/ui/portrait_%s.png" % _speaker_sheets[speaker])
+
+
+func _draw_player(p: Player) -> void:
+	_panel(Rect2(6, 6, 178, 60))
+	var tex := _player_portrait(p)
 	canvas.draw_rect(Rect2(9, 9, 42, 42), Color(0.2, 0.15, 0.12))
 	if tex:
 		canvas.draw_texture_rect(tex, Rect2(10, 10, 40, 40), false)
@@ -579,8 +599,16 @@ func _draw_dialogue() -> void:
 	var r := Rect2(70, 262, 500, 62)
 	canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.9))
 	canvas.draw_rect(r, GOLD, false, 1.0)
-	_text(r.position + Vector2(10, 14), line[0], 9, GOLD)
-	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(10, 30), Game.keys_text(line[1]), HORIZONTAL_ALIGNMENT_LEFT, 480, 9, 3, Color.WHITE)
+	var x := 10.0
+	var tex := _speaker_portrait(line[0])
+	if tex:   # 말하는 이 초상화를 왼쪽에, 글은 그만큼 오른쪽으로
+		var pr := Rect2(r.position + Vector2(7, 7), Vector2(48, 48))
+		canvas.draw_rect(pr, Color(0.2, 0.15, 0.12))
+		canvas.draw_texture_rect(tex, pr, false)
+		canvas.draw_rect(pr, GOLD, false, 1.0)
+		x = 62.0
+	_text(r.position + Vector2(x, 14), line[0], 9, GOLD)
+	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(x, 30), Game.keys_text(line[1]), HORIZONTAL_ALIGNMENT_LEFT, 490 - x, 9, 3, Color.WHITE)
 	_text(r.end + Vector2(-150, -6), _advance_keys() + " ▶", 7, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_RIGHT, 144)
 
 

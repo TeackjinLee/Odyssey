@@ -68,6 +68,8 @@ trojan_sword/death_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a3df-9bb9
 trojan_sword/death_NE-Na /Users/itaegjin/.codex/generated_images/01a1a3df-9b8a-7fb3-8312-3a655fcada9e/exec-5258e809-b96b-4d62-a2b1-c48619290a5f.png
 trojan_sword/hit_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a3df-9b8a-7a60-ba34-a85a630a666c/exec-6c67644a-ed04-44d5-bd5b-b9fb349616d1.png
 trojan_sword/hit_NE-Na /Users/itaegjin/.codex/generated_images/01a1a3df-9bb6-7142-ae36-f7badc6f1267/exec-691f2c93-6520-4fb8-a818-632c0a8693d6.png
+trojan_sword/interact_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a5a5-3f40-7102-a452-8f79aaf3cebe/exec-53bd5352-83a2-4a66-a030-948c3e1bc159.png
+trojan_sword/interact_NE-Na /Users/itaegjin/.codex/generated_images/01a1a5a5-3f4d-7b73-8af5-91bece1849aa/exec-703cc5e5-0a6a-4032-bd6f-eb8dc8cd287c.png
 trojan_sword/run_Ea /Users/itaegjin/.codex/generated_images/01a1a440-7e95-7991-b02f-b60f94b824d5/exec-fa1c0908-a15b-4aed-a9a0-c86f5964f832.png
 trojan_sword/run_NEa /Users/itaegjin/.codex/generated_images/01a1a440-9603-7dc1-ac3c-a871a67bcbf9/exec-3a2382e7-c53f-4156-ae50-af14d8644564.png
 trojan_sword/run_Na /Users/itaegjin/.codex/generated_images/01a1a440-a602-7680-95b2-d2dcc81aef91/exec-35b42711-4ae8-4bd5-bc5b-9b4d82cd9b10.png
@@ -88,6 +90,8 @@ trojan_spear/death_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a405-2e01
 trojan_spear/death_NE-Na /Users/itaegjin/.codex/generated_images/01a1a405-6f2f-7d11-8ab6-63eb1f72a7f2/exec-1eaf43da-73c9-42ce-a314-b24e374b5927.png
 trojan_spear/hit_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a405-83b7-7791-a2ef-1150b71a417c/exec-bd78f9d3-afb5-4cae-875d-2209ed47c915.png
 trojan_spear/hit_NE-Na /Users/itaegjin/.codex/generated_images/01a1a405-8b6e-7113-a886-cf7295f858d3/exec-78db8169-6db9-435a-bd19-ab5455d959c0.png
+trojan_spear/interact_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a5a5-3f3f-7310-b7ec-2e6b7b27ac07/exec-a5aeefb6-318c-4949-b7cf-f2ad27ab6f91.png
+trojan_spear/interact_NE-Na /Users/itaegjin/.codex/generated_images/01a1a5a5-3f36-7411-8fc6-91e2bc1d0e0d/exec-013f5448-de42-4d40-916e-a47318480a5a.png
 trojan_spear/run_Ea /Users/itaegjin/.codex/generated_images/01a1a441-1a3c-7091-97e0-8026e31d24ec/exec-e521f3c9-94e3-4e9c-8293-7716295f5404.png
 trojan_spear/run_NEa /Users/itaegjin/.codex/generated_images/01a1a441-215c-72e3-b631-8beb5de98e4d/exec-0311da7f-4cb1-48e1-a776-40c15db7ed8b.png
 trojan_spear/run_Na /Users/itaegjin/.codex/generated_images/01a1a441-72ce-7092-a463-d46a235fcd61/exec-8ae1dfba-3ecf-407a-a95a-262ca187d8b1.png
@@ -134,6 +138,8 @@ trojan_captain/heavy_SEb /Users/itaegjin/.codex/generated_images/01a1a40b-b68c-7
 trojan_captain/heavy_Sa /Users/itaegjin/.codex/generated_images/01a1a408-fd5f-7820-b08d-c4af3c256d28/exec-7dca66df-2d97-4fd0-9d4e-8973c2f05e01.png
 trojan_captain/hit_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a409-0c13-72a2-83e5-3029f63f2c1c/exec-662684eb-15ca-4ea7-926e-0792c9022866.png
 trojan_captain/hit_NE-Na /Users/itaegjin/.codex/generated_images/01a1a409-3540-7173-b9c6-a16afeef0fdd/exec-950428c8-1475-4d6f-8a9e-c91365dec016.png
+trojan_captain/interact_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a5a5-3f3f-77e3-a02c-8f471fd3ff72/exec-9537f05b-cb88-41d1-ac64-57fe49864d35.png
+trojan_captain/interact_NE-Na /Users/itaegjin/.codex/generated_images/01a1a5a5-3f3d-7320-90e8-1c3311698653/exec-5634f775-bb02-42d4-b2bf-07f1695907de.png
 trojan_captain/run_Ea /Users/itaegjin/.codex/generated_images/01a1a4f2-ada6-7b32-8da0-01a93cbead5a/exec-72416693-f50b-42cd-885d-dde25fd09355.png
 trojan_captain/run_NEa /Users/itaegjin/.codex/generated_images/01a1a4f2-adb0-7480-819d-74b4aedcf4f4/exec-167f6a76-84a0-406c-92b5-9b00d2c111b0.png
 trojan_captain/run_Na /Users/itaegjin/.codex/generated_images/01a1a4f2-adaa-7280-90dc-34d472f191a4/exec-12228f87-3736-41ed-9a29-9906805c011f.png
@@ -147,6 +153,7 @@ trojan_captain/walk_Sa /Users/itaegjin/.codex/generated_images/01a1a409-bca5-7d2
 portrait/greek_archer /Users/itaegjin/.codex/generated_images/01a1a4f3-9363-7a31-ab1f-c428e5eed65e/exec-c8165313-5a5c-4171-ac9d-893fa95917bf.png
 portrait/greek_spear /Users/itaegjin/.codex/generated_images/01a1a4f3-e682-7d92-a474-16c885c54668/exec-871f9faa-b234-4e0c-be1a-27fe24027562.png
 portrait/greek_sword /Users/itaegjin/.codex/generated_images/01a1a4f3-e93b-73d1-b77c-d6eb8bd6ce43/exec-046ca5ba-8682-45b0-b2c2-969551b7815f.png
+portrait/sinon /Users/itaegjin/.codex/generated_images/01a1a5a5-3f36-7252-8054-1b2b7381415d/exec-efd7c7ff-9196-43b5-938d-4d46d99c6077.png
 portrait/trojan_archer /Users/itaegjin/.codex/generated_images/01a1a4f3-ebd2-7763-8ef7-b19656296630/exec-c2493a1e-494c-4a5a-ac3a-e3ab16a517c6.png
 portrait/trojan_captain /Users/itaegjin/.codex/generated_images/01a1a4f3-efe5-7f00-8206-c336b801845c/exec-c446c143-cd49-4c49-b85b-e272849e6a9a.png
 portrait/trojan_spear /Users/itaegjin/.codex/generated_images/01a1a4f3-f119-7271-a7b1-d6003b61a939/exec-0e39dc13-8172-4408-a2f0-324c31c00ec0.png
