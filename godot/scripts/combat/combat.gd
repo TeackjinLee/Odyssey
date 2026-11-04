@@ -9,9 +9,17 @@ static func ground_dist(a: Vector2, b: Vector2) -> float:
 	return Vector2(d.x, d.y * Y_STRETCH).length()
 
 
+## 맞을 수 있는 것: 인물(actors) + 그리스 쪽 공격이면 사냥감(animals, docs/NUTRITION.md)
+static func targets(tree: SceneTree, team: int) -> Array:
+	var out: Array = tree.get_nodes_in_group("actors")
+	if team == Actor.Team.GREEK:
+		out = out + tree.get_nodes_in_group("animals")
+	return out
+
+
 static func melee(attacker: Actor, reach: float, arc_deg: float, dmg: float, kb: float, heavy := false) -> Array:
 	var hits: Array = []
-	for a in attacker.get_tree().get_nodes_in_group("actors"):
+	for a in targets(attacker.get_tree(), attacker.team):
 		if a == attacker or a.team == attacker.team or not a.is_alive():
 			continue
 		var to: Vector2 = a.global_position - attacker.global_position
@@ -30,7 +38,7 @@ static func melee(attacker: Actor, reach: float, arc_deg: float, dmg: float, kb:
 
 static func area(attacker: Actor, center: Vector2, radius: float, dmg: float, kb: float, heavy := true) -> Array:
 	var hits: Array = []
-	for a in attacker.get_tree().get_nodes_in_group("actors"):
+	for a in targets(attacker.get_tree(), attacker.team):
 		if a == attacker or a.team == attacker.team or not a.is_alive():
 			continue
 		if ground_dist(center, a.global_position) <= radius:
@@ -49,4 +57,4 @@ static func shoot(shooter: Actor, target_pos: Vector2, dmg: float, speed := 300.
 	p.velocity = dir * speed
 	p.position = shooter.global_position + dir * 8.0
 	Game.level.fx_layer.add_child(p)
-	Sfx.play("bow")
+	Sfx.at("bow", shooter.global_position, -7.0)

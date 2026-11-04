@@ -10,10 +10,12 @@
 | [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
 | [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
 | [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
-| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`) |
+| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`), 챕터 2 맵·항해 모드([CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md)) |
+| [docs/NUTRITION.md](docs/NUTRITION.md) | 영양(탄수화물·단백질·지방)·채집·사냥·낚시·배의 식량 창고 — 모든 챕터 공통 |
 
-현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지 플레이할 수 있다. 진행은 체크포인트마다 저장되어
-타이틀의 "이어 하기"로 이어서 한다.
+현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지, **CHAPTER 2 — 귀환의 시작**(항해 모드 기반: 이스마로스 약탈과 탈출)을
+끝까지 플레이할 수 있다. 챕터 1을 깨면 결과 화면의 "다음 챕터"로 넘어가고 영양·살아남은 부하를 이어받는다.
+진행은 체크포인트마다 저장되어 타이틀의 "이어 하기"로 이어서 한다.
 
 ## 실행
 
@@ -22,6 +24,7 @@ Godot 4.7 이상(`brew install --cask godot`). 이 폴더에서:
 ```bash
 godot --path .                # 타이틀 화면부터
 godot --path . -- --play      # 바로 챕터 1
+godot --path . -- --chapter=2 # 바로 챕터 2 (챕터 1을 깬 적이 없으면 기본 영양·부하 셋)
 godot -e --path .             # 에디터로 열기
 ```
 
@@ -96,6 +99,25 @@ Master/Music/SFX), 전체 화면, 키 바꾸기(동작을 누르고 새 키, Esc
 7. 클리어 화면 — 시간·처치(조용히)·들킨 횟수·경보·부하가 쓰러진 횟수·체크포인트에서 다시 한 횟수·골라서 하는 목표.
    경보 0이면 칭호 「밤의 그림자」, 한 번도 안 들키면 「보이지 않는 자」. 타이틀의 챕터 이름 옆에 ✓
 
+## 챕터 2 진행 (항해 모드 기반)
+
+맵은 64×56칸, 거의 바다다. 오른쪽 위가 키코네스족의 땅 **이스마로스**, 가운데 작은 섬과 암초들. 자세한 것은 [docs/maps/CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md).
+
+1. **항해** — 오디세우스는 갤리선을 몬다(몸은 배 위에 숨고 배가 키를 받는다). W/S 노 단계(뒤로·멈춤·천천히·힘껏 — 힘껏은
+   노꾼 힘을 쓴다), A/D 키(느리면 잘 안 돎), Shift 돛(바람을 등지면 빨라지고 맞바람에 펴면 밀림). 해안·암초에 빠르게 부딪히면 선체가 상한다.
+   오른쪽 위 배 칸: 선체·노 단계·노꾼 힘·돛·바람 나침반·식량 창고·부하 배부름·항해 하루. 하단 슬롯도 배 조작으로 바뀐다
+2. **상륙** — 해안 표시에 배를 멈추고 E. 부하 셋(챕터 1에서 정찰병을 구했으면 넷)과 내린다
+3. **약탈** — 키코네스 마을의 곡식 창고 셋을 길게 E로 턴다(창고 하나 = 식량 5몫). 양·염소·닭, 올리브·산딸기·무화과·잣.
+   음식은 **길게 E = 오디세우스가 먹기, 짧게 E = 배 창고에 넣기**
+4. **반격** — 마지막 창고를 털면 새벽, 해안 양쪽에서 먼저, 이어 내륙에서 두 번 키코네스족이 몰려온다(마지막엔 전사장 — 보스).
+   해안의 배 앞에서 E를 4초 길게 눌러 **배를 띄운다**(맞으면 끊김 — 2 위치 사수로 부하를 곁에). 260px보다 멀리 쓰러진 부하는 두고 간다
+5. **탈출** — 제우스의 북풍이 남쪽으로 세게 분다. 해안에서 떠난 키코네스 배 셋이 쫓아와 화살을 쏜다. 갑판의 궁병·창병이 맞쏘고,
+   힘껏 저어 뱃머리로 들이받으면 크게 부서진다. 화면 아래쪽 먼바다(57~63, 49~55)에 닿으면 클리어 — 하루가 지나 부하가 창고에서 먹는다.
+   부하를 하나도 잃지 않으면 칭호 「아무도 두고 오지 않은 자」
+
+**식량 창고**: 항해 하루(배 위 50초)마다 부하가 1몫씩 먹는다. 모자라면 배부름이 줄고, 50 아래면 부하의 회복·공격력(갑판 사격 포함)이 준다.
+챕터 2 체크포인트: 상륙 · 반격 시작 · 출항.
+
 **체크포인트**: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 쓰러지면 "체크포인트에서 다시"로 그 단계부터 하고,
 골라서 하는 목표(정찰병·무기고)와 경보로 는 경비는 그대로, 기록은 체크포인트 때 값으로 돌아간다(`chapter1_troy.gd`의 `restore_checkpoint`).
 
@@ -114,7 +136,12 @@ scripts/
     iso.gd             격자↔화면 좌표, 8방향
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
-    chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계
+    chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
+    chapter2_ismaros.gd 챕터 2 바다 맵·상륙/약탈/반격/승선/탈출·바다 길찾기(sea_path)·바람
+    ship.gd            배(Ship): 관성 이동·노 단계·돛·바람·키·암초 충돌·들이받기·갑판 사격·적 배 AI·봇, 임시 그림
+    rations.gd         배의 식량 창고와 부하 배부름(항해 하루마다 먹음) — docs/NUTRITION.md §7
+    food_source.gd     먹을 것이 있는 지점(채집·고기·낚시터) — 음식 값은 data/food.json
+    lines.gd           챕터 글 읽기(Lines): data/dialogue/<챕터>.json의 대사·튜토리얼 카드·목표·알림·이름
     squad.gd           부대 명령과 진형(넓으면 V자, 좁으면 한 줄)
     interactable.gd    E로 쓰는 지점
   actors/
@@ -123,12 +150,41 @@ scripts/
     companion.gd       부하 AI (검병·창병·궁병, 쓰러짐·부활)
     enemy.gd           트로이 병사 AI (검병·창병·궁수·수비대장)
     npc.gd             대화 인물
-  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 기술 효과(skills.gd: 미끼·일제 사격), 합성 효과음(sfx.gd)
+    nutrition.gd       영양(탄수화물·단백질·지방) 규칙·수치 — docs/NUTRITION.md
+    animal.gd          사냥감(닭·염소…): 달아나고 놀라면 울고, 잡으면 고기를 남김
+  combat/              판정(combat.gd), 화살, 이펙트(fx.gd — 그림 이펙트가 있으면 그림), 기술 효과(skills.gd: 미끼·일제 사격)
+  audio/sfx.gd         효과음: assets/audio/sfx 파일이 있으면 파일(변형 무작위), 없으면 코드 합성. at()은 거리로 줄임
+  audio/bgm.gd         배경 음악 교차 페이드·짧은 곡(승리·패배)·환경음 층
   ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드)
   ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
-assets/                생성된 임시 그림 (sprites/, env/, ui/)
-tools/                 임시 그림 생성기 (Python + Pillow)
+data/food.json         음식 표(탄·단·지, 먹는 횟수, 다시 열리는 시간)
+data/dialogue/common.json 모든 챕터가 같이 쓰는 글(영양 안내 등)
+data/dialogue/ch2.json 챕터 2 글
+data/dialogue/ch1.json 챕터 1 글 — 대사·튜토리얼 카드·목표·알림. 글 속 {동작}(예: {interact})은 지금 묶인 키로 보인다
+assets/                생성된 임시 그림 (sprites/, env/, ui/) · 소리 (audio/sfx·amb·music)
+tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 소리는 ffmpeg)
 ```
+
+### 글 고치기
+
+대사·튜토리얼 카드·목표·알림은 `data/dialogue/ch1.json`에 있다(코드는 `Lines.t("tut.move")`·`Lines.say("sinon_intro")`로 읽음).
+키 이름은 글에 직접 쓰지 말고 `{동작}`으로 적는다 — `{interact}` `{attack}` `{block}` `{dodge}` `{heavy}` `{switch_weapon}` `{skill}`
+`{decoy}` `{run}` `{cmd_follow}`…`{cmd_special}` `{move_up}` 등(`game.gd`의 `KEYS`·`REBIND`). 키를 바꾸면 화면에 바로 바뀐 키로 보인다.
+`%d`·`%s`는 코드가 넣는 수·글이니 지우지 않는다.
+
+### 소리
+
+모든 소리는 `tools/gen_audio.py`가 합성한다(녹음·외부 소리 없음): `python3 tools/gen_audio.py .` (`sfx`·`amb`·`music` 중 골라서도 됨, 음악은 1분쯤).
+느낌은 영화 《오디세이》(2026, 루드비히 고란손 음악)처럼 — 오케스트라 없이 고대 악기(리라·아울로스·청동 징·두드린 쇠붙이),
+그 소리를 일그러뜨린 신시, 말 없는 목소리·합창. 선율·화성은 이 게임용으로 새로 만든 것이다.
+
+- 효과음 `assets/audio/sfx/<이름>.wav`(변형은 `_1`…`_n`): swing·swing_heavy·hit·hit_heavy·block·parry·bow·arrow_hit·cry·shout·death·step·
+  bell·horn·gate·winch·ui·ui_ok·checkpoint·alert·takedown·torch_out·torch_on·fire_burst·stone·switch
+- 환경음 `assets/audio/amb/`: wind(늘) · fire(성문이 열리면 크게) · sea(동쪽 해안에 가까울수록) · battle(성문 사수 동안)
+- 음악 `assets/audio/music/`: theme(타이틀) · stealth(잠입) · battle(들켜 싸울 때, 권양기) · siege(성문 사수) · ending(출항) · victory · defeat
+  — 들키면 전투 곡으로 바뀌고 싸움이 끝나고 6초 뒤 잠입 곡으로 돌아간다(`chapter1_troy.gd`의 `_update_audio`)
+- 녹음·작곡한 소리로 바꾸려면 **같은 이름**의 `.wav`/`.ogg`를 덮어쓰면 된다(코드 수정 없음). 파일이 없으면 효과음은 코드 합성음, 음악은 조용히 넘어간다
+- 크기: 효과음은 부르는 곳의 dB, 음악은 `bgm.gd`의 `MUSIC_DB`, 환경음은 `_update_audio`의 0~1 값
 
 ### 핵심 규칙
 
@@ -149,15 +205,27 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   - 열 = 동작 프레임을 이어 붙임. `.json`에 동작별 `start`(시작 열)·`frames`·`fps`·`loop`
   - 동작: idle walk run attack1 attack2 attack3 heavy block bow hit dodge death interact downed
   - `frame`(한 칸 크기)과 `anchor`(발 위치)를 `.json`에 적는다. 크기는 64×64가 아니어도 된다
+- **이펙트**(있으면) `assets/fx/<이름>.png` + `<이름>.json` — 프레임을 가로로 늘어놓은 한 장.
+  json `{"frame": [폭, 높이], "frames": 수, "fps": 초당, "anchor": [x, y](생략하면 가운데), "scale": 1}`.
+  이름 = ART_PLAN의 `F-<이름>`: hit · block · parry(맞음·막음·패링 불꽃) · dust(구르기) · shout(함성 고리) · takedown · decoy_dust.
+  없으면 지금처럼 코드로 그린다(`fx.gd`의 `anim`·`impact`)
+- **병사·NPC** 그려 받은 그림: `assets/source/<시트>_8dir.webp` + 동작 줄 → `SPRITE_CHAR=<시트> SPRITE_SRC_H=320`으로
+  `split_rows.py`·`pack_strip.py` → `gen_hero.py` (방법은 `docs/sprite_request/ch1_kit/README.md`)
 - **환경** `assets/env/env.json`의 `props`: 소품마다 `file`·`anchor`(발자국 중심 지점)·`footprint`(칸 수)
 - **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = `env.json`의 `floor_atlas.rows` 순서
   (cobble plaza dirt grass road ash + water sand planks), 열 = 변형 4개. `water`·`sand` 칸은 챕터가 막힌 칸으로 둔다
 
 다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .`
 
-- 맵 개편용 소품·바닥은 받기 전이라 `tools/gen_env_extra.py`의 임시 생성 그림이다:
-  temple · steps · lion · fountain · stall_red/white · bell_tower · ladder · column_broken · cypress · pine · pot · rock ·
-  galley · boat · pier_post, 바닥 water · sand · planks. `troy_city`·`troy_coast` 그림(ART_PLAN §4.4)을 받으면 같은 이름으로 덮어쓴다
+- 맵 개편용 소품·바닥은 `tools/gen_env_extra.py`가 임시 그림을 만든 뒤, 끝에서 `gen_env_redraw.py`가 다시 그려 받은 그림
+  (`assets/source/troy_city.webp`·`troy_coast.webp`, 받으면 `troy_extra.webp`도)을 잘라 같은 이름으로 덮어쓴다: temple · steps · lion · fountain · stall_red/white ·
+  bell_tower · ladder · column_broken · cypress · pine · olive · bush · pot · rock · galley · boat · pier_post, 바닥 water · sand · planks.
+  `troy_extra`(요청 준비됨): alarm_bell · winch · brazier · banner_greek · torch_post_off · gate_open · house_a~d_burnt + 새 그림 armory · armory_burnt · sacks
+  (새 그림은 env.json에 더해지기만 하므로 받으면 챕터 배치를 고친다).
+  받은 그림은 안내 그림판(`docs/sprite_request/env_requests/<city|extra|coast>_redraw/guide.png`)과 같은 자리라 `boxes.json` 상자로 자르고,
+  기준점은 임시 그림의 것을 물려받는다(그래서 늘 `gen_env_extra.py`부터 돌린다)
+- **바다**는 칸 그림 대신 셰이더(`scripts/world/water.gdshader`)로 그린다: 월드 좌표라 이음매가 없고, 물결이 흐르고 반짝임이 깜박이며,
+  뭍·성벽과 닿는 곳에 거품, 부두(planks) 앞쪽 물에 부두 옆면·그림자. 물 칸 지도는 `iso_level.gd`의 `_apply_floor`가 넣는다
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
   성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`
@@ -200,13 +268,16 @@ godot --path . -- --start=ending                                  # 바로 엔�
 godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기
 godot --path . -- --start=gate --menu=settings                    # 설정 화면을 띄운 채로(--menu=pause는 일시정지)
 godot --path . -- --continue                                      # 저장된 체크포인트에서 바로 이어 하기
+godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=300   # 챕터 2 봇: 항해 → 상륙 → 약탈 → 반격 → 승선 → 탈출
+godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 상륙한 뒤부터 (--start=retreat 반격, --start=escape 출항)
 ```
 
 `--fixed-fps 60`(Godot 엔진 인자)을 주면 한 프레임을 늘 1/60초로 치고 실시간을 기다리지 않아 몇 배 빨리 끝난다.
 느린 컴퓨터에서 실시간으로 돌리면 프레임이 떨어져 봇이 지는 일이 있으니 봇 검증은 이 인자로 한다.
 마지막 대규모 전투에 무작위가 섞여 있으니 봇은 2~3번 돌려 본다.
 
-`--god`(무적), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
+`--god`(무적, 배도 안 가라앉음), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
+챕터 2는 `ending`이 true면 클리어 — `hull`(선체), `rations`(창고)·`fullness`(배부름)·`day`, `crew`·`lost`(잃은 부하), `looted`, `boats`(남은 적 배)도 찍힌다.
 
 ## 수치 조정
 
@@ -220,3 +291,6 @@ godot --path . -- --continue                                      # 저장된 �
   부대 특수 명령 `squad.gd`의 `SPECIAL_CD`, `companion.gd`의 `WALL_TIME`·`JAVELIN_*`
 - 튜토리얼 카드: `chapter1_troy.gd`의 `_tut()`(줄에 넣기)·`_tut_once()`(한 번만)·`_tut_urgent()`(바로 띄우기)·`_watch_firsts()`, 그리는 곳 `hud.gd`의 `_draw_tutorial()`
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`
+- 배: `ship.gd`의 `OAR_SPEED`·`SAIL_SPEED`·`ACCEL`·`TURN_RATE`·`TURN_FULL`·`ROW_DRAIN`·`BUMP_*`·`RAM_*`·`DECK_FIRE`, 적 배 `as_enemy_boat()`
+- 챕터 2 흐름: `chapter2_ismaros.gd`의 `LAND_SPEED`·`LOOT_UNITS`·`CARRY_DIST`·`COUNTER_*`·`LAUNCH_TIME`·`REEFS`·`BOATS`, 바람 `_wind_base`·`wind_strength`
+- 식량 창고: `rations.gd`의 `DAY_LEN`·`FED_GAIN`·`MISS_LOSS`·`HUNGRY`·`START_STORE`

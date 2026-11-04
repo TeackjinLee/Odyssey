@@ -1,0 +1,261 @@
+{
+ "save_as": "troy_coast.webp",
+ "items": {
+  "floor_water_0": {
+   "box": [
+    40,
+    40,
+    134,
+    87
+   ],
+   "floor": "water",
+   "variant": 0
+  },
+  "floor_water_1": {
+   "box": [
+    150,
+    40,
+    244,
+    87
+   ],
+   "floor": "water",
+   "variant": 1
+  },
+  "floor_water_2": {
+   "box": [
+    260,
+    40,
+    354,
+    87
+   ],
+   "floor": "water",
+   "variant": 2
+  },
+  "floor_water_3": {
+   "box": [
+    370,
+    40,
+    464,
+    87
+   ],
+   "floor": "water",
+   "variant": 3
+  },
+  "floor_sand_0": {
+   "box": [
+    40,
+    111,
+    134,
+    158
+   ],
+   "floor": "sand",
+   "variant": 0
+  },
+  "floor_sand_1": {
+   "box": [
+    150,
+    111,
+    244,
+    158
+   ],
+   "floor": "sand",
+   "variant": 1
+  },
+  "floor_sand_2": {
+   "box": [
+    260,
+    111,
+    354,
+    158
+   ],
+   "floor": "sand",
+   "variant": 2
+  },
+  "floor_sand_3": {
+   "box": [
+    370,
+    111,
+    464,
+    158
+   ],
+   "floor": "sand",
+   "variant": 3
+  },
+  "floor_planks_0": {
+   "box": [
+    40,
+    182,
+    134,
+    229
+   ],
+   "floor": "planks",
+   "variant": 0
+  },
+  "floor_planks_1": {
+   "box": [
+    150,
+    182,
+    244,
+    229
+   ],
+   "floor": "planks",
+   "variant": 1
+  },
+  "floor_planks_2": {
+   "box": [
+    260,
+    182,
+    354,
+    229
+   ],
+   "floor": "planks",
+   "variant": 2
+  },
+  "floor_planks_3": {
+   "box": [
+    370,
+    182,
+    464,
+    229
+   ],
+   "floor": "planks",
+   "variant": 3
+  },
+  "galley": {
+   "box": [
+    512,
+    161,
+    788,
+    438
+   ],
+   "footprint": [
+    5,
+    2
+   ],
+   "k": 0.68,
+   "size_game": [
+    177,
+    175
+   ]
+  },
+  "boat": {
+   "box": [
+    862,
+    356,
+    972,
+    438
+   ],
+   "footprint": [
+    2,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    64,
+    42
+   ]
+  },
+  "pier_post": {
+   "box": [
+    1046,
+    362,
+    1083,
+    438
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    14,
+    38
+   ]
+  },
+  "rock": {
+   "box": [
+    1157,
+    359,
+    1238,
+    438
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    44,
+    40
+   ]
+  },
+  "cypress": {
+   "box": [
+    502,
+    647,
+    547,
+    808
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    20,
+    96
+   ]
+  },
+  "pine": {
+   "box": [
+    621,
+    664,
+    713,
+    808
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    52,
+    84
+   ]
+  },
+  "olive": {
+   "box": [
+    787,
+    664,
+    879,
+    808
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    52,
+    84
+   ]
+  },
+  "bush": {
+   "box": [
+    953,
+    729,
+    1034,
+    808
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "k": 0.68,
+   "size_game": [
+    44,
+    40
+   ]
+  }
+ }
+}

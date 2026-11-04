@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = about 94x47 px in that sheet.
+2) guide.png = a LAYOUT GUIDE made of rough placeholder drawings: it shows WHERE each item goes and HOW BIG it is.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape), the same size as guide.png.
+
+Pixel art isometric game tiles and props sprite sheet. REDRAW every placeholder in the SECOND image (guide.png) as finished art,
+matching EXACTLY the style, outline, palette, lighting (from the upper left) and pixel density of the FIRST image (troy_env.png):
+hand-placed pixels, soft stone texture, warm red clay roof tiles, blue-grey night shading, crisp dark outline.
+The placeholders are crude flat-shaded drafts: do NOT copy their look, colors or stripes literally; copy only their
+POSITION, SIZE, FOOTPRINT (the diamond on the ground) and general SHAPE. Keep each item in the same place and within the
+same outline size as its placeholder, so the items can be cut out with the same boxes.
+Solid flat dark background #282B35 everywhere else. Every item separated by empty space. No text, no labels, no grid lines,
+no shadows on the ground, no new items. 2:1 isometric view (camera looks down about 30 degrees), no perspective.
+Night colors: blue-grey stone, deep blue water, warm orange only where there are torches or fire.
+
+Top-left block, 3 rows of FLOOR TILES, 4 variants each, every tile exactly one 2:1 diamond of 94x47 px, seamless when tiled (no outline around the diamonds):
+- row 1: deep night SEA water with small wave highlights
+- row 2: ROCKY SHORE: grey stones and wet sand
+- row 3: wooden DOCK planks running toward the upper right
+
+Row 1 (left to right):
+- Greek GALLEY ship with one mast, square sail with red and cream stripes, a row of oars, dark wooden hull, bow pointing to the upper right (footprint 5x2 tiles), about 260x257 px.
+- small wooden rowing BOAT, bow to the upper right, two oars inside (footprint 2x1 tiles), about 94x62 px.
+- wooden dock POST, weathered, a rope tied around it, about 21x56 px.
+- grey SEA ROCK, a few boulders, about 65x59 px.
+
+Row 2 (left to right):
+- tall thin dark green CYPRESS tree, about 29x141 px.
+- Mediterranean umbrella PINE tree, about 76x124 px.
+- OLIVE tree with a twisted grey trunk and silver-green leaves (its placeholder is a flat grey-green silhouette: draw a new tree in that space), about 76x124 px.
+- low round green BUSH (its placeholder is a flat grey-green silhouette: draw a new bush in that space), about 65x59 px.
+

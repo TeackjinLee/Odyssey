@@ -121,7 +121,7 @@ Style rules:
 첨부: `pose.png` = 그 인물 기본 시트에서 그 방향 칸들을 왼→오로 이어 붙인 그림.
 `python3 tools/motion_request.py <인물>_8dir.webp <설명.txt> <출력> idle 1`로 만들면 `pose.png`가 같은 방식으로 생긴다
 (그 `prompt.txt`는 맨손 규칙이라 쓰지 말고 아래 틀을 쓴다).
-받으면 `split_rows.py`로 방향별로 자르고 `pack_strip.py`로 묶는다(두 도구의 파일 이름 앞부분 `odysseus_`를 시트 이름으로 바꿔 쓰는 손질이 필요 — ROADMAP M1).
+받으면 `SPRITE_CHAR=<시트> python3 tools/split_rows.py …`로 방향별로 자르고 `SPRITE_CHAR=<시트> SPRITE_SRC_H=320 python3 tools/pack_strip.py …`로 묶는다.
 
 빈칸: `[N]` 프레임 수, `[DIRS]` 줄 목록, `[GRID]` 격자 (3줄이면 `[N] columns x 3 rows, every cell (1536/[N])x341`),
 `[EMPTY]` 2방향이면 `The last row stays EMPTY magenta.`, `[ACTION]` 아래 동작 글.
@@ -260,6 +260,5 @@ Style rules:
 
 ## 4. 넣는 법
 
-병사 시트는 아직 생성기 임시 그림(칸 64)이다. 받은 그림을 넣으려면 ROADMAP M1의 코드 작업이 먼저다:
-`split_rows.py`·`pack_strip.py`가 `odysseus_` 말고 시트 이름을 받게 하고, `gen_soldier.py`(또는 `gen_hero.py` 일반화)가
-`assets/sprites/<시트 이름>.png/.json`(칸 128·`scale` 0.5)을 만들게 한다. 그 전에는 기본 8방향만 받아 "서 있는 모습"으로 넣어 볼 수 있다.
+병사 7종은 그려 받아 넣었다. 새로 받으면 `SPRITE_CHAR=<시트> SPRITE_SRC_H=320`으로 `split_rows.py`·`pack_strip.py`를 돌리고
+`gen_hero.py`로 시트를 만든다(자세한 방법은 [ch1_kit/README.md](ch1_kit/README.md)).

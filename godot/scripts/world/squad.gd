@@ -68,7 +68,7 @@ func command(m: int, aim_pos: Vector2) -> void:
 			regroup_time = 2.5
 	set_mode(m)
 	Fx.text(p.global_position + Vector2(0, -60), MODE_SHOUTS[m], Color(0.7, 0.85, 1.0))
-	Sfx.play("ui")
+	Sfx.play("shout", -10.0)
 
 
 ## 부대 특수 명령: 서 있는 부하마다 병과 기술을 쓴다(aim_pos = 조준한 곳).
@@ -90,7 +90,7 @@ func special(aim_pos: Vector2) -> void:
 		if shouts.has(r):
 			words.append({"sword": "방패벽!", "spear": "창을 던져라!", "archer": "일제 사격!"}[r])
 	Fx.text(p.global_position + Vector2(0, -60), " ".join(words), Color(0.7, 0.85, 1.0))
-	Sfx.play("cry", -12.0)
+	Sfx.play("shout", -6.0)
 
 
 func _pick_focus(aim_pos: Vector2, from: Vector2) -> Actor:

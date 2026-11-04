@@ -228,7 +228,7 @@ func _attack_update() -> void:
 		else:
 			Combat.melee(self, cfg["reach"], cfg["arc"], cfg["dmg"], 55.0)
 			Fx.slash(self, cfg["reach"], cfg["arc"], Color(0.75, 0.85, 1.0), anim_i == 1, 4.0)
-			Sfx.play("swing", -16.0)
+			Sfx.at("swing", global_position, -16.0)
 	if t >= cfg["dur"]:
 		attack_cd = cfg["cd"] * randf_range(0.8, 1.25)
 		set_state(St.IDLE)
@@ -247,6 +247,19 @@ func _die() -> void:
 	revive_point.on_use = func(_by): revive()
 	add_child(revive_point)
 	died.emit(self)
+
+
+## 챕터 2부터: 배의 식량 창고로 채우는 배부름(Rations)이 낮으면 회복·공격력이 준다
+func regen_mult() -> float:
+	var r = Game.level.get("rations") if Game.level else null
+	return r.crew_regen() if r else 1.0
+
+
+func update_buff(delta: float) -> void:
+	super.update_buff(delta)
+	var r = Game.level.get("rations") if Game.level else null
+	if r:
+		damage_mult *= r.crew_power()
 
 
 func revive(ratio := 0.5) -> void:

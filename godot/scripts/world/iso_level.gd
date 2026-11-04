@@ -29,10 +29,22 @@ var sight_layer: Node2D
 var player: Player
 var squad: Squad
 var chapter_title := ""
+## 미니맵 아래 이름, 결과 화면 "다음 챕터" 단추(0이면 없음), 쓰러졌을 때 문구
+var area_name := ""
+var next_chapter := 0
+var death_text := "오디세우스가 쓰러졌다"
+## --god (흐름 확인용: 배도 가라앉지 않음)
+var god := false
+## 미니맵에 땅(물이 아닌 바닥)도 그림 — 바다 챕터
+var minimap_land := false
+## 암초 칸(배가 못 지나감. 사람에게는 어차피 물이라 막힘)
+var reefs: Dictionary = {}
 var _source_id := 0
 var _cam_pos := Vector2.ZERO
 ## 연출: 카메라가 오디세우스 대신 따라갈 것(null이면 오디세우스)
 var camera_target: Node2D = null
+## 바다 칸 셰이더(water.gdshader) — 물 칸 지도는 _apply_floor에서 넣는다
+var water_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -86,6 +98,32 @@ func start() -> void:
 	pass
 
 
+# ── 챕터가 채우는 것(main·HUD가 부른다) ──────────────────
+## 체크포인트에서 다시(Game.checkpoint 모양은 챕터마다)
+func restore_checkpoint(_cp: Dictionary) -> void:
+	pass
+
+
+## 검증용 --start=<id>
+func skip_to(_id: String) -> void:
+	pass
+
+
+## 체크포인트 이름(HUD·타이틀 메뉴)
+func checkpoint_name(id: String) -> String:
+	return id
+
+
+## 봇 REPORT에 더할 값
+func report() -> Dictionary:
+	return {}
+
+
+## 결과 화면: {"head", "title", "badge"(칭호, 없으면 ""), "badge_hint", "rows": [글…], "next"(다음 안내)}
+func result_info(_st: Dictionary) -> Dictionary:
+	return {"head": chapter_title, "title": "", "badge": "", "badge_hint": "", "rows": [], "next": ""}
+
+
 # ── 지형 ─────────────────────────────────────────────
 func fill(rect: Rect2i, kind: String) -> void:
 	for x in range(rect.position.x, rect.end.x):
@@ -131,6 +169,11 @@ func _make_tileset() -> TileSet:
 	for r in rows.size():
 		for v in variants:
 			src.create_tile(Vector2i(v, r))
+	if FLOOR_ROWS.has("water"):
+		water_material = ShaderMaterial.new()
+		water_material.shader = load("res://scripts/world/water.gdshader")
+		for v in variants:
+			src.get_tile_data(Vector2i(v, FLOOR_ROWS["water"]), 0).material = water_material
 	return ts
 
 
@@ -142,6 +185,20 @@ func _apply_floor() -> void:
 			var kind: String = floor_kind.get(c, "cobble")
 			var v := int(abs(hash(c)) % variants)
 			ground.set_cell(c, _source_id, Vector2i(v, FLOOR_ROWS[kind]))
+	if water_material:
+		var img := Image.create(W, H, false, Image.FORMAT_L8)
+		for c in floor_kind:
+			if c.x < 0 or c.y < 0 or c.x >= W or c.y >= H:
+				continue
+			if floor_kind[c] == "water":
+				img.set_pixelv(c, Color.WHITE)
+			elif floor_kind[c] == "planks":
+				img.set_pixelv(c, Color(0.5, 0.5, 0.5))
+		water_material.set_shader_parameter("water_map", ImageTexture.create_from_image(img))
+		water_material.set_shader_parameter("map_size", Vector2(W, H))
+		water_material.set_shader_parameter("origin", Iso.origin)
+		water_material.set_shader_parameter("ex", Iso.ex)
+		water_material.set_shader_parameter("ey", Iso.ey)
 
 
 func _build_astar() -> void:
@@ -332,7 +389,7 @@ func set_torch(t: Dictionary, lit: bool) -> void:
 	t["light"].enabled = lit
 	t["point"].enabled = lit
 	t["sprite"].texture = AssetLibrary.prop_texture("torch_post" if lit else "torch_post_off")
-	Sfx.play("ui", -8.0)
+	Sfx.at("torch_on" if lit else "torch_out", t["sprite"].global_position, -6.0)
 
 
 ## 경보 종: 알아챈 적 하나가 경보병이 되어 달려와 치면, 주변 적이 모두 알아채고 alarm_rung이 나간다.
@@ -361,7 +418,7 @@ func ring_bell(b: Dictionary) -> void:
 	b["runner"] = null
 	Game.stats["alarms"] += 1
 	var s: Sprite2D = b["sprite"]
-	Sfx.play("bell", -2.0)
+	Sfx.at("bell", s.global_position, 0.0)
 	Game.shake(3.0)
 	Fx.ring(s.global_position, 140.0, Color(1, 0.75, 0.3), 0.8)
 	Fx.text(s.global_position + Vector2(0, -62), "경보!", Color(1, 0.4, 0.25))
@@ -391,6 +448,15 @@ func light_at(pos: Vector2) -> float:
 		if t < 1.0:
 			sum += l[1] * l[4] * (1.0 - t * 0.55 / 0.45 if t < 0.45 else 0.45 * (1.0 - t) / 0.55)
 	return pow(clampf(sum / 0.5, 0.0, 1.0), 1.5)
+
+
+func is_reef(c: Vector2i) -> bool:
+	return reefs.has(c)
+
+
+## 배가 지나갈 수 있는 칸: 맵 안의 물이고 암초가 아님
+func sea_ok(c: Vector2i) -> bool:
+	return in_bounds(c) and floor_kind.get(c, "") == "water" and not reefs.has(c)
 
 
 func in_bounds(c: Vector2i) -> bool:

@@ -29,6 +29,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if Game.level and Game.level.is_blocked_world(position):
 		Fx.spark(position + Vector2(0, -16), Color(0.8, 0.7, 0.5), 3)
+		Sfx.at("arrow_hit", position, -12.0)
 		queue_free()
 		return
 	# 방패벽(부대 특수 명령의 검병): 앞쪽에서 날아온 화살을 막는다
@@ -36,10 +37,10 @@ func _physics_process(delta: float) -> void:
 		if w.team != team and Combat.ground_dist(position, w.global_position) < 20.0 \
 				and w.facing.dot(-velocity.normalized()) > 0.1:
 			Fx.spark(position + Vector2(0, -16), Color(1, 0.95, 0.75), 5)
-			Sfx.play("block", -8.0)
+			Sfx.at("block", position, -8.0)
 			queue_free()
 			return
-	for a in get_tree().get_nodes_in_group("actors"):
+	for a in Combat.targets(get_tree(), team):
 		if a.team == team or not a.is_alive():
 			continue
 		if Combat.ground_dist(position, a.global_position) < 9.0:

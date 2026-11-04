@@ -18,6 +18,12 @@ const KINDS := {
 	"trojan_captain": {"name": "성문 수비대장 아게노르", "hp": 300.0, "speed": 50.0, "reach": 27.0, "dmg": 13.0, "windup": 0.6, "dur": 0.45, "arc": 140.0, "shield": true, "cd": 0.9, "boss": true},
 	## 마지막 총공세를 이끄는 트로이 왕자(그림은 아게노르 것을 쓴다)
 	"trojan_prince": {"name": "트로이 왕자 데이포보스", "sheet": "trojan_captain", "hp": 320.0, "speed": 54.0, "reach": 27.0, "dmg": 14.0, "windup": 0.55, "dur": 0.45, "arc": 140.0, "shield": true, "cd": 0.85, "boss": true},
+	## 챕터 2 이스마로스의 키코네스족(그림은 트로이 병사 것을 색만 바꿔 쓴다 — ART_PLAN §4.8 키코네스 전사·궁수를 받으면 sheet만 바꿈)
+	"cicones_sword": {"name": "키코네스 전사", "sheet": "trojan_sword", "tint": Color(0.95, 1.08, 0.82), "hp": 40.0, "speed": 56.0, "reach": 21.0, "dmg": 8.0, "windup": 0.45, "dur": 0.36, "arc": 120.0, "shield": true, "cd": 1.3},
+	"cicones_spear": {"name": "키코네스 창병", "sheet": "trojan_spear", "tint": Color(0.95, 1.08, 0.82), "hp": 36.0, "speed": 54.0, "reach": 34.0, "dmg": 10.0, "windup": 0.55, "dur": 0.42, "arc": 45.0, "shield": true, "cd": 1.6},
+	"cicones_archer": {"name": "키코네스 궁수", "sheet": "trojan_archer", "tint": Color(0.95, 1.08, 0.82), "hp": 24.0, "speed": 52.0, "reach": 160.0, "dmg": 6.0, "windup": 0.65, "dur": 0.3, "arc": 0.0, "shield": false, "cd": 2.2, "ranged": true},
+	## 내륙에서 달려오는 키코네스 기병대장(말 그림이 없어 걷는 대장 — 그림은 아게노르 것)
+	"cicones_chief": {"name": "키코네스 전사장", "sheet": "trojan_captain", "tint": Color(0.95, 1.08, 0.82), "hp": 200.0, "speed": 56.0, "reach": 27.0, "dmg": 12.0, "windup": 0.6, "dur": 0.45, "arc": 140.0, "shield": true, "cd": 1.0, "boss": true},
 }
 
 var kind := "trojan_sword"
@@ -94,6 +100,7 @@ func setup(k: String) -> void:
 	kind = k
 	cfg = KINDS[k]
 	sheet = cfg.get("sheet", k)
+	tint = cfg.get("tint", Color(1, 1, 1))
 	team = Team.TROJAN
 	display_name = cfg["name"]
 	max_hp = cfg["hp"]
@@ -133,6 +140,7 @@ func alert(t: Actor) -> void:
 	_drop_errand()
 	takedown.enabled = false
 	Fx.text(global_position + Vector2(0, -head_height - 4), "!", Color(1, 0.35, 0.25))
+	Sfx.at("alert", global_position, -10.0)
 	if phase == "idle":
 		phase = "chase"
 	if cfg.get("boss", false):
@@ -308,7 +316,7 @@ func sight_range(pos: Vector2) -> float:
 func _perceive(delta: float) -> void:
 	var p: Player = Game.player
 	var stim := false
-	if p and p.is_alive():
+	if p and p.is_alive() and p.get("riding") == null:
 		var to := p.global_position - global_position
 		var d := Combat.ground_dist(global_position, p.global_position)
 		var r := sight_range(p.global_position)
@@ -492,7 +500,8 @@ func silent_kill(count_kill: bool) -> void:
 		Game.stats["kills"] += 1
 	Game.stats["silent"] += 1
 	Fx.text(global_position + Vector2(0, -head_height), "조용히", Color(0.7, 0.85, 1.0))
-	Sfx.play("hit", -10.0)
+	Sfx.play("takedown", -6.0)
+	Fx.anim("takedown", global_position + Vector2(0, -16))
 	_die()
 
 
@@ -575,7 +584,7 @@ func _windup(_delta: float) -> void:
 			body.frame = 2
 		else:
 			play_timed("heavy" if slam else ["attack1", "attack2", "attack3"][strikes % 4 if poise else randi() % 2], cfg["dur"] * (1.4 if slam else 1.0))
-			Sfx.play("swing", -14.0)
+			Sfx.at("swing", global_position, -12.0)
 
 
 func _strike() -> void:
@@ -595,9 +604,9 @@ func _strike() -> void:
 			if p and p.is_alive() and p.state == St.BLOCK and p.block_time < 0.3 and Combat.ground_dist(c, p.global_position) <= 46.0 \
 					and p.facing.dot((global_position - p.global_position).normalized()) > 0.15:
 				p.invuln = 0.05
-				Fx.spark(p.global_position + Vector2(0, -20), Color(1, 0.85, 0.3), 16)
+				Fx.impact("parry", p.global_position + Vector2(0, -20), Color(1, 0.85, 0.3), 16)
 				Fx.text(p.global_position + Vector2(0, -p.head_height), "패링!", Color(1, 0.85, 0.3))
-				Sfx.play("parry")
+				Sfx.play("parry", -4.0)
 				Combat.area(self, c, 46.0, cfg["dmg"] * 1.3, 200.0)
 				_open_up()
 				return
@@ -630,7 +639,7 @@ func _open_up() -> void:
 func _shove() -> void:
 	Fx.text(global_position + Vector2(0, -head_height - 6), "밀쳐내기!", Color(1, 0.7, 0.35))
 	Fx.ring(global_position, SHOVE_RADIUS, Color(1, 0.8, 0.5), 0.4)
-	Sfx.play("hit_heavy", -4.0)
+	Sfx.at("hit_heavy", global_position, -4.0)
 	Game.shake(4.0)
 	for a in Game.level.greeks():
 		var to: Vector2 = a.global_position - global_position
@@ -648,7 +657,7 @@ func _horn() -> void:
 		_horn_blown = true
 		Fx.text(global_position + Vector2(0, -head_height - 6), "뿔나팔!", Color(1, 0.55, 0.3))
 		Fx.ring(global_position, 60.0, Color(1, 0.55, 0.3), 0.6)
-		Sfx.play("bell", -6.0)
+		Sfx.at("horn", global_position, -2.0)
 		Game.shake(3.0)
 		if Game.level.has_method("on_boss_horn"):
 			Game.level.on_boss_horn(self)
@@ -677,7 +686,7 @@ func _charge_windup() -> void:
 		_charge_hit = []
 		_set_phase("charge")
 		set_state(St.ATTACK)
-		Sfx.play("swing", -6.0)
+		Sfx.at("swing_heavy", global_position, -4.0)
 
 
 func _charge() -> void:
@@ -690,7 +699,7 @@ func _charge() -> void:
 		knock = -charge_dir * 60.0
 		charge_cd = CHARGE_CD
 		Fx.spark(global_position + charge_dir * 10.0 + Vector2(0, -20), Color(1, 0.9, 0.6), 14)
-		Sfx.play("hit_heavy")
+		Sfx.at("hit_heavy", global_position, -4.0)
 		_open_up()
 		return
 	for a in Game.level.greeks():
@@ -717,7 +726,7 @@ func _die() -> void:
 	_drop_bell()
 	takedown.enabled = false
 	if not _quiet:
-		Sfx.play("death", -10.0)
+		Sfx.at("death", global_position, -9.0)
 	remove_from_group("enemies")
 	await get_tree().create_timer(5.0).timeout
 	var tw := create_tween()

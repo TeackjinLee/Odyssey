@@ -174,7 +174,7 @@ func _show_settings() -> void:
 			_close()
 		else:
 			_show_main())
-	_label(p, "튜토리얼 안내 글은 기본 키로 적혀 있다. 하단 슬롯·조작법(F1)은 바꾼 키로 보인다.", Vector2(0, 276), 6, Color(0.6, 0.6, 0.6), 640).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label(p, "바꾼 키는 튜토리얼 카드·목표·알림·하단 슬롯·조작법에 바로 보인다.", Vector2(0, 276), 6, Color(0.6, 0.6, 0.6), 640).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if first:
 		first.grab_focus()
 

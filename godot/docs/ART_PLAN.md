@@ -152,6 +152,18 @@
 | horn · charge (아게노르) | idle · run |
 | dodge | 병사는 쓰지 않음 ➖ |
 
+### 4.2b 동물·음식 `C-ANI` (영양 — [NUTRITION.md](NUTRITION.md))
+
+지금은 코드로 그린 임시 그림(`scripts/actors/animal.gd` · `scripts/world/food_source.gd`). 크기는 사람 키(약 52px) 기준.
+
+| ID | 내용 | 챕터 | 동작 | 상태 |
+|---|---|---|---|---|
+| `C-ANI-chicken` | 닭 (키 약 16px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
+| `C-ANI-goat` | 염소 (키 약 28px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
+| `C-ANI-sheep` | 양 | 3 | 같음 | ⬜ |
+| `C-ANI-boar` `C-ANI-deer` | 멧돼지·사슴 | 4 | 같음 | ⬜ |
+| `C-ANI-food` | 고기 한 점 · 낚시찌 · 열매 달린 덤불/올리브나무 표시 | 1~ | 1장 | ⬜ (코드 그림) |
+
 ### 4.3 무기 `W`
 
 `assets/weapons/` + `weapons.json`(그림·`grip`). 지금은 `tools/gen_weapons.py`의 아주 작은 임시 그림. 프롬프트 odysseus.md §무기
@@ -170,31 +182,31 @@
 |---|---|---|
 | `E-TROY-floor` | 바닥 6종(cobble plaza dirt grass road ash) × 변형 4 | ✅ |
 | `E-TROY-wall` `-tower` `-gate` | 성벽·성탑·성문(열린 문은 닫힌 문을 어둡게 가공) | ✅ |
-| `E-TROY-house` | 집 4채 + 불탄 변형(가공) | ✅ |
+| `E-TROY-house` | 집 4채 + 불탄 변형(가공) | ✅ (불탄 변형 다시 그려 받기 요청 `extra_redraw`) |
 | `E-TROY-horse` | 트로이 목마 | ✅ |
 | `E-TROY-props` | 상자·통·횃불대·항아리·기둥·트로이 깃발·돌무더기·창 걸이·수레 | ✅ |
-| `E-TROY-torch_off` | 꺼진 횃불대 (횃불대를 가공) | ✅ |
+| `E-TROY-torch_off` | 꺼진 횃불대 (횃불대를 가공) | ✅ (다시 그려 받기 요청 `extra_redraw`) |
 | `E-TROY-fire` `-smoke` | 불꽃 8프레임·연기 6프레임 (`troy_fire.webp`) | ✅ |
-| `E-TROY-alarm_bell` | 경보 종 | 🟡 |
-| `E-TROY-winch` | 성문 권양기 | 🟡 |
-| `E-TROY-brazier` | 화로 | 🟡 |
-| `E-TROY-banner_greek` | 그리스 깃발 | 🟡 |
+| `E-TROY-alarm_bell` | 경보 종 | 🟡 요청 준비됨 `env_requests/extra_redraw` (안내 그림) |
+| `E-TROY-winch` | 성문 권양기 | 🟡 요청 준비됨 `extra_redraw` |
+| `E-TROY-brazier` | 화로 | 🟡 요청 준비됨 `extra_redraw` |
+| `E-TROY-banner_greek` | 그리스 깃발 | 🟡 요청 준비됨 `extra_redraw` |
 | `E-TROY-arrow` | 날아가는 화살 | 🟡 |
-| `E-TROY-armory` | 무기고 (지금은 통·창 걸이·상자 묶음) + 불탄 모습 | ⬜ (있으면 좋음) |
-| `E-TROY-market` | 시장 좌판·짐더미(궁수가 올라서는 곳) | ⬜ (지금은 상자·통으로 대신) |
+| `E-TROY-armory` | 무기고 (지금은 통·창 걸이·상자 묶음) + 불탄 모습 | 🟡 요청 준비됨 `extra_redraw` (받으면 배치 고침) |
+| `E-TROY-market` | 시장 좌판 ✅(`troy_city`)·짐더미(궁수가 올라서는 곳) | 🟡 짐더미 요청 준비됨 `extra_redraw` |
 | `E-TROY-post` | 정찰병을 묶었던 기둥 | ⬜ (있으면 좋음) |
 | `E-TROY-shadow` | 발밑 그림자 | ➖ (코드 그림으로 충분) |
-| `E-TROY-gate_anim` | 성문 열림 3단계 | ⬜ (있으면 좋음) |
+| `E-TROY-gate_anim` | 성문 열림 3단계 | ⬜ (있으면 좋음 — 열린 성문 한 장은 `extra_redraw`) |
 | `E-TROY-stairs` | 성벽 계단·성벽 위 통로 | ⬜ (M2 높낮이 때) |
 | `E-TROY-decal` | 바닥 그을음·부서진 방패·떨어진 창 | ⬜ (있으면 좋음) |
-| `E-TROY-temple` | 아테나 신전(3×3칸)·사자상·신전 계단 — 맵 개편 [maps/CH1_TROY.md](maps/CH1_TROY.md) (`troy_city`) | 🟡 생성 그림 `temple`·`lion`·`steps` |
-| `E-TROY-fountain` | 분수(2×2칸) (`troy_city`) | 🟡 생성 그림 `fountain` |
-| `E-TROY-belltower` | 나무 종탑(2×2칸) (`troy_city`) | 🟡 생성 그림 `bell_tower` |
-| `E-TROY-stall` | 차양 좌판 2색 (`troy_city`, `E-TROY-market`과 함께) | 🟡 생성 그림 `stall_red`·`stall_white` |
-| `E-TROY-ladder` `-column_broken` `-wall_banner` `-wall_low` | 목마 사다리·부러진 기둥·벽 깃발·반 높이 성벽 (`troy_city`) | 🟡 사다리·부러진 기둥은 생성 그림. 반 높이 성벽 대신 앞쪽 성벽을 반투명하게 함 |
-| `E-TROY-sea` `-shore` `-dock` `-mosaic` | 바닥: 바다·바위 해안·부두·모자이크 각 4변형 (`troy_coast`) | 🟡 바닥 `water`·`sand`·`planks`는 생성 그림, 모자이크 없음 |
-| `E-TROY-ship` `-boat` `-rock` `-post` | 갤리선·작은 배·바위·부두 말뚝 (`troy_coast`) | 🟡 생성 그림 `galley`·`boat`·`rock`·`pier_post` (갤리선은 엔딩에 출항) |
-| `E-TROY-tree` | 사이프러스·올리브·소나무·화분·덤불 (`troy_coast`) | 🟡 생성 그림 `cypress`·`pine`·`pot` |
+| `E-TROY-temple` | 아테나 신전(3×3칸)·사자상·신전 계단 — 맵 개편 [maps/CH1_TROY.md](maps/CH1_TROY.md) (`troy_city`) | ✅ `troy_city` (안내 그림판으로 다시 그려 받음) |
+| `E-TROY-fountain` | 분수(2×2칸) (`troy_city`) | ✅ `troy_city` |
+| `E-TROY-belltower` | 나무 종탑(2×2칸) (`troy_city`) | ✅ `troy_city` |
+| `E-TROY-stall` | 차양 좌판 2색 (`troy_city`, `E-TROY-market`과 함께) | ✅ `troy_city` |
+| `E-TROY-ladder` `-column_broken` `-wall_banner` `-wall_low` | 목마 사다리·부러진 기둥·벽 깃발·반 높이 성벽 (`troy_city`) | ✅ 사다리·부러진 기둥(`troy_city`). 벽 깃발·반 높이 성벽은 ➖(앞쪽 성벽을 반투명하게 함) |
+| `E-TROY-sea` `-shore` `-dock` `-mosaic` | 바닥: 바다·바위 해안·부두·모자이크 각 4변형 (`troy_coast`) | ✅ 해안·부두(`troy_coast`). 바다는 셰이더로 그림(`water.gdshader`), 모자이크 ⬜ |
+| `E-TROY-ship` `-boat` `-rock` `-post` | 갤리선·작은 배·바위·부두 말뚝 (`troy_coast`) | ✅ `troy_coast` (갤리선은 엔딩에 출항) |
+| `E-TROY-tree` | 사이프러스·올리브·소나무·화분·덤불 (`troy_coast`) | ✅ `troy_coast`·`troy_city` (올리브·덤불은 성 밖 장식) |
 
 ### 4.5 이펙트 `F`
 
@@ -242,7 +254,10 @@
 
 | 챕터 | 인물 | 환경 | 특별한 그림 |
 |---|---|---|---|
-| 2 귀환의 시작 | 키코네스 전사·궁수, 오디세우스 **항해복** | 바다 타일(물결 4프레임), 해안, 항구(부두·말뚝·그물), 이스마로스 마을(챕터 1 집 색 바꿈) | **갤리선** 8방향(돛 접힘/펼침, 노 젓기 4프레임), 해도 UI |
+| 2 귀환의 시작 | 키코네스 전사·궁수·전사장, 오디세우스 **항해복** | 바다 타일(물결 4프레임), 해안, 항구(부두·말뚝·그물), 이스마로스 마을(챕터 1 집 색 바꿈) | **갤리선** 8방향(돛 접힘/펼침, 노 젓기 4프레임), **키코네스 배**(작고 붉은 돛), 해도 UI |
+
+챕터 2 기반 코드가 먼저 들어가 지금은 임시: 갤리선·키코네스 배는 `ship.gd`의 `_draw`(코드 그림), 키코네스 병사는 트로이 병사 시트에
+색만 바꿈(`enemy.gd` `KINDS["cicones_*"]["tint"]`), 이스마로스 집·소품은 챕터 1 그림 그대로, 바다는 챕터 1 물 셰이더.
 | 3 폴리페모스 | **폴리페모스**(대기·걷기·내리치기·움켜잡기·포효·취함·눈 찔림·잠), 양(걷기·풀 뜯기) | 동굴 바닥·벽·종유석, 나무 우리, 치즈 바구니 | 포도주 통, 말뚝(달군 끝), 바위, 양 배 밑 오디세우스 포즈 |
 | 4 키르케 | 키르케, 돼지(변신한 부하), 마법 늑대·사자, 헤르메스 | 숲 타일, 궁전, 마법진 | 몰리 약초, 변신 이펙트 |
 | 5 세이렌 | 세이렌(날기·노래), 노 젓는 선원, 오디세우스 **항해복** | 거친 바다, 암초, 절벽 | 돛대에 묶인 오디세우스, 밀랍, 안개 덮개 |

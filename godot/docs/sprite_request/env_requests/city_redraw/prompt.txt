@@ -1,0 +1,30 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = about 94x47 px in that sheet.
+2) guide.png = a LAYOUT GUIDE made of rough placeholder drawings: it shows WHERE each item goes and HOW BIG it is.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape), the same size as guide.png.
+
+Pixel art isometric game buildings and props sprite sheet. REDRAW every placeholder in the SECOND image (guide.png) as finished art,
+matching EXACTLY the style, outline, palette, lighting (from the upper left) and pixel density of the FIRST image (troy_env.png):
+hand-placed pixels, soft stone texture, warm red clay roof tiles, blue-grey night shading, crisp dark outline.
+The placeholders are crude flat-shaded drafts: do NOT copy their look, colors or stripes literally; copy only their
+POSITION, SIZE, FOOTPRINT (the diamond on the ground) and general SHAPE. Keep each item in the same place and within the
+same outline size as its placeholder, so the items can be cut out with the same boxes.
+Solid flat dark background #282B35 everywhere else. Every item separated by empty space. No text, no labels, no grid lines,
+no shadows on the ground, no new items. 2:1 isometric view (camera looks down about 30 degrees), no perspective.
+Night colors: blue-grey stone, deep blue water, warm orange only where there are torches or fire.
+
+Row 1 (left to right):
+- Greek TEMPLE of Athena on a raised marble platform, six front columns, red tiled pediment roof, two red banners with a gold emblem hung between the front columns (footprint 3x3 tiles), about 294x249 px.
+- wooden BELL TOWER: four tall posts, two cross-braced floors, small red tiled roof, a bronze bell hanging under the roof, a ladder up one side, stone-paved base (footprint 2x2 tiles), about 201x260 px.
+- round stone FOUNTAIN with a two-tier basin and dark blue night water (footprint 2x2 tiles), about 126x99 px.
+
+Row 2 (left to right):
+- a block of wide marble STEPS (three steps going up toward the upper right, one tile), about 93x62 px.
+- seated stone LION statue on a square base, facing lower left (one tile), about 71x78 px.
+- MARKET STALL: wooden counter with baskets of fruit and jars, RED and WHITE striped cloth awning (one tile), about 91x93 px.
+- the same market stall with a BLUE and WHITE striped awning and different goods (one tile), about 91x93 px.
+- BROKEN marble COLUMN: standing lower half with a jagged top, fallen drum pieces beside it (one tile), about 85x85 px.
+- wooden LADDER leaning to the right, rope-tied rungs (to lean against the Trojan horse), about 34x140 px.
+- clay POT with a small green plant, about 32x53 px.
+

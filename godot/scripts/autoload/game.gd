@@ -32,19 +32,23 @@ var outfit := "odysseus"
 var outfit_locked := false   # --outfit으로 골랐으면 챕터가 바꾸지 않는다
 ## 연출 중: 오디세우스가 입력을 받지 않는다(Player.script_goal이 있으면 그리로 걷는다)
 var cutscene := false
-var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
-## 마지막 체크포인트: {"id", "stats", "scout", "armory", "guards"} — 챕터를 처음 시작하면 비운다(레벨이 채움)
+var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0, "meals": 0}
+## 마지막 체크포인트: {"chapter", "id", "stats", "food", …챕터마다 더} — 챕터를 처음 시작하면 비운다(레벨이 채움)
 var checkpoint: Dictionary = {}
+## 지금 하는 챕터 번호(1부터)
+var chapter := 1
 
 var ui_font: SystemFont
+var _key_re: RegEx
 
 const SETTINGS_PATH := "user://settings.json"
 const SAVE_PATH := "user://save.json"
 const DEFAULT_SETTINGS := {"vol_master": 1.0, "vol_music": 0.8, "vol_sfx": 1.0, "fullscreen": false, "keys": {}}
 ## 설정: 음량 0~1(전체·음악·효과음), 전체 화면, 바꾼 키 {동작: [물리 키 코드…]}
 var settings: Dictionary = {}
-## 진행: {"cleared": [깬 챕터 번호…], "checkpoint": 마지막 체크포인트(Game.checkpoint와 같은 모양)}
-var progress: Dictionary = {"cleared": [], "checkpoint": {}}
+## 진행: {"cleared": [깬 챕터 번호…], "checkpoint": 마지막 체크포인트(Game.checkpoint와 같은 모양),
+##   "carry": {"<다음 챕터 번호>": 이어받을 값}} — 이어받을 값은 carry_for 참고
+var progress: Dictionary = {"cleared": [], "checkpoint": {}, "carry": {}}
 ## 키 바꾸기 화면에 나오는 동작과 이름
 const REBIND := [["move_up", "위로 이동"], ["move_down", "아래로 이동"], ["move_left", "왼쪽 이동"], ["move_right", "오른쪽 이동"],
 	["run", "달리기"], ["attack", "공격"], ["block", "방패 막기"], ["heavy", "강공격"], ["dodge", "구르기"],
@@ -112,9 +116,9 @@ func set_outfit(id: String) -> void:
 
 
 ## 챕터 번호(1부터)의 기본 옷으로 갈아입는다
-func apply_chapter_outfit(chapter: int) -> void:
+func apply_chapter_outfit(ch: int) -> void:
 	if not outfit_locked:
-		set_outfit(CHAPTER_OUTFITS.get(chapter, "odysseus"))
+		set_outfit(CHAPTER_OUTFITS.get(ch, "odysseus"))
 
 
 ## 입을 수 있는 다음 옷(시트가 있는 것만)
@@ -124,6 +128,11 @@ func next_outfit() -> String:
 
 
 # ── 설정·저장 ─────────────────────────────────────────
+func _exit_tree() -> void:
+	Sfx.clear()
+	Bgm.clear()
+
+
 func _read_json(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null
@@ -206,21 +215,52 @@ func key_label(action: String) -> String:
 	return "-"
 
 
+## 글 속 {동작}을 지금 묶인 키 이름으로 바꾼다. 예: "{interact} — 말 걸기" → "E — 말 걸기".
+## 키를 바꾸면 바로 반영되게 HUD가 그릴 때마다 부른다(튜토리얼 카드·목표·알림·대사).
+func keys_text(s: String) -> String:
+	if s.find("{") < 0:
+		return s
+	if _key_re == null:
+		_key_re = RegEx.create_from_string("\\{([a-z_]+)\\}")
+	var out := s
+	for m in _key_re.search_all(s):
+		var a := m.get_string(1)
+		if InputMap.has_action(a):
+			out = out.replace(m.get_string(), key_label(a))
+	return out
+
+
 ## 진행 저장: 체크포인트가 생기거나 바뀔 때, 챕터를 깼을 때
 func save_progress() -> void:
 	progress["checkpoint"] = checkpoint.duplicate(true)
 	_write_json(SAVE_PATH, progress)
 
 
-func mark_cleared(chapter: int) -> void:
-	if not chapter in progress["cleared"]:
-		progress["cleared"].append(chapter)
+func mark_cleared(ch: int) -> void:
+	if not is_cleared(ch):
+		progress["cleared"].append(ch)
 	checkpoint = {}
 	save_progress()
 
 
-func is_cleared(chapter: int) -> bool:
-	return progress["cleared"].any(func(c): return int(c) == chapter)
+func is_cleared(ch: int) -> bool:
+	return progress["cleared"].any(func(c): return int(c) == ch)
+
+
+## 챕터를 깨면 다음 챕터로 넘길 값을 적는다: {"food": 영양 state(), "crew": [[역할, 이름]…], "rations": 식량 창고, "fullness": 부하 배부름}
+func set_carry(to_chapter: int, data: Dictionary) -> void:
+	if not progress.has("carry") or not progress["carry"] is Dictionary:
+		progress["carry"] = {}
+	progress["carry"][str(to_chapter)] = data.duplicate(true)
+	save_progress()
+
+
+## 그 챕터가 이어받을 값(앞 챕터를 깬 적이 없으면 빈 사전 → 챕터가 기본값을 쓴다)
+func carry_for(ch: int) -> Dictionary:
+	var c: Variant = progress.get("carry", {})
+	if c is Dictionary and c.get(str(ch)) is Dictionary:
+		return c[str(ch)].duplicate(true)
+	return {}
 
 
 func _register_input() -> void:
@@ -251,7 +291,7 @@ func _register_input() -> void:
 
 
 func reset_run() -> void:
-	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
+	stats = {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0, "meals": 0}
 	shake_amount = 0.0
 	quest_marker = Vector2.INF
 	side_markers = []

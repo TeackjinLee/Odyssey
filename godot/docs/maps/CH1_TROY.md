@@ -1,7 +1,7 @@
 # 챕터 1 맵 — 트로이 (개편 반영)
 
-> **반영됨.** 아래 개편안대로 `chapter1_troy.gd`의 `build()`를 다시 짰다(48×50). 새 소품·바닥은 받기 전이라
-> `tools/gen_env_extra.py`의 임시 생성 그림이고, `troy_city`·`troy_coast`를 받으면 같은 이름으로 덮어쓴다.
+> **반영됨.** 아래 개편안대로 `chapter1_troy.gd`의 `build()`를 다시 짰다(48×50). 새 소품·바닥은
+> 받은 `troy_city`·`troy_coast` 그림(`tools/gen_env_redraw.py`가 잘라 넣음)이고, 바다는 셰이더(`scripts/world/water.gdshader`)로 그린다.
 > 개편안과 달라진 점은 §5에 적었다. 맵 화면 확인: `godot --path . -- --play --god --at=37,38`(부두) · `--at=29,10`(신전) · `--at=18,26`(분수).
 
 참고 그림: [`references/environment/ch1_troy__city-layout.webp`](../references/environment/ch1_troy__city-layout.webp)

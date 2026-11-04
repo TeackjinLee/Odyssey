@@ -18,12 +18,13 @@ static func throw_decoy(from: Vector2, to: Vector2) -> void:
 	s.from = from
 	s.to = to
 	Game.level.fx_layer.add_child(s)
-	Sfx.play("swing", -12.0)
+	Sfx.play("swing", -16.0)
 
 
 static func _decoy_land(pos: Vector2) -> void:
-	Sfx.play("block", -10.0)
-	Fx.spark(pos + Vector2(0, -2), Color(0.85, 0.8, 0.7), 6)
+	Sfx.at("stone", pos, -6.0)
+	if not Fx.anim("decoy_dust", pos):
+		Fx.spark(pos + Vector2(0, -2), Color(0.85, 0.8, 0.7), 6)
 	Fx.ring(pos, DECOY_HEAR * 0.6, Color(1.0, 0.9, 0.55, 0.6), 0.6)
 	for e in Game.level.enemies():
 		if Combat.ground_dist(pos, e.global_position) < DECOY_HEAR:
@@ -37,7 +38,8 @@ static func volley(shooter: Actor, center: Vector2, burning := false) -> void:
 	v.position = center
 	v.burning = burning
 	Game.level.fx_layer.add_child(v)
-	Sfx.play("bow", -4.0)
+	Sfx.at("bow", shooter.global_position, -4.0)
+	Sfx.at("shout", shooter.global_position, -12.0)
 
 
 ## 던진 돌멩이: 포물선으로 날아가 떨어진다.

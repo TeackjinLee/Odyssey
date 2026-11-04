@@ -1,7 +1,8 @@
 # 이펙트·UI 그림 요청
 
 목록·상태는 [../ART_PLAN.md](../ART_PLAN.md) §4.5·§4.6, 공통 규칙·검사표는 [README.md](README.md).
-받은 그림을 넣으려면 `fx.gd`·`hud.gd`에 그림 경로를 더해야 한다(ROADMAP M1 코드 항목).
+이펙트는 받은 한 장에서 이펙트마다 프레임 줄을 잘라 `assets/fx/<이름>.png`(가로로 늘어놓은 프레임) + `<이름>.json`으로 두면 `fx.gd`가 바로 쓴다
+(이름 hit·block·parry·dust·shout·takedown·decoy_dust, json 형식은 godot/README.md "그림 바꾸기"). UI 그림은 아직 `hud.gd`에 경로를 더해야 한다.
 
 ## 0. 진행 상태
 

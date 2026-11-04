@@ -22,6 +22,8 @@ var has_shield := true
 var poise := false
 var can_parry := false
 var damage_mult := 1.0
+## 그림 색 바꿈(같은 시트를 다른 군대에 쓸 때 — 키코네스 등)
+var tint := Color(1, 1, 1)
 var show_health_bar := true
 var head_height := 46.0
 
@@ -144,7 +146,7 @@ func _physics_process(delta: float) -> void:
 	update_buff(delta)
 	since_hurt += delta
 	if team == Team.GREEK and since_hurt > 5.0 and is_alive():
-		hp = min(max_hp, hp + max_hp * 0.04 * delta)
+		hp = min(max_hp, hp + max_hp * 0.04 * regen_mult() * delta)
 	if stamina_rest > 0.7:
 		stamina = min(max_stamina, stamina + 28.0 * delta)
 	desired_velocity = Vector2.ZERO
@@ -186,7 +188,7 @@ func _separation() -> Vector2:
 
 
 func _update_visual() -> void:
-	var c := Color(1, 1, 1)
+	var c := tint
 	if telegraph > 0.0:
 		var pulse := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.03)
 		c = c.lerp(Color(1.9, 0.45, 0.35), telegraph * pulse)
@@ -216,17 +218,17 @@ func take_hit(dmg: float, src: Node2D, kb := 60.0, heavy := false, ranged := fal
 	if state == St.BLOCK and has_shield and facing.dot(from_dir) > 0.15:
 		if can_parry and block_time < 0.2 and not ranged and not heavy and src is Actor:
 			(src as Actor).stagger(0.9)
-			Fx.spark(global_position + from_dir * 8 + Vector2(0, -16), Color(1, 0.85, 0.3), 12)
+			Fx.impact("parry", global_position + from_dir * 8 + Vector2(0, -16), Color(1, 0.85, 0.3), 12)
 			Fx.text(global_position + Vector2(0, -head_height), "패링!", Color(1, 0.85, 0.3))
-			Sfx.play("parry")
+			Sfx.at("parry", global_position, -4.0)
 			return "parried"
 		var cost := 45.0 if heavy else dmg * 1.6
 		stamina -= cost
 		stamina_rest = 0.0
 		if stamina > 0.0:
 			knock = -from_dir * kb * 0.45
-			Fx.spark(global_position + from_dir * 8 + Vector2(0, -16), Color(1, 0.95, 0.75), 6)
-			Sfx.play("block")
+			Fx.impact("block", global_position + from_dir * 8 + Vector2(0, -16), Color(1, 0.95, 0.75), 6)
+			Sfx.at("block", global_position, -6.0)
 			return "blocked"
 		stamina = 0.0
 		dmg *= 0.5
@@ -237,8 +239,8 @@ func take_hit(dmg: float, src: Node2D, kb := 60.0, heavy := false, ranged := fal
 	flash = 1.0
 	knock = -from_dir * kb
 	Fx.damage_number(global_position + Vector2(0, -head_height + 6), dmg, team == Team.GREEK)
-	Fx.spark(global_position + Vector2(0, -18), Color(1, 0.4, 0.3) if team == Team.TROJAN else Color(1, 0.75, 0.6), 7)
-	Sfx.play("hit_heavy" if heavy else "hit")
+	Fx.impact("hit", global_position + Vector2(0, -18), Color(1, 0.4, 0.3) if team == Team.TROJAN else Color(1, 0.75, 0.6), 7)
+	Sfx.at("hit_heavy" if heavy else "hit", global_position, -5.0 if heavy else -7.0)
 	hurt.emit(self, dmg)
 	if hp <= 0.0:
 		hp = 0.0
@@ -308,6 +310,11 @@ func nav_velocity(goal: Vector2, speed: float, delta: float, stop_dist := 4.0) -
 	if _path.is_empty():
 		return to / dist * arrive
 	return (_path[0] - global_position).normalized() * speed
+
+
+## 체력 회복 배율 (오디세우스는 탄수화물에 따라 — Player가 바꿈)
+func regen_mult() -> float:
+	return 1.0
 
 
 func update_buff(delta: float) -> void:

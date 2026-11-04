@@ -2,6 +2,9 @@ class_name Interactable
 extends Node2D
 ## E로 쓰는 지점(대화·권양기·쓰러진 부하). hold_time > 0이면 그만큼 길게 눌러야 한다.
 
+## 길게 누르는 지점에서 이보다 짧게 눌렀다 떼면 tap(by)을 부른다(그 메서드가 있는 지점만 — FoodSource)
+const TAP_TIME := 0.3
+
 var label := "조사하기"
 var hold_time := 0.0
 var radius := 28.0

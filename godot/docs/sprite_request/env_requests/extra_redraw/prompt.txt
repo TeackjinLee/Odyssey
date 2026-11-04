@@ -1,0 +1,35 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) troy_env.png = the STYLE reference: isometric Greek city of Troy at night, one floor tile = about 94x47 px in that sheet.
+2) guide.png = a LAYOUT GUIDE made of rough placeholder drawings: it shows WHERE each item goes and HOW BIG it is.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Make the image 1536x1024 (landscape), the same size as guide.png.
+
+Pixel art isometric game buildings and props sprite sheet. REDRAW every placeholder in the SECOND image (guide.png) as finished art,
+matching EXACTLY the style, outline, palette, lighting (from the upper left) and pixel density of the FIRST image (troy_env.png):
+hand-placed pixels, soft stone texture, warm red clay roof tiles, blue-grey night shading, crisp dark outline.
+The placeholders are crude flat-shaded drafts: do NOT copy their look, colors or stripes literally; copy only their
+POSITION, SIZE, FOOTPRINT (the diamond on the ground) and general SHAPE. Keep each item in the same place and within the
+same outline size as its placeholder, so the items can be cut out with the same boxes.
+Solid flat dark background #282B35 everywhere else. Every item separated by empty space. No text, no labels, no grid lines,
+no shadows on the ground, no new items. 2:1 isometric view (camera looks down about 30 degrees), no perspective.
+Night colors: blue-grey stone, deep blue water, warm orange only where there are torches or fire.
+
+Row 1 (left to right):
+- ALARM BELL stand: two wooden posts with a crossbar, a bronze bell hanging in the middle with a rope, on a small stone base (one tile), about 44x85 px.
+- wooden city-gate WINCH: a heavy horizontal wooden drum on two thick posts, a big four-spoke crank wheel on its side, thick rope wound on the drum (one tile), about 68x74 px.
+- bronze BRAZIER on three legs, a shallow bowl of glowing red-orange coals (no tall flames: the game adds them), about 44x46 px.
+- tall cloth BANNER on a wooden pole, TEAL-BLUE cloth with a white owl emblem (the Greek side), same shape as the red Trojan banner in the first image, about 47x103 px.
+- the same wooden TORCH POST as in the first image but UNLIT: a black burnt-out torch head, a thin wisp of smoke, about 31x76 px.
+- the same CITY GATE as in the first image but OPEN: the wooden doors swung inward, a dark passage visible through the arch, about 97x132 px.
+
+Row 2 (left to right):
+- the matching house from the first image after a FIRE: charred black beams, half-collapsed red tile roof, soot-blackened walls, a few glowing embers (no tall flames: the game adds them), about 210x165 px.
+- another matching house from the first image, BURNT the same way (charred, roof partly fallen in, embers), about 260x179 px.
+- another matching house from the first image, BURNT the same way, about 260x178 px.
+- another matching house from the first image, BURNT the same way, about 212x163 px.
+
+Row 3 (left to right):
+- small ARMORY STORE against a city wall: a lean-to wooden shed roof over stacked spears, round shields and amphorae (footprint 2x1 tiles; its placeholder is a flat silhouette: draw a new item in that space), about 139x123 px.
+- the same armory store BURNT: charred black planks, collapsed roof, broken spears, glowing embers (no tall flames; flat-silhouette placeholder), about 139x123 px.
+- a tall PILE OF GRAIN SACKS AND CRATES that an archer can stand on top of (one tile; flat-silhouette placeholder), about 78x73 px.
+
