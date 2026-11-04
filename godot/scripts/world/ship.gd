@@ -59,6 +59,9 @@ var stripe := Color(0.7, 0.25, 0.18)
 var hull_color := Color(0.36, 0.22, 0.13)
 var deck_color := Color(0.62, 0.45, 0.28)
 var target_ship: Ship = null
+## 폭풍(챕터 2): 파도에 노가 휩쓸려 이보다 빨리 못 간다(칸/초). 돛이 찢어지면 다시 펼 수 없다(레벨이 고침)
+var max_speed := INF
+var sail_torn := false
 var turn_in := 0.0
 
 var _shoot_cd := 1.5
@@ -140,7 +143,7 @@ func target_speed() -> float:
 		t = OAR_SPEED[2]
 	if sail:
 		t += SAIL_SPEED * wind_effect()
-	return t
+	return clampf(t, -max_speed, max_speed)
 
 
 func is_riding_player() -> bool:
@@ -219,6 +222,10 @@ func _read_controls() -> void:
 
 func set_sail(on: bool) -> void:
 	if sail == on:
+		return
+	if on and sail_torn:
+		if is_riding_player() and not Game.autoplay:
+			Game.show_hint("돛이 찢어져 펼 수 없다")
 		return
 	sail = on
 	Sfx.at("swing", global_position, -8.0)
@@ -441,7 +448,7 @@ func _bot(delta: float) -> void:
 		gear = 1
 	else:
 		gear = 2 if row_power > 30.0 else 1
-	set_sail(fwd().dot(Game.level.wind) > 0.3 and dist > 4.0)
+	set_sail(fwd().dot(Game.level.wind) > 0.3 and dist > 4.0 and not Game.level.get("storm_on"))
 	if gear > 0 and absf(speed) < 0.08:
 		_stuck_t += delta
 		if _stuck_t > 2.5:

@@ -15,7 +15,7 @@ const STEADY := ["ui", "ui_ok", "checkpoint", "bell", "gate", "horn", "cry", "fi
 const FALLBACK := {"swing_heavy": "swing", "arrow_hit": "block", "shout": "cry", "winch": "step", "ui_ok": "ui",
 	"checkpoint": "ui", "alert": "block", "takedown": "hit", "torch_out": "step", "torch_on": "swing", "fire_burst": "gate",
 	"stone": "block", "switch": "ui", "horn": "bell", "eat": "step", "cluck": "ui", "bleat": "cry", "splash": "step",
-	"oar": "step", "ram": "gate"}
+	"oar": "step", "ram": "gate", "thunder": "gate", "wave": "splash"}
 
 static var _streams := {}
 static var _players: Array = []

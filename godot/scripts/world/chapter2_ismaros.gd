@@ -4,11 +4,12 @@ extends IsoLevel
 ## 트로이를 떠난 갤리선. 항해 모드로 이스마로스 해안까지 배를 몰고(바람·돛·노 단계·암초) → 상륙해 키코네스 마을의
 ## 곡식 창고 셋을 털고(양·염소 사냥, 채집한 음식은 짧게 눌러 배 창고에) → 내륙에서 몰려오는 반격을 막으며 배로 물러나
 ## 오르면(멀리서 쓰러진 부하는 두고 간다) → 해안에서 떠난 키코네스 배들을 따돌리거나 격침하며 남쪽 먼바다로 빠져나간다.
-## 먼바다에 닿으면 제우스의 북풍에 여러 날 밀려(식량 창고에서 며칠 치가 빠짐) 남쪽의 로토스 섬에 닿는다 → 상륙하면 정찰 보낸
+## 먼바다에 닿으면 제우스의 폭풍: 비·번개 속에서 STORM_TIME초를 버틴다(파도는 바람 쪽에서 온다 — 옆구리로 맞으면 선체·부하가 크게 다치고,
+## 돛을 펴 두면 찢어진다) → 여러 날 밀려(식량 창고에서 며칠 치가 빠짐) 남쪽의 로토스 섬에 닿는다 → 상륙하면 정찰 보낸
 ## 부하 둘이 로토스 열매를 먹고 고향을 잊는다 → 붙잡아 끌고 와 배에 묶는다(다른 부하도 열매 곁에 오래 두면 끌려간다 — 해안에
 ## 위치 사수) → 섬을 떠나면 클리어. 오디세우스가 열매를 먹으면 잠시 고향을 잊는다(걸음이 흐트러지고 목표 표시가 사라짐).
 ## 영양·부하는 챕터 1 끝에서 이어받는다(Game.carry_for(2)). 배의 식량 창고(Rations)는 항해 하루(50초)마다 부하 수만큼 준다.
-## 체크포인트: 상륙 · 반격 시작 · 출항 · 로토스 섬.
+## 체크포인트: 상륙 · 반격 시작 · 출항 · 폭풍 · 로토스 섬.
 ##
 ## 격자(64×104): x는 화면 오른쪽 아래, y는 왼쪽 아래. 대부분 바다(물 칸 — 사람은 못 들어감, 배만 다님).
 ## 위쪽(y 0~55)이 이스마로스 앞바다, 아래쪽(y 58~)이 로토스 섬(가운데 (38, 86)).
@@ -56,6 +57,18 @@ const LOTUS_EXIT_DIST := 22.0
 const LOTUS_EXIT_MARK := Vector2(14.0, 76.0)
 ## 폭풍에 밀려 다닌 날(식량 창고에서 빠짐)
 const STORM_DAYS := 3
+## 폭풍: 버틸 시간(초)·바람 세기·배 속도 상한(칸/초)·파도 간격(초)·파도 피해(옆구리로 맞을 때, 앞뒤로 받으면 15%)·부하 피해
+const STORM_TIME := 32.0
+const STORM_WIND := 1.5
+const STORM_SPEED := 0.65
+const SURGE_EVERY := Vector2(3.2, 5.0)
+const SURGE_DMG := 11.0
+const SURGE_CREW_DMG := 7.0
+## 폭풍 체크포인트에서 다시 할 때 배 자리(이스마로스 먼바다 끝)
+const STORM_START := Vector2(58.5, 52.0)
+## 폭풍 바다의 암초(배가 밀려가는 남서쪽)
+const STORM_REEFS := [Vector2i(54, 57), Vector2i(51, 60), Vector2i(57, 61), Vector2i(47, 58), Vector2i(44, 64),
+	Vector2i(53, 64), Vector2i(49, 67), Vector2i(58, 66), Vector2i(41, 60)]
 ## 로토스나무(열매)와 그 곁 앉을 자리. 부하가 열매에서 LURE_DIST(px) 안에 LURE_TIME초 넘게 있으면 끌려가 먹는다
 const LOTUS_TREES := [Vector2i(36, 88), Vector2i(41, 86), Vector2i(39, 92), Vector2i(33, 85)]
 const LURE_DIST := 120.0
@@ -96,6 +109,15 @@ var scouts: Array = []
 var bound := 0
 var _lure_t := {}
 var _canvas_base := Color(0.86, 0.82, 0.86)
+## 폭풍
+var storm_on := false
+var storm_fx: StormFx
+var _storm_t := 0.0
+var _storm_k := 0.0
+var _surge_t := 0.0
+var _bolt_t := 0.0
+var _storm_dir := Vector2(-0.7, 0.7).normalized()
+var _side_warned := false
 
 
 static func coast_x(y: float) -> int:
@@ -167,7 +189,7 @@ func build() -> void:
 						near_land = true
 			if near_land:
 				set_solid(c)
-	for c in REEFS:
+	for c in REEFS + STORM_REEFS:
 		reefs[c] = true
 		add_prop("rock", c, true, false)
 	# 섬: 소나무·바위
@@ -329,6 +351,8 @@ func start() -> void:
 	world.add_child(board_point)
 	_place_village()
 	_place_lotus()
+	storm_fx = StormFx.new()
+	add_child(storm_fx)
 	Bgm.play("ending", 2.0)
 	Bgm.amb("sea", 1.0, 2.0)
 	Bgm.amb("wind", 0.5, 2.0)
@@ -610,12 +634,44 @@ func _escaped() -> void:
 	Bgm.sting("victory")
 	if Game.hud:
 		Game.hud.show_title(Lines.list("title.escaped"))
-	Game.say(Lines.say("escaped"), func(): _storm())
+	Game.say(Lines.say("escaped"), func(): _start_storm())
 
 
-## 북풍에 여러 날 밀려 로토스 섬 앞바다로. instant면 화면 연출·식량 소비 없이 바로(검증·체크포인트)
-func _storm(instant := false) -> void:
+## 폭풍 시작: 적 배·화살을 치우고 비·번개·거친 물결. teleport면 배를 폭풍 자리로 옮긴다(체크포인트·검증)
+func _start_storm(teleport := false) -> void:
 	_storming = true
+	_clear_ismaros_foes()
+	storm_on = true
+	_storm_t = 0.0
+	_surge_t = 2.5
+	_bolt_t = 1.5
+	if teleport:
+		ship.gpos = STORM_START
+		ship.heading = _storm_dir.angle()
+		ship.speed = 0.0
+		ship._wake.clear()
+		ship._sync()
+		player.global_position = ship.global_position
+		_cam_pos = ship.global_position
+		if Game.hud:
+			Game.hud.clear_story()
+	ship.max_speed = STORM_SPEED
+	wind_strength = STORM_WIND
+	_canvas_base = Color(0.5, 0.53, 0.66)
+	canvas_mod.color = _canvas_base
+	area_name = Lines.t("meta.area_storm")
+	_save_checkpoint("storm")
+	Bgm.play("siege", 1.5)
+	Bgm.amb("wind", 1.0, 1.5)
+	Bgm.amb("rain", 0.9, 1.5)
+	Bgm.amb("sea", 1.0, 1.5)
+	if Game.hud:
+		Game.hud.show_title(Lines.list("title.storm_start"))
+	_tut_clear()
+	_tut(Lines.t("tut.storm"), func(): return not storm_on, 18.0)
+
+
+func _clear_ismaros_foes() -> void:
 	for b in boats:
 		if is_instance_valid(b):
 			b.queue_free()
@@ -625,10 +681,74 @@ func _storm(instant := false) -> void:
 	for n in fx_layer.get_children():
 		if n is Ship.Shot:
 			n.queue_free()
+
+
+## 폭풍 속 매 프레임: 바람이 흔들리고, 파도가 바람 쪽에서 덮치고, 번개가 친다. 다 버티면 _storm()
+func _update_storm(delta: float) -> void:
+	_storm_t += delta
+	wind = _storm_dir.rotated(0.55 * sin(_t / 4.5) + 0.25 * sin(_t * 1.3))
+	wind_strength = STORM_WIND
+	var wd := (Iso.ex * wind.x + Iso.ey * wind.y).normalized()
+	storm_fx.lean = Vector2(wd.x * 0.6, 1.0)
+	# 표시: 바람이 불어 가는 쪽(봇도 이걸 따라 바람을 등진다)
+	var goal := (ship.gpos + wind * 6.0).clamp(Vector2(3, 3), Vector2(W - 4, 70))
+	Game.quest_marker = Iso.grid_to_world(goal)
+	Game.set_objective(chapter_title, Lines.t("objective.storm", maxi(0, ceili(STORM_TIME - _storm_t))))
+	_surge_t -= delta
+	if _surge_t <= 0.0:
+		_surge_t = randf_range(SURGE_EVERY.x, SURGE_EVERY.y)
+		_surge()
+	_bolt_t -= delta
+	if _bolt_t <= 0.0:
+		_bolt_t = randf_range(3.5, 8.0)
+		storm_fx.lightning()
+		get_tree().create_timer(randf_range(0.2, 0.9)).timeout.connect(func(): Sfx.play("thunder", -4.0))
+	if _storm_t >= STORM_TIME:
+		storm_on = false
+		_storm()
+
+
+## 파도 한 번: 옆구리(바람과 직각)로 맞을수록 크게 다치고 배가 옆으로 돌려진다. 펴 둔 돛은 찢어진다
+func _surge() -> void:
+	var w := wind.normalized()
+	var broad := absf(ship.right().dot(w))
+	var dmg := SURGE_DMG * (0.15 + 0.85 * broad * broad)
+	ship.damage(dmg, null)
+	var push := ship.gpos + w * 0.45
+	if ship._clear_at(push, ship.heading):
+		ship.gpos = push
+	var cross := ship.fwd().x * w.y - ship.fwd().y * w.x
+	var turn := 0.3 * (1.0 - broad) * signf(cross)
+	if ship._clear_at(ship.gpos, ship.heading + turn):
+		ship.heading = wrapf(ship.heading + turn, -PI, PI)
+	ship._sync()
+	Sfx.play("wave", -3.0 + 4.0 * broad)
+	Game.shake(2.5 + 5.0 * broad)
+	Fx.text(ship.global_position + Vector2(0, -56), "파도! -%d" % roundi(dmg), Color(0.75, 0.88, 1.0) if broad < 0.5 else Color(1, 0.6, 0.5))
+	if broad > 0.5:
+		Game.stats["broadside"] = Game.stats.get("broadside", 0) + 1
+		if not squad.members.is_empty():
+			var c: Companion = squad.members.pick_random()
+			c.hp = maxf(1.0, c.hp - SURGE_CREW_DMG * broad)
+		if not _side_warned:
+			_side_warned = true
+			Game.show_hint(Lines.t("hint.wave_side"))
+	if ship.sail and not ship.sail_torn:
+		ship.sail = false
+		ship.sail_torn = true
+		Sfx.play("ram", -8.0)
+		Game.show_hint(Lines.t("hint.sail_torn"))
+
+
+## 폭풍이 지나감 → 여러 날 밀려 로토스 섬 앞바다로. instant면 화면 연출·식량 소비 없이 바로(검증·체크포인트)
+func _storm(instant := false) -> void:
+	_storming = true
+	storm_on = false
+	_clear_ismaros_foes()
 	Game.quest_marker = Vector2.INF
 	if not instant:
 		Game.cutscene = true
-		Game.set_objective(chapter_title, Lines.t("objective.storm"))
+		Game.set_objective(chapter_title, Lines.t("objective.drift"))
 		Bgm.amb("wind", 1.0, 1.0)
 		Game.shake(5.0)
 		canvas_mod.color = Color(0.45, 0.48, 0.6)
@@ -643,6 +763,13 @@ func _storm(instant := false) -> void:
 			Game.hud.show_title(Lines.list("title.storm"))
 		Game.show_hint(Lines.t("hint.storm_days" if missed == 0 else "hint.storm_days_miss",
 			[STORM_DAYS, before - rations.store, rations.store, roundi(rations.fullness)]))
+	# 폭풍이 지나감: 비·물결을 가라앉히고 찢어진 돛을 기운다
+	ship.max_speed = INF
+	Bgm.amb("rain", 0.0, 2.0)
+	Bgm.amb("sea", 1.0, 2.0)
+	if ship.sail_torn:
+		ship.sail_torn = false
+		Game.show_hint(Lines.t("hint.sail_mended"))
 	ship.gpos = LOTUS_START
 	ship.heading = LOTUS_START_HEADING
 	ship.speed = 0.0
@@ -847,7 +974,7 @@ func _save_checkpoint(id: String) -> void:
 
 
 func checkpoint_name(id: String) -> String:
-	return {"landing": "상륙", "retreat": "반격 시작", "escape": "출항", "lotus": "로토스 섬"}.get(id, id)
+	return {"landing": "상륙", "retreat": "반격 시작", "escape": "출항", "storm": "폭풍", "lotus": "로토스 섬"}.get(id, id)
 
 
 func restore_checkpoint(cp: Dictionary) -> void:
@@ -870,6 +997,8 @@ func restore_checkpoint(cp: Dictionary) -> void:
 		Game.hud.clear_story()
 		if step == 4:
 			Game.hud.show_title(Lines.list("title.lotus"))
+		elif storm_on:
+			Game.hud.show_title(Lines.list("title.storm_start"))
 	for i in mini(int(cp.get("looted", 0)), loot_points.size()):
 		if loot_points[i].enabled:
 			loot_points[i].enabled = false
@@ -879,7 +1008,7 @@ func restore_checkpoint(cp: Dictionary) -> void:
 	Game.show_hint(Lines.t("hint.checkpoint"))
 
 
-## 검증용 --start=landing|retreat|escape|lotus|lotus_land
+## 검증용 --start=landing|retreat|escape|storm|lotus|lotus_land
 func skip_to(id: String) -> void:
 	_tut_clear()
 	match id:
@@ -900,6 +1029,9 @@ func skip_to(id: String) -> void:
 		"escape":
 			skip_to("retreat")
 			_board()
+		"storm":
+			skip_to("escape")
+			_start_storm(true)
 		"lotus":
 			skip_to("escape")
 			_storm(true)
@@ -911,7 +1043,7 @@ func skip_to(id: String) -> void:
 func report() -> Dictionary:
 	return {"ending": ending_done, "hull": snappedf(ship.hull, 0.1), "rations": rations.store, "fullness": snappedf(rations.fullness, 0.1),
 		"day": rations.day, "crew": squad.members.size(), "lost": lost, "looted": looted, "step": step,
-		"bound": bound, "lotus_eaten": Game.stats.get("lotus", 0),
+		"bound": bound, "lotus_eaten": Game.stats.get("lotus", 0), "broadside": Game.stats.get("broadside", 0), "sail_torn": ship.sail_torn,
 		"boats": boats.filter(func(b): return is_instance_valid(b) and not b.sunk_done).size(),
 		"ship_cell": ship.gpos.snapped(Vector2(0.1, 0.1)), "riding": player.riding != null}
 
@@ -929,7 +1061,7 @@ func result_info(st: Dictionary) -> Dictionary:
 			"시간 %d분 %02d초   ·   처치 %d   ·   격침 %d   ·   들이받기 %d" % [int(t) / 60, int(t) % 60, st.get("kills", 0), st.get("sunk", 0), st.get("rams", 0)],
 			"곡식 창고 %d/%d   ·   배 창고 %d몫   ·   부하 배부름 %d   ·   잃은 부하 %d" % [looted, loot_points.size(), rations.store, roundi(rations.fullness), st.get("lost", 0)],
 			"먹은 횟수 %d   ·   창고에 넣은 몫 %d   ·   남은 선체 %d%%" % [st.get("meals", 0), st.get("stored", 0), roundi(100.0 * ship.hull / ship.max_hull)],
-			"끌고 온 부하 %d   ·   %s" % [bound, "로토스를 먹지 않았다" if st.get("lotus", 0) == 0 else "로토스를 %d번 먹었다" % st.get("lotus", 0)],
+			"옆으로 맞은 파도 %d   ·   끌고 온 부하 %d   ·   %s" % [Game.stats.get("broadside", 0), bound, "로토스를 먹지 않았다" if st.get("lotus", 0) == 0 else "로토스를 %d번 먹었다" % st.get("lotus", 0)],
 		],
 		"next": "다음: CHAPTER 3 — 외눈박이 거인 (준비 중). 영양·부하·식량 창고는 이어진다"}
 
@@ -940,6 +1072,16 @@ func _process(delta: float) -> void:
 	_t += delta
 	wind = _wind_base.rotated(0.3 * sin(_t / 23.0))
 	_update_tut(delta)
+	# 폭풍 화면(비·물결)은 천천히 오르내린다
+	_storm_k = move_toward(_storm_k, 1.0 if storm_on else 0.0, delta * 0.5)
+	if storm_fx:
+		storm_fx.strength = _storm_k
+	if water_material:
+		water_material.set_shader_parameter("storm", _storm_k)
+	if storm_fx and storm_fx.flash > 0.0:
+		canvas_mod.color = _canvas_base.lerp(Color(1.3, 1.3, 1.45), storm_fx.flash * 0.6)
+	elif storm_on:
+		canvas_mod.color = _canvas_base
 	if _done:
 		return
 	if ship.rider != null and not Game.cutscene:
@@ -955,7 +1097,9 @@ func _process(delta: float) -> void:
 				_wave_t = COUNTER_INTERVAL
 				_send_wave()
 		3:
-			if _storming:
+			if storm_on:
+				_update_storm(delta)
+			elif _storming:
 				pass
 			elif EXIT_RECT.has_point(ship.gpos):
 				_escaped()

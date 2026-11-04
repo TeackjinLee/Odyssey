@@ -4,6 +4,7 @@ shader_type canvas_item;
 // - 가로로 긴 물결 줄이 천천히 흐르고, 달빛 반짝임이 드문드문 깜박인다
 // - 물이 아닌 칸(해안·부두·성벽)과 닿는 가장자리에 흰 거품, 그 안쪽은 얕은 물빛
 // - 부두(planks) 칸의 앞쪽(화면 아래) 물에는 부두 옆면(나무)과 그림자를 그려 두께를 준다
+// - storm(0~1, 챕터 2 폭풍): 물이 어둡고 빨라지며 물결 줄이 많아지고 흰 파도머리가 인다
 // iso_level.gd가 water_map(물 칸 = 흰색, 부두 = 회색 0.5, 나머지 = 검정)·map_size·origin·ex·ey를 넣는다.
 
 uniform sampler2D water_map : filter_nearest;
@@ -18,6 +19,7 @@ uniform vec4 crest : source_color = vec4(0.38, 0.52, 0.72, 1.0);
 uniform vec4 foam : source_color = vec4(0.78, 0.84, 0.90, 1.0);
 uniform vec4 pier_side : source_color = vec4(0.22, 0.14, 0.09, 1.0);
 uniform vec4 pier_shadow : source_color = vec4(0.04, 0.07, 0.15, 1.0);
+uniform float storm = 0.0;
 
 varying vec2 wpos;
 
@@ -56,7 +58,7 @@ bool is_pier(vec2 cell) {
 void fragment() {
 	float a = texture(TEXTURE, UV).a;
 	vec2 p = floor(wpos);                      // 픽셀 단위로 끊어 픽셀아트처럼
-	float t = TIME;
+	float t = TIME * (1.0 + storm * 1.6);
 
 	// 격자 좌표(칸 안 위치 f: 0~1)
 	vec2 q = p + 0.5 - origin;
@@ -73,10 +75,21 @@ void fragment() {
 	float bend = noise(p * vec2(0.025, 0.07)) * 7.0;
 	float w = sin(p.y * 0.5 + bend + t * 1.2);
 	float dash = noise(vec2(p.x * 0.07 + t * 0.25, floor(p.y / 2.0) * 0.9));
-	if (w > 0.93 && dash > 0.62) {
+	col = mix(col, col * 0.6 + vec3(0.015, 0.02, 0.035), storm * 0.7);
+	if (w > 0.93 - storm * 0.16 && dash > 0.62 - storm * 0.18) {
 		col = crest.rgb;
-	} else if (w > 0.78 && dash > 0.55) {
+	} else if (w > 0.78 - storm * 0.2 && dash > 0.55 - storm * 0.15) {
 		col = mix(col, crest.rgb, 0.35);
+	}
+	// 폭풍의 흰 파도머리: 큰 얼룩이 지나가는 자리에 부서지는 거품 줄
+	if (storm > 0.01) {
+		float wc = noise(p * vec2(0.04, 0.08) + vec2(t * 0.35, -t * 0.18));
+		float roll = sin(p.y * 0.8 - p.x * 0.15 + t * 2.6 + wc * 8.0);
+		if (wc > 0.9 - storm * 0.14 && roll > 0.55) {
+			col = foam.rgb;
+		} else if (wc > 0.86 - storm * 0.14 && roll > 0.75) {
+			col = mix(col, foam.rgb, 0.5);
+		}
 	}
 
 	// 달빛 반짝임: 8×4 칸마다 드물게 가로 2px 점 하나가 제각각 깜박인다
