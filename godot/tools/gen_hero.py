@@ -372,7 +372,8 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
 # 값이 숫자면 그 키로 방향마다 맞추고, 다른 캐릭터 이름이면 그 캐릭터 기본 시트와 같은 배율(원본 픽셀당)을 써서
 # 원래 그려 받은 키 차이(대장은 더 크게, 투구 없는 궁수는 작게)를 그대로 살린다. 적·동료는 기본 8방향만 받아 동작은 변형으로 만든다
 ARMED_BODIES = {"odysseus_ch1": 118, **{n: "odysseus_ch1" for n in (
-    "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain", "sinon")}}
+    "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain", "sinon",
+    "odysseus_sea", "cicones_sword", "cicones_spear", "cicones_archer", "cicones_chief")}}
 
 
 def armed_k(root, body, height):
@@ -628,7 +629,17 @@ def make_portrait(root):
     crop.resize((PORTRAIT_SIZE, PORTRAIT_SIZE), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
 
 
+def portrait_only(root, name):
+    """기본 시트 없이 초상화만 있는 인물(대화창에만 나오는 아가멤논의 전령 등)."""
+    Image.open(root / f"assets/source/{name}_portrait.webp").convert("RGBA").resize(
+        (PORTRAIT_SIZE, PORTRAIT_SIZE), Image.LANCZOS).save(root / f"assets/ui/portrait_{name}.png")
+
+
 if __name__ == "__main__":
     outfit = sys.argv[2] if len(sys.argv) > 2 else "odysseus"
+    if not (Path(sys.argv[1]) / f"assets/source/{GEAR.get(outfit, (outfit,))[0]}_8dir.webp").exists():
+        portrait_only(Path(sys.argv[1]), outfit)
+        print(f"{outfit} 초상화 생성")
+        sys.exit()
     build(Path(sys.argv[1]), outfit)
     print(f"{outfit} 시트 생성")

@@ -1,0 +1,10 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) portrait_ref.png = ONLY the portrait framing, size of the face, background colour and pixel style to copy (a different person — do NOT copy his face, helmet or armor).
+2) style_ref.png = the game's chibi pixel style and its Greek bronze-and-crimson palette.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+A square 1024x1024 pixel-art CHARACTER PORTRAIT for a game HUD: head and shoulders of AGAMEMNON'S HERALD (Talthybius), a Greek army herald:
+middle-aged man, neatly trimmed grey-streaked dark beard, open bronze helmet with a short white horsehair crest and NO face guard (whole face visible), a deep royal-purple cloak with a gold Greek-key border pinned by a gold lion-head clasp, bronze shoulder scales; the top of a golden herald's staff with two entwined snakes (kerykeion) rising beside his shoulder.
+Three-quarter view facing slightly to the right, mouth open SHOUTING a battle order, proud commanding expression, eyebrows raised.
+The face fills most of the image (it will be shrunk to 48x48 pixels, so the face must be BIG and readable).
+Background: flat dark charcoal blue #252C34. Crisp pixel art, chunky readable pixel clusters, 1px dark outline, no text, no frame, no border.

@@ -101,6 +101,9 @@ func setup(k: String) -> void:
 	cfg = KINDS[k]
 	sheet = cfg.get("sheet", k)
 	tint = cfg.get("tint", Color(1, 1, 1))
+	if sheet != k and ResourceLoader.exists("res://assets/sprites/%s.png" % k):   # 제 그림이 생기면 빌린 시트·색 대신 그것
+		sheet = k
+		tint = Color(1, 1, 1)
 	team = Team.TROJAN
 	display_name = cfg["name"]
 	max_hp = cfg["hp"]

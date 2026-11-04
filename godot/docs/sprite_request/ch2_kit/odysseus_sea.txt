@@ -1,0 +1,20 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = Odysseus in his battle armor: copy EXACTLY the layout, camera, chibi proportions, figure size, the 8 facings, the pixel style AND his weapons (sword, star shield, bow and quiver). Do NOT copy his helmet, red crest, red cape or bronze cuirass.
+2) sea_costume.png = the SAME hero in his SEA VOYAGE clothes: copy this costume and face EXACTLY (an older, plainer drawing — redraw it in the richer style of style_ref.png).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 8-direction CHARACTER SHEET for an isometric Greek action RPG:
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall) in his SEA VOYAGE clothes exactly like sea_costume.png: bare head with wind-blown curly dark-brown hair and a thin bronze brow band, face visible (dark eyebrows, brown eyes, short dark beard), a short weathered blue-green cloak over the shoulders, a bronze breastplate over a cream linen tunic, a rope belt with a gold round buckle, a crimson front flap, bronze bracers, laced leather sandals. NO helmet, NO red cape.
+Weapons always carried, exactly like style_ref.png: a short bronze leaf-blade sword with a gold crossguard held in the RIGHT fist, a round bronze shield with a gold eight-pointed star strapped to the LEFT forearm, and a wooden recurve bow with a brown quiver of white-fletched arrows slung diagonally on his BACK.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: same figure size and position in every cell, feet on the same baseline, nothing cut off.
+- Top row left to right: NORTH (back), NORTH-EAST (back-right), EAST (right side), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front), SOUTH-WEST (front-left), WEST (left side), NORTH-WEST (back-left).
+- Standing battle-ready idle in every cell: sword held low in the right fist pointing down-forward, shield on the left forearm in front of the body at chest/hip height (never in front of the face).
+- DEPTH: whatever is on the far side of the body is hidden behind it. Back views (N, NE, NW): the short cloak covers the upper back, the bow and quiver are visible on top of it, the shield shows only its rim on the left side.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, no smooth gradients.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).

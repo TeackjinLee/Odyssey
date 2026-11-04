@@ -8,6 +8,7 @@
     "sinon": "시논",
     "scout": "테르산드로스",
     "scout_full": "정찰병 테르산드로스",
+    "herald": "아가멤논의 전령",
     "crew": [["sword", "에우릴로코스"], ["spear", "폴리테스"], ["archer", "엘페노르"]],
     "vanguard": [["sword", "아카이아 검병"], ["spear", "아카이아 창병"], ["sword", "아카이아 검병"], ["spear", "아카이아 창병"]],
     "army_prefix": "아카이아 "

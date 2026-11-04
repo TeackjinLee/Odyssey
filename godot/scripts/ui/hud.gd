@@ -276,7 +276,7 @@ func _speaker_portrait(speaker: String) -> Texture2D:
 	if p and speaker == "오디세우스":
 		return _player_portrait(p)
 	if _speaker_sheets.is_empty():
-		_speaker_sheets = {Lines.t("names.sinon"): "sinon", Lines.t("names.scout"): "greek_sword"}
+		_speaker_sheets = {Lines.t("names.sinon"): "sinon", Lines.t("names.scout"): "greek_sword", Lines.t("names.herald"): "herald"}
 		for pair in Lines.list("names.crew"):
 			_speaker_sheets[pair[1]] = "greek_" + pair[0]
 	if not _speaker_sheets.has(speaker):

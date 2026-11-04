@@ -3,16 +3,18 @@
 기본 8방향 요청 글(<이름>.txt)의 인물 설명으로 <이름>_motion.txt를 만들고, motion_request.py로 폴더를 만든 뒤
 armed_patch.py로 무기 든 병사 문구로 바꾼다. 창병은 찌르기, 궁수는 활, 대장 강공격은 방향마다 한 장(3×2칸)으로 받는다.
 사용: python3 make_motion.py [--anims=run,block,portrait] <이름> [<이름> ...]   (godot/ 안에서)
+  UNIT_KIT=<폴더>: 요청 글(<이름>.txt)과 출력이 있는 다른 키트(2장 키코네스는 docs/sprite_request/ch2_kit)
   --anims: 처음 받은 동작 대신 그 동작만 더 만든다(portrait = HUD 초상화 요청 units/portrait/<이름>)
 """
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[3]
-sys.path.insert(0, str(HERE.parent))
+ROOT = Path(__file__).resolve().parents[4]
+HERE = Path(os.environ["UNIT_KIT"]).resolve() if os.environ.get("UNIT_KIT") else Path(__file__).resolve().parent
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import armed_patch  # noqa: E402
 
 ANIMS = {"sword": "walk,attack1,attack2,hit,death", "spear": "walk,attack1,attack2,hit,death",
@@ -106,6 +108,7 @@ def main(names, only=None):
     mr.GROUPS["heavy"] = [["E"], ["SE"], ["S"], ["NE"], ["N"]]
     for name in names:
         kind = name.split("_")[1] if "_" in name else name
+        kind = {"chief": "captain"}.get(kind, kind)   # 키코네스 전사장 = 트로이 대장과 같은 동작
         if not (HERE / f"{name}_motion.txt").exists():
             (HERE / f"{name}_motion.txt").write_text(motion_text(name) + "\n")
         out = HERE / name
