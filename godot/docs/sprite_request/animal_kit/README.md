@@ -31,4 +31,7 @@ python3 tools/gen_animal.py . <종류>   # → assets/sprites/animal_<종류>.pn
 | 종류 | 상태 |
 |---|---|
 | 닭 | ✅ 받음(걷기는 두 번 받아 `chicken_move.webp`를 씀 — `chicken_move_alt.webp`는 남동·북동 구별이 약함) |
-| 염소·양·멧돼지·사슴 | ⬜ |
+| 염소 | ✅ 받음(북동 쓰러짐 첫 두 칸에 날개가 그려져 와서 남동 줄을 씀 — `gen_animal.py` `ROW_FIX`) |
+| 양 | ✅ 받음(북동 쓰러짐이 끝까지 눕지 않아 남동 줄을 씀) |
+| 멧돼지·사슴 | ⬜ |
+| 음식 12가지 | ✅ `python3 tools/gen_food.py .` → `assets/sprites/food_icons.*`, `food_source.gd`가 음식 id로 찾아 그림 |

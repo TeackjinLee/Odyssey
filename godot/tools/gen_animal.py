@@ -25,6 +25,9 @@ ANIMS = [
     ("run", "move", 2, 3, 16, True),
     ("death", "idle", 2, 3, 9, False),
 ]
+# 잘못 그려 온 줄 대신 쓸 줄: 종류 → {(동작, 시트 줄): 원본 줄}
+# 염소 북동 쓰러짐은 첫 두 칸에 날개가, 양 북동 쓰러짐은 끝까지 눕지 않게 그려 와서 남동 줄을 씀
+ROW_FIX = {"goat": {("death", 1): 2}, "sheep": {("death", 1): 2}}
 
 
 def is_bg(c):
@@ -84,7 +87,7 @@ def build(root, kind):
     anims, col = {}, 0
     for name, file, se, ne, fps, loop in ANIMS:
         for d, row in enumerate((se, ne)):
-            line = src[file][row]
+            line = src[file][ROW_FIX.get(kind, {}).get((name, d), row)]
             # 줄 안에서 발 x는 가운데값 하나로(걸을 때 몸이 좌우로 떨지 않게), 발 y는 칸마다(땅에 붙게)
             xs = sorted(foot(c)[0] for c in line)
             fx = xs[len(xs) // 2]

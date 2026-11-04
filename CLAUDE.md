@@ -44,6 +44,7 @@ python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 �
 python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
 python3 tools/gen_storm.py .                            # 받은 바다 무늬·폭풍 이펙트 → assets/env/sea_*·assets/fx/storm_* (요청 묶음 storm_requests/)
 python3 tools/gen_animal.py . chicken                    # 받은 동물 원본 → assets/sprites/animal_<종류>.* (요청 묶음 animal_kit/)
+python3 tools/gen_food.py .                             # 받은 음식 그림 → assets/sprites/food_icons.* (food_source.gd가 씀)
 python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
 python3 tools/gen_video.py .                            # 컷신 영상 assets/source/video/*.mp4 → assets/video/*.ogv (Godot 무비 메이커로, 창이 잠깐 뜬다)
 python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)

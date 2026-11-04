@@ -1,0 +1,1 @@
+{"frame": [85, 85], "anchor": [42, 82], "dirs": 2, "scale": 0.5, "anims": {"idle": {"start": 0, "frames": 6, "fps": 5, "loop": true}, "walk": {"start": 6, "frames": 6, "fps": 10, "loop": true}, "run": {"start": 12, "frames": 6, "fps": 16, "loop": true}, "death": {"start": 18, "frames": 6, "fps": 9, "loop": false}}}
