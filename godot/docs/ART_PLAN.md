@@ -123,17 +123,18 @@
 
 ### 4.2 챕터 1 인물 `C-GRK` `C-TRO` `C-NPC`
 
-지금은 모두 `tools/gen_characters.py`의 임시 그림(칸 64, 옛 비율). 프롬프트 [sprite_request/soldiers.md](sprite_request/soldiers.md)
+병사 7종은 1장 오디세우스와 같은 화풍으로 그려 받았다(요청 기록 [sprite_request/ch1_kit/README.md](sprite_request/ch1_kit/README.md) "적·동료 7종").
+상태 칸의 "그려 받음"은 Codex로 받은 동작, 나머지 동작은 기본 8방향을 변형해 쓴다. 시논은 아직 옛 임시 그림.
 
 | ID | 인물 | 시트 이름 | 꼭 필요한 동작 | 있으면 좋은 동작 | 상태 |
 |---|---|---|---|---|---|
-| `C-GRK-sword` | 그리스 검병 (부하) + 정찰병 테르산드로스 | `greek_sword` | walk attack1 block hit death | idle run attack2 | 🟡 |
-| `C-GRK-spear` | 그리스 창병 (부하) | `greek_spear` | walk attack1 block hit death | idle run attack2 | 🟡 |
-| `C-GRK-archer` | 그리스 궁병 (부하) | `greek_archer` | walk bow hit death | idle run | 🟡 |
-| `C-TRO-sword` | 트로이 검병 (경보병 겸함) | `trojan_sword` | walk run attack1 block hit death interact | idle attack2 | 🟡 |
-| `C-TRO-spear` | 트로이 창병 | `trojan_spear` | walk run attack1 block hit death interact | idle attack2 | 🟡 |
-| `C-TRO-archer` | 트로이 궁수 | `trojan_archer` | walk run bow hit death | idle interact | 🟡 |
-| `C-TRO-captain` | 수비대장 아게노르 (2페이즈 보스) | `trojan_captain` | walk attack1 attack2 attack3 heavy block hit death | idle run horn charge | 🟡 |
+| `C-GRK-sword` | 그리스 검병 (부하) + 정찰병 테르산드로스 | `greek_sword` | walk attack1 block hit death | idle run attack2 | ✅ walk run attack1 attack2 block hit death |
+| `C-GRK-spear` | 그리스 창병 (부하) | `greek_spear` | walk attack1 block hit death | idle run attack2 | ✅ walk run attack1 attack2(찌르기) block hit death |
+| `C-GRK-archer` | 그리스 궁병 (부하) | `greek_archer` | walk bow hit death | idle run | ✅ walk run bow hit death |
+| `C-TRO-sword` | 트로이 검병 (경보병 겸함) | `trojan_sword` | walk run attack1 block hit death interact | idle attack2 | 🟡 그려 받음 walk run attack1 attack2 block hit death — interact 없음 |
+| `C-TRO-spear` | 트로이 창병 | `trojan_spear` | walk run attack1 block hit death interact | idle attack2 | 🟡 그려 받음 walk run attack1 attack2(찌르기) block hit death — interact 없음 |
+| `C-TRO-archer` | 트로이 궁수 | `trojan_archer` | walk run bow hit death | idle interact | 🟡 그려 받음 walk run bow hit death — interact 없음 |
+| `C-TRO-captain` | 수비대장 아게노르 (2페이즈 보스) | `trojan_captain` | walk attack1 attack2 attack3 heavy block hit death | idle run horn charge | 🟡 그려 받음 walk run attack1·2·3 heavy block hit death — horn charge 없음 |
 | `C-NPC-sinon` | 첩자 시논 | `sinon` (새로) | idle | walk | 🟡 (지금은 궁병 시트를 빌려 씀) |
 
 각 인물마다 먼저 **기본 8방향 1장**(`<시트 이름>_8dir.webp`)을 받고, 동작은 한 장에 3방향(E·SE·S)·2방향(NE·N)씩 받는다.
@@ -220,8 +221,8 @@
 | ID | 그림 | 상태 |
 |---|---|---|
 | `U-portrait-odysseus` | 오디세우스 초상화 | ✅ |
-| `U-portrait-greek` | 부하 초상화 3 (검병·창병·궁병) | 🟡 |
-| `U-portrait-sinon` `-agenor` | 시논(대화창)·아게노르(보스 체력바) | ⬜ |
+| `U-portrait-greek` | 부하 초상화 3 (검병·창병·궁병) | ✅ (`ch1_kit/units/portrait`, 트로이 4종도 받아 둠) |
+| `U-portrait-sinon` `-agenor` | 시논(대화창)·아게노르(보스 체력바) | ⬜ 시논 · ✅ 아게노르(`portrait_trojan_captain`, 체력바에는 아직 안 씀) |
 | `U-icons` | 아이콘 12: 검·활·함성·명령 4·상호작용·의심 ?·알아챔 !·체크포인트·잠입 | ⬜ (의심·알아챔은 지금 글자) |
 | `U-frames` | 체력·스태미나 바 틀, 슬롯 틀, 미니맵 테두리, 대화창 9칸 틀(뇌문 장식), 이름표 | ⬜ |
 | `U-result` | 클리어 화면 칭호 배지 「밤의 그림자」「보이지 않는 자」 | ⬜ (있으면 좋음) |
