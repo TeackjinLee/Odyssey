@@ -22,6 +22,8 @@ var has_shield := true
 var poise := false
 var can_parry := false
 var damage_mult := 1.0
+## 그림 색 바꿈(같은 시트를 다른 군대에 쓸 때 — 키코네스 등)
+var tint := Color(1, 1, 1)
 var show_health_bar := true
 var head_height := 46.0
 
@@ -186,7 +188,7 @@ func _separation() -> Vector2:
 
 
 func _update_visual() -> void:
-	var c := Color(1, 1, 1)
+	var c := tint
 	if telegraph > 0.0:
 		var pulse := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.03)
 		c = c.lerp(Color(1.9, 0.45, 0.35), telegraph * pulse)

@@ -693,6 +693,35 @@ def sfx_splash():
     return body + drops
 
 
+def sfx_oar(seed=0):
+    """노 젓기: 나무 노가 물을 가르는 쏴(낮은 물소리) + 노걸이 삐걱"""
+    r = np.random.default_rng(400 + seed)
+    n = int(0.55 * SR)
+    t = np.arange(n) / SR
+    swish = ola_filter(r.standard_normal(n), lambda s: (180 + 500 * min(1, s * 3), 900 + 1600 * min(1, s * 3)), block=1024)
+    swish *= np.minimum(1, t / 0.06) * np.exp(-t / 0.16)
+    creak_n = int(0.12 * SR)
+    ct = np.arange(creak_n) / SR
+    creak = np.sin(2 * np.pi * np.cumsum(220 + 60 * np.sin(ct * 90)) / SR) * env_exp(creak_n, 0.04, 0.005)
+    creak = fft_filter(creak * (1 + 0.6 * r.standard_normal(creak_n)), lo=200, hi=1800)
+    y = swish * 0.9
+    y[:creak_n] += creak * 0.25
+    return y
+
+
+def sfx_ram(seed=0):
+    """배끼리·해안에 부딪힘: 나무가 쿵 하고 갈라지는 소리"""
+    r = np.random.default_rng(500 + seed)
+    n = int(0.9 * SR)
+    t = np.arange(n) / SR
+    thud = np.sin(2 * np.pi * np.cumsum(55 + 50 * np.exp(-t * 18)) / SR) * env_exp(n, 0.22, 0.001)
+    crack = fft_filter(r.standard_normal(n), lo=600, hi=5000) * env_exp(n, 0.05, 0.0005)
+    splinter = sum(fft_filter(r.standard_normal(n), lo=1500, hi=6000) * env_exp(n, 0.02, 0.0003) * np.roll(np.ones(n), 0)
+                   * (t > d) for d in (0.06, 0.13, 0.21)) * 0.5
+    wood = modal(n, [(180, 0.12, 0.5), (410, 0.08, 0.3), (730, 0.05, 0.2)], seed=500 + seed)
+    return sat(thud * 1.1 + crack * 0.7 + splinter + wood, 2.0)
+
+
 SFX = {
     "swing": [lambda s=s: sfx_swing(False, s) for s in range(3)],
     "swing_heavy": [lambda s=s: sfx_swing(True, 10 + s) for s in range(2)],
@@ -724,6 +753,8 @@ SFX = {
     "cluck": [lambda s=s: sfx_cluck(s) for s in range(2)],
     "bleat": [lambda s=s: sfx_bleat(s) for s in range(2)],
     "splash": [sfx_splash],
+    "oar": [lambda s=s: sfx_oar(s) for s in range(2)],
+    "ram": [sfx_ram],
 }
 
 

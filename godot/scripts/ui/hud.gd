@@ -7,6 +7,7 @@ extends CanvasLayer
 signal restart_requested
 signal menu_requested
 signal checkpoint_requested
+signal next_requested
 
 const GOLD := Color(0.95, 0.78, 0.38)
 const PANEL := Color(0.06, 0.05, 0.07, 0.72)
@@ -179,6 +180,8 @@ func _show_overlay(kind: String, st: Dictionary) -> void:
 	var labels := [["처음부터", func(): restart_requested.emit()], ["타이틀로", func(): menu_requested.emit()]]
 	if kind == "clear":
 		labels[0][0] = "챕터 다시 하기"
+		if Game.level and int(Game.level.get("next_chapter")) > 0:
+			labels.push_front(["다음 챕터", func(): next_requested.emit()])
 	elif not Game.checkpoint.is_empty():
 		labels.push_front(["체크포인트에서 다시", func(): checkpoint_requested.emit()])
 	for i in labels.size():
@@ -226,6 +229,7 @@ func _draw_hud() -> void:
 		_draw_cinematic()
 	if p and Game.level and not cinematic:
 		_draw_player(p)
+		_draw_ship(p)
 		_draw_squad()
 		_draw_quest()
 		_draw_minimap(p)
@@ -305,6 +309,9 @@ func _draw_squad() -> void:
 		if c.state == Actor.St.DOWNED:
 			st = "쓰러짐 — 가까이 가서 %s 길게" % Game.key_label("interact")
 			col = Color(1, 0.45, 0.4)
+		elif not c.visible:
+			st = "배 위 — 노 젓는 중"
+			col = Color(0.75, 0.9, 1.0)
 		elif c.state == Actor.St.ATTACK or (c.target and c.target.is_alive()):
 			st = "교전 중"
 			col = Color(1, 0.75, 0.5)
@@ -331,12 +338,31 @@ func _draw_minimap(p: Player) -> void:
 	canvas.draw_circle(center, radius, Color(0.22, 0.2, 0.18, 0.92))
 	var pg := Iso.world_to_grid(p.global_position)
 	var k := 2.6
-	for c in lvl.solid:
-		var d := Vector2(c) + Vector2(0.5, 0.5) - pg
-		var m := center + Vector2((d.x - d.y) * k, (d.x + d.y) * k * 0.5)
+	# 보이는 둘레의 칸만 본다. 막힌 칸(성벽·물). 땅을 그리는 챕터(minimap_land)는 물이 아닌 바닥도 옅게
+	var span := int(radius / k) + 2
+	var pc := Vector2i(floori(pg.x), floori(pg.y))
+	for x in range(pc.x - span, pc.x + span + 1):
+		for y in range(pc.y - span, pc.y + span + 1):
+			var c := Vector2i(x, y)
+			var kind: String = lvl.floor_kind.get(c, "")
+			var col := Color.TRANSPARENT
+			if lvl.solid.has(c):
+				col = Color(0.2, 0.34, 0.55) if kind in ["water", "sand"] else Color(0.55, 0.5, 0.42)
+				if lvl.minimap_land and kind == "water":
+					col = Color(0.08, 0.1, 0.12) if lvl.is_reef(c) else Color.TRANSPARENT
+			elif lvl.minimap_land and kind != "" and kind != "water":
+				col = Color(0.62, 0.55, 0.36) if kind == "sand" else Color(0.36, 0.42, 0.26)
+			if col.a == 0.0:
+				continue
+			var d := Vector2(c) + Vector2(0.5, 0.5) - pg
+			var m := center + Vector2((d.x - d.y) * k, (d.x + d.y) * k * 0.5)
+			if m.distance_to(center) < radius - 2:
+				canvas.draw_rect(Rect2(m - Vector2(1.5, 1), Vector2(3, 2)), col)
+	for sh in get_tree().get_nodes_in_group("ships"):
+		var g: Vector2 = sh.gpos - pg
+		var m := center + Vector2((g.x - g.y) * k, (g.x + g.y) * k * 0.5)
 		if m.distance_to(center) < radius - 2:
-			var sea: bool = lvl.floor_kind.get(c, "") in ["water", "sand"]
-			canvas.draw_rect(Rect2(m - Vector2(1.5, 1), Vector2(3, 2)), Color(0.2, 0.34, 0.55) if sea else Color(0.55, 0.5, 0.42))
+			canvas.draw_circle(m, 2.4, GOLD if sh.team == Actor.Team.GREEK else Color(1, 0.3, 0.25))
 	for a in get_tree().get_nodes_in_group("actors"):
 		if not a.is_alive() or a == p:
 			continue
@@ -358,10 +384,64 @@ func _draw_minimap(p: Player) -> void:
 		canvas.draw_circle(m, 3.0, Color(1, 0.85, 0.2, blink))
 	canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -3), center + Vector2(2.5, 2.5), center + Vector2(-2.5, 2.5)]), GOLD)
 	canvas.draw_arc(center, radius + 1, 0, TAU, 48, GOLD, 1.5)
-	_text(Vector2(center.x - 40, center.y + radius + 11), "트로이 성내", 7, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 80)
+	_text(Vector2(center.x - 40, center.y + radius + 11), lvl.area_name, 7, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 80)
+
+
+## 배(챕터 2~): 오른쪽 미니맵 아래 — 선체·노 단계·노꾼 힘·돛·바람 나침반, 식량 창고·부하 배부름·항해 하루
+func _draw_ship(p: Player) -> void:
+	var ship = Game.level.get("ship")
+	var rations = Game.level.get("rations")
+	if ship == null or not is_instance_valid(ship):
+		return
+	var at_sea: bool = p.riding != null
+	var r := Rect2(522, 108, 112, 98 if at_sea else 34)
+	_panel(r)
+	var x := r.position.x + 5
+	var y := r.position.y + 10
+	if at_sea:
+		_text(Vector2(x, y), ship.display_name, 7, GOLD)
+		y += 4
+		_bar(Rect2(x, y, 102, 4), ship.hull / ship.max_hull, Color(0.8, 0.55, 0.3))
+		_text(Vector2(x, y + 11), "선체 %d%%" % roundi(100.0 * ship.hull / ship.max_hull), 6, Color(0.9, 0.85, 0.8))
+		y += 16
+		var gear_col: Color = [Color(0.7, 0.8, 1.0), Color(0.7, 0.7, 0.7), Color(0.9, 0.9, 0.8), Color(1, 0.75, 0.4)][ship.gear + 1]
+		_text(Vector2(x, y + 6), "노: " + Ship.GEARS[ship.gear + 1], 7, gear_col)
+		_bar(Rect2(x + 52, y + 2, 50, 3), ship.row_power / 100.0, Color(0.45, 0.8, 0.55))
+		_text(Vector2(x + 52, y + 12), "노꾼 힘", 6, Color(0.7, 0.85, 0.7))
+		y += 16
+		var we: float = ship.wind_effect()
+		_text(Vector2(x, y + 6), "돛: " + ("펼침" if ship.sail else "접음"), 7, Color(1, 1, 1) if ship.sail else Color(0.7, 0.7, 0.7))
+		if ship.sail:
+			_text(Vector2(x, y + 15), "순풍" if we > 0.45 else ("옆바람" if we > 0.05 else "맞바람!"), 6,
+				Color(0.6, 1, 0.6) if we > 0.45 else (Color(0.9, 0.9, 0.7) if we > 0.05 else Color(1, 0.45, 0.4)))
+		_text(Vector2(x, y + 24), "속도 %.1f" % absf(ship.speed), 6, Color(0.8, 0.8, 0.8))
+		# 바람 나침반: 화면에서 바람이 부는 쪽 화살표 + 배 머리 방향(금색 짧은 선)
+		var c := Vector2(r.end.x - 20, y + 12)
+		canvas.draw_circle(c, 12.0, Color(0, 0, 0, 0.5))
+		canvas.draw_arc(c, 12.0, 0, TAU, 20, EDGE, 1.0)
+		var w: Vector2 = Game.level.wind
+		var wd := (Iso.ex * w.x + Iso.ey * w.y).normalized()
+		canvas.draw_line(c - wd * 9.0, c + wd * 9.0, Color(0.75, 0.9, 1.0), 1.5)
+		canvas.draw_colored_polygon(PackedVector2Array([c + wd * 10.0, c + wd * 5.0 + wd.orthogonal() * 3.0, c + wd * 5.0 - wd.orthogonal() * 3.0]), Color(0.75, 0.9, 1.0))
+		var f: Vector2 = ship.fwd()
+		var fd := (Iso.ex * f.x + Iso.ey * f.y).normalized()
+		canvas.draw_line(c, c + fd * 7.0, GOLD, 2.0)
+		_text(Vector2(c.x - 12, c.y + 21), "바람", 6, Color(0.75, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER, 24)
+		y += 32
+	if rations:
+		_text(Vector2(x, y + 2), "식량 창고 %d몫" % rations.store, 7, Color(0.75, 0.9, 1.0))
+		var fcol := Color(0.6, 0.85, 0.6) if rations.fullness >= Rations.HUNGRY else Color(1, 0.5, 0.4)
+		_bar(Rect2(x, y + 7, 70, 3), rations.fullness / 100.0, fcol)
+		_text(Vector2(x + 73, y + 11), "배부름", 6, fcol)
+		if at_sea:
+			_bar(Rect2(x, y + 13, 70, 2), rations.day_progress(), Color(0.7, 0.7, 0.75))
+			_text(Vector2(x + 73, y + 17), "하루 %d" % (rations.day + 1), 6, Color(0.7, 0.7, 0.75))
 
 
 func _draw_slots(p: Player) -> void:
+	if p.riding != null:
+		_draw_ship_slots(p)
+		return
 	var slots := [
 		["검" if p.weapon == "sword" else "활", Game.key_label("switch_weapon") + " 교체", 0.0, p.weapon == "sword"],
 		["연타" if p.weapon == "sword" else "조준", Game.key_label("attack") + "/클릭", 0.0, true],
@@ -390,6 +470,26 @@ func _draw_slots(p: Player) -> void:
 		_text(r.position + Vector2(0, w - 4), s[1], 6, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
 
 
+func _draw_ship_slots(p: Player) -> void:
+	var ship = p.riding
+	var slots := [
+		["노 +", Game.key_label("move_up"), 0.0, ship.gear < 2],
+		["노 −", Game.key_label("move_down"), 0.0, ship.gear > -1],
+		["키", "%s %s" % [Game.key_label("move_left"), Game.key_label("move_right")], 0.0, true],
+		["돛", Game.key_label("run"), 0.0, ship.sail],
+		["상륙", Game.key_label("interact"), 0.0, Game.level.find_interactable(p.global_position) != null],
+	]
+	var w := 34.0
+	var x0 := 320.0 - slots.size() * (w + 4) * 0.5
+	for i in slots.size():
+		var s: Array = slots[i]
+		var r := Rect2(x0 + i * (w + 4), 318.0, w, w)
+		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
+		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
+		_text(r.position + Vector2(0, 17), s[0], 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
+		_text(r.position + Vector2(0, w - 4), s[1], 6, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
+
+
 func _draw_boss() -> void:
 	if boss == null or not is_instance_valid(boss) or not boss.is_alive():
 		return
@@ -403,7 +503,7 @@ func _draw_interact(p: Player) -> void:
 	if it == null or dialogue.size() > 0:
 		return
 	var sp: Vector2 = get_viewport().get_canvas_transform() * (it.global_position + Vector2(0, -56))
-	var label := "[%s] " % Game.key_label("interact") + it.label + ("  (누르고 있기)" if it.progress >= 0.0 else "  (길게)" if it.hold_time > 0.0 else "")
+	var label := "[%s] " % Game.key_label("interact") + it.label + ("  (누르고 있기)" if it.progress >= 0.0 else "  (길게)" if it.hold_time > 0.0 and it.label.find("길게") < 0 else "")
 	var f: Font = Game.ui_font
 	var tw := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 10
 	var r := Rect2(sp.x - tw / 2, sp.y - 10, tw, 13)
@@ -509,29 +609,19 @@ func _draw_help() -> void:
 const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞"}
 
 
-## 클리어 결과: 시간·처치·들킨 횟수·경보·골라서 하는 목표, 경보 없이 끝내면 칭호
+## 클리어 결과: 챕터가 result_info로 준 글(제목·칭호·기록 줄·다음 안내)
 func _draw_clear_result() -> void:
-	var st := overlay_stats
-	_text(Vector2(0, 92), "CHAPTER 1 클리어", 12, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
-	_text(Vector2(0, 120), "트로이의 성문을 열었다", 18, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 640)
-	var title := ""
-	if st.get("alarms", 0) == 0 and st.get("detected", 0) == 0:
-		title = "칭호 「보이지 않는 자」 — 한 번도 들키지 않고 성문까지"
-	elif st.get("alarms", 0) == 0:
-		title = "칭호 「밤의 그림자」 — 경보 종 한 번 울리지 않고 성문까지"
-	if title != "":
-		_text(Vector2(0, 148), title, 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	var info: Dictionary = Game.level.result_info(overlay_stats) if Game.level else {}
+	_text(Vector2(0, 92), info.get("head", "클리어"), 12, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 120), info.get("title", ""), 18, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	if info.get("badge", "") != "":
+		_text(Vector2(0, 148), info["badge"], 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
 	else:
-		_text(Vector2(0, 148), "경보 종을 한 번도 울리지 않고 끝내면 칭호를 얻는다", 8, Color(0.7, 0.7, 0.7), HORIZONTAL_ALIGNMENT_CENTER, 640)
-	var t: float = st.get("time", 0.0)
-	var rows := [
-		"시간 %d분 %02d초   ·   처치 %d (조용히 %d)" % [int(t) / 60, int(t) % 60, st.get("kills", 0), st.get("silent", 0)],
-		"들킨 횟수 %d   ·   경보 %d   ·   부하가 쓰러진 횟수 %d   ·   체크포인트에서 다시 %d" % [st.get("detected", 0), st.get("alarms", 0), st.get("downs", 0), st.get("retries", 0)],
-		"골라서 하는 목표   %s 정찰병 구출   ·   %s 무기고 불태우기" % ["●" if st.get("scout", false) else "○", "●" if st.get("armory", false) else "○"],
-	]
+		_text(Vector2(0, 148), info.get("badge_hint", ""), 8, Color(0.7, 0.7, 0.7), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	var rows: Array = info.get("rows", [])
 	for i in rows.size():
 		_text(Vector2(0, 178 + i * 16), rows[i], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)
-	_text(Vector2(0, 240), "다음: CHAPTER 2 — 귀환의 시작 (준비 중)", 7, Color(0.65, 0.65, 0.65), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 240), info.get("next", ""), 7, Color(0.65, 0.65, 0.65), HORIZONTAL_ALIGNMENT_CENTER, 640)
 
 
 func _draw_overlay() -> void:
@@ -539,8 +629,8 @@ func _draw_overlay() -> void:
 	if overlay == "clear":
 		_draw_clear_result()
 		return
-	_text(Vector2(0, 150), "오디세우스가 쓰러졌다", 18, Color(1, 0.5, 0.45), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 150), Game.level.death_text if Game.level else "오디세우스가 쓰러졌다", 18, Color(1, 0.5, 0.45), HORIZONTAL_ALIGNMENT_CENTER, 640)
 	if not Game.checkpoint.is_empty():
-		_text(Vector2(0, 228), "체크포인트: " + CHECKPOINT_NAMES.get(Game.checkpoint["id"], "") + "  (골라서 하는 목표는 그대로)", 7, Color(0.55, 0.85, 1.0), HORIZONTAL_ALIGNMENT_CENTER, 640)
+		_text(Vector2(0, 228), "체크포인트: " + (Game.level.checkpoint_name(Game.checkpoint["id"]) if Game.level else "") + "  (골라서 하는 목표는 그대로)", 7, Color(0.55, 0.85, 1.0), HORIZONTAL_ALIGNMENT_CENTER, 640)
 	var t: float = overlay_stats.get("time", 0.0)
 	_text(Vector2(0, 212), "처치 %d   ·   부하가 쓰러진 횟수 %d   ·   %d분 %02d초" % [overlay_stats.get("kills", 0), overlay_stats.get("downs", 0), int(t) / 60, int(t) % 60], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)

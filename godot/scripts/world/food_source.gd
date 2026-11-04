@@ -2,6 +2,7 @@ class_name FoodSource
 extends Interactable
 ## 먹을 것이 있는 지점(docs/NUTRITION.md §4): 채집(나무·덤불·좌판·항아리) · 고기(잡은 동물이 남김) · 낚시터.
 ## 음식 값은 data/food.json. 길게 눌러 먹고, 다 먹으면 regrow초 뒤 다시 열린다(0이면 사라짐).
+## 배의 식량 창고가 있는 챕터(레벨에 rations)에서는 짧게 눌러 창고에 넣는다(부하 몫 — Rations.units_of).
 
 var food_id := ""
 var info: Dictionary = {}
@@ -19,6 +20,8 @@ func setup(id: String, look_kind := "") -> FoodSource:
 	look = look_kind
 	left = int(info.get("servings", 1))
 	label = "%s %s" % [info.get("name", id), info.get("verb", "먹기")]
+	if Game.level and Game.level.get("rations") != null and info.get("kind", "") != "fish":
+		label = "%s — 길게: %s · 짧게: 배 창고에(+%d)" % [info.get("name", id), info.get("verb", "먹기"), Rations.units_of(info)]
 	hold_time = 3.5 if info.get("kind", "") == "fish" else (1.0 if info.get("kind", "") == "meat" else 0.7)
 	radius = 26.0
 	on_use = _eat
@@ -37,6 +40,22 @@ func _eat(by) -> void:
 	by.eat(food_id)
 	if info.get("kind", "") == "fish":
 		Sfx.at("splash", global_position, -8.0)
+	_use_one()
+
+
+## 짧게: 배의 식량 창고에 넣는다(창고가 없는 챕터에서는 아무 일도 없음)
+func tap(by) -> void:
+	var r = Game.level.get("rations") if Game.level else null
+	if r == null or not by is Player or info.get("kind", "") == "fish":
+		return
+	var n: int = r.add(Rations.units_of(info))
+	Fx.text(global_position + Vector2(0, -30), "창고 +%d" % n if n > 0 else "창고가 가득 찼다", Color(0.75, 0.9, 1.0))
+	Sfx.play("ui_ok", -10.0)
+	Game.stats["stored"] = Game.stats.get("stored", 0) + n
+	_use_one()
+
+
+func _use_one() -> void:
 	left -= 1
 	if left > 0:
 		return

@@ -1,7 +1,7 @@
 extends Node
 ## 타이틀 메뉴 → 챕터 시작 → 클리어/사망 화면 → 다시 하기·타이틀.
 ## 검증용 인자(godot --path . -- <인자>):
-##   --play         타이틀을 건너뛰고 바로 챕터 1
+##   --play         타이틀을 건너뛰고 바로 챕터 1 (--chapter=2면 챕터 2. --auto·--shot 등과 같이 써도 된다)
 ##   --continue     저장된 마지막 체크포인트(user://save.json)에서 바로 이어 하기
 ##   --auto         자동 플레이(봇이 퀘스트를 끝까지 진행, 들키면 싸워서 지나감)
 ##   --auto=stealth 잠입 봇: 알아채지 못한 적은 활·뒤 처치로 조용히 쓰러뜨리며 지나감(경보 0이 목표)
@@ -16,7 +16,7 @@ extends Node
 
 const CHAPTERS := [
 	["CHAPTER 1", "트로이의 목마", "트로이 성에 잠입하라", true],
-	["CHAPTER 2", "귀환의 시작", "배를 몰아 이타카로", false],
+	["CHAPTER 2", "귀환의 시작", "이스마로스 약탈과 첫 항해", true],
 	["CHAPTER 3", "외눈박이 거인", "폴리페모스의 동굴에서 탈출하라", false],
 	["CHAPTER 4", "키르케의 섬", "돼지가 된 부하들을 구하라", false],
 	["CHAPTER 5", "세이렌의 유혹", "노래를 견디고 해역을 빠져나가라", false],
@@ -36,8 +36,8 @@ func _ready() -> void:
 	if args.has("continue") and not Game.progress.get("checkpoint", {}).is_empty():
 		Game.checkpoint = Game.progress["checkpoint"].duplicate(true)
 		start_chapter(true)
-	elif args.has("play") or args.has("auto") or args.has("start") or args.has("showcase"):
-		start_chapter()
+	elif args.has("play") or args.has("auto") or args.has("start") or args.has("showcase") or args.has("chapter"):
+		start_chapter(false, int(args.get("chapter", "1")))
 	else:
 		_show_menu()
 	if args.has("menu") and hud:
@@ -53,11 +53,26 @@ func _ready() -> void:
 		_report_and_quit()
 
 
+## 챕터 번호 → 레벨 클래스
+static func make_level(n: int) -> IsoLevel:
+	match n:
+		2:
+			return Chapter2Ismaros.new()
+	return Chapter1Troy.new()
+
+
 ## from_checkpoint면 마지막 체크포인트(Game.checkpoint)의 기록·골라서 하는 목표로 그 자리부터 다시 시작한다.
-func start_chapter(from_checkpoint := false) -> void:
+## n: 챕터 번호(체크포인트에서 다시 할 때는 체크포인트에 적힌 챕터)
+func start_chapter(from_checkpoint := false, n := -1) -> void:
 	_clear()
 	get_tree().paused = false
 	var cp: Dictionary = Game.checkpoint if from_checkpoint else {}
+	if n < 1:
+		n = int(cp.get("chapter", Game.chapter)) if not cp.is_empty() else Game.chapter
+	n = clampi(n, 1, CHAPTERS.size())
+	if not CHAPTERS[n - 1][3]:
+		n = 1
+	Game.chapter = n
 	Game.reset_run()
 	Game.checkpoint = {}
 	if not cp.is_empty():
@@ -66,34 +81,33 @@ func start_chapter(from_checkpoint := false) -> void:
 			if k != "time" and Game.stats[k] is float:
 				Game.stats[k] = int(Game.stats[k])
 		Game.stats["retries"] = Game.stats.get("retries", 0) + 1
-	Game.apply_chapter_outfit(1)
-	level = Chapter1Troy.new()
+	Game.apply_chapter_outfit(n)
+	level = make_level(n)
 	add_child(level)
 	hud = Hud.new()
 	add_child(hud)
-	hud.restart_requested.connect(start_chapter)
+	hud.restart_requested.connect(func(): start_chapter(false, Game.chapter))
 	hud.menu_requested.connect(_show_menu)
 	hud.checkpoint_requested.connect(func(): start_chapter(true))
+	hud.next_requested.connect(func(): start_chapter(false, Game.chapter + 1))
 	if not cp.is_empty():
-		(level as Chapter1Troy).restore_checkpoint(cp)
+		level.restore_checkpoint(cp)
 		return
-	var c: Array = CHAPTERS[0]
+	var c: Array = CHAPTERS[n - 1]
 	hud.show_title([c[0], c[1], c[2]])
 	if args.has("god"):
 		level.player.max_hp = 99999.0
 		level.player.hp = 99999.0
-	if args.has("showcase"):
+		level.set("god", true)
+	if args.has("showcase") and n == 1:
 		_showcase()
 	if args.has("at"):
 		var xy := String(args["at"]).split(",")
 		level.player.position = Iso.grid_to_world(Vector2(float(xy[0]), float(xy[1])))
-		level.sinon.talk.enabled = false
-	if args.get("start", "") == "gate":
-		(level as Chapter1Troy).skip_to_gate()
-	elif args.get("start", "") == "winch":
-		(level as Chapter1Troy).skip_to_winch()
-	elif args.get("start", "") == "ending":
-		(level as Chapter1Troy).skip_to_ending()
+		if n == 1:
+			level.sinon.talk.enabled = false
+	if args.has("start"):
+		level.skip_to(String(args["start"]))
 
 
 func _showcase() -> void:
@@ -163,7 +177,7 @@ func _show_menu() -> void:
 	# 이어 하기: 저장된 마지막 체크포인트(user://save.json)
 	var saved: Dictionary = Game.progress.get("checkpoint", {})
 	if not saved.is_empty():
-		var cb := _menu_button("이어 하기 — CHAPTER 1 · 체크포인트: %s" % Hud.CHECKPOINT_NAMES.get(saved.get("id", ""), "?"), y, func():
+		var cb := _menu_button("이어 하기 — CHAPTER %d · 체크포인트: %s" % [int(saved.get("chapter", 1)), Hud.CHECKPOINT_NAMES.get(saved.get("id", ""), "?")], y, func():
 			Game.checkpoint = saved.duplicate(true)
 			start_chapter(true))
 		first = cb
@@ -171,7 +185,8 @@ func _show_menu() -> void:
 	for i in CHAPTERS.size():
 		var c: Array = CHAPTERS[i]
 		var done := "  ✓" if Game.is_cleared(i + 1) else ""
-		var b := _menu_button("%s  %s%s%s" % [c[0], c[1], done, "" if c[3] else "  (준비 중)"], y, start_chapter)
+		var ch := i + 1
+		var b := _menu_button("%s  %s%s%s" % [c[0], c[1], done, "" if c[3] else "  (준비 중)"], y, func(): start_chapter(false, ch))
 		b.disabled = not c[3]
 		if first == null and c[3]:
 			first = b
@@ -228,7 +243,7 @@ func _take_shot(path: String, delay: float, count := 1) -> void:
 
 func _report_and_quit() -> void:
 	var lv = level
-	var info := {"stats": Game.stats}
+	var info := {"chapter": Game.chapter, "stats": Game.stats}
 	if lv and is_instance_valid(lv):
 		info["step"] = lv.get("step")
 		info["capture"] = lv.get("capture")
@@ -242,6 +257,7 @@ func _report_and_quit() -> void:
 		info["squad_hp"] = Game.squad.members.map(func(m): return int(m.hp))
 		info["food"] = Game.player.nutrition.state()
 		info["animals"] = get_tree().get_nodes_in_group("animals").map(func(a): return "%s %s" % [a.kind, Iso.world_to_grid(a.global_position).snapped(Vector2(0.1, 0.1))])
+		info.merge(lv.report())
 	print("REPORT ", JSON.stringify(info))
 	# 소리를 멈추고 오디오 스레드가 놓을 때까지 두 프레임 기다린 뒤 끝낸다(끝낼 때 남는 재생 경고 줄이기)
 	Sfx.clear()

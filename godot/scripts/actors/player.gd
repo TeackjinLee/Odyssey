@@ -61,6 +61,8 @@ var _reach_flash: Array = []
 var weapons: WeaponLayer
 ## 연출(Game.cutscene)에서 걸어갈 자리 (INF면 제자리)
 var script_goal := Vector2.INF
+## 타고 있는 배(Ship). 타는 동안은 숨겨지고, 배가 키 입력을 받는다(챕터 2 항해 모드)
+var riding: Node2D = null
 
 
 func _ready() -> void:
@@ -87,6 +89,43 @@ func _ready() -> void:
 	light.texture_scale = 0.9
 	light.position = Vector2(0, -16)
 	add_child(light)
+
+
+## 배에 타기(ship) / 내리기(null). 내릴 때는 레벨이 자리를 옮긴다
+func set_riding(ship: Node2D) -> void:
+	riding = ship
+	visible = ship == null
+	_shape.set_deferred("disabled", ship != null)
+	move_vel = Vector2.ZERO
+	knock = Vector2.ZERO
+	interact_target = null
+	if ship:
+		remove_from_group("actors")
+		set_state(St.IDLE)
+	elif not is_in_group("actors"):
+		add_to_group("actors")
+
+
+func _physics_process(delta: float) -> void:
+	if riding == null:
+		super._physics_process(delta)
+		return
+	# 배 위: 몸은 배를 따라가고, 영양·회복만 돈다. 상호작용(상륙 등)만 받는다
+	global_position = riding.global_position
+	velocity = Vector2.ZERO
+	state_time += delta
+	since_hurt += delta
+	update_buff(delta)
+	stamina = minf(max_stamina, stamina + 28.0 * delta)
+	if since_hurt > 5.0:
+		hp = minf(max_hp, hp + max_hp * 0.04 * regen_mult() * delta)
+	_update_nutrition(delta)
+	if Game.cutscene:
+		return
+	if Game.autoplay or Input.is_action_just_pressed("interact"):
+		var it: Interactable = Game.level.find_interactable(global_position)
+		if it:
+			it.use(self)
 
 
 func _input(event: InputEvent) -> void:
@@ -377,6 +416,10 @@ func _interact_update(delta: float) -> void:
 	var it := interact_target
 	if not inp["interact_held"] or it == null or not is_instance_valid(it) or not it.enabled \
 			or it.global_position.distance_to(global_position) > it.radius + 8.0:
+		# 짧게 눌렀다 뗌: 짧게 쓰는 기능이 있는 지점(음식 → 배의 식량 창고에 넣기)
+		if not inp["interact_held"] and it and is_instance_valid(it) and it.enabled \
+				and interact_progress < Interactable.TAP_TIME and it.has_method("tap"):
+			it.tap(self)
 		interact_target = null
 		set_state(St.IDLE)
 		return

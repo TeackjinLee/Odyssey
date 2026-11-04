@@ -29,6 +29,16 @@ var sight_layer: Node2D
 var player: Player
 var squad: Squad
 var chapter_title := ""
+## 미니맵 아래 이름, 결과 화면 "다음 챕터" 단추(0이면 없음), 쓰러졌을 때 문구
+var area_name := ""
+var next_chapter := 0
+var death_text := "오디세우스가 쓰러졌다"
+## --god (흐름 확인용: 배도 가라앉지 않음)
+var god := false
+## 미니맵에 땅(물이 아닌 바닥)도 그림 — 바다 챕터
+var minimap_land := false
+## 암초 칸(배가 못 지나감. 사람에게는 어차피 물이라 막힘)
+var reefs: Dictionary = {}
 var _source_id := 0
 var _cam_pos := Vector2.ZERO
 ## 연출: 카메라가 오디세우스 대신 따라갈 것(null이면 오디세우스)
@@ -86,6 +96,32 @@ func build() -> void:
 
 func start() -> void:
 	pass
+
+
+# ── 챕터가 채우는 것(main·HUD가 부른다) ──────────────────
+## 체크포인트에서 다시(Game.checkpoint 모양은 챕터마다)
+func restore_checkpoint(_cp: Dictionary) -> void:
+	pass
+
+
+## 검증용 --start=<id>
+func skip_to(_id: String) -> void:
+	pass
+
+
+## 체크포인트 이름(HUD·타이틀 메뉴)
+func checkpoint_name(id: String) -> String:
+	return id
+
+
+## 봇 REPORT에 더할 값
+func report() -> Dictionary:
+	return {}
+
+
+## 결과 화면: {"head", "title", "badge"(칭호, 없으면 ""), "badge_hint", "rows": [글…], "next"(다음 안내)}
+func result_info(_st: Dictionary) -> Dictionary:
+	return {"head": chapter_title, "title": "", "badge": "", "badge_hint": "", "rows": [], "next": ""}
 
 
 # ── 지형 ─────────────────────────────────────────────
@@ -412,6 +448,15 @@ func light_at(pos: Vector2) -> float:
 		if t < 1.0:
 			sum += l[1] * l[4] * (1.0 - t * 0.55 / 0.45 if t < 0.45 else 0.45 * (1.0 - t) / 0.55)
 	return pow(clampf(sum / 0.5, 0.0, 1.0), 1.5)
+
+
+func is_reef(c: Vector2i) -> bool:
+	return reefs.has(c)
+
+
+## 배가 지나갈 수 있는 칸: 맵 안의 물이고 암초가 아님
+func sea_ok(c: Vector2i) -> bool:
+	return in_bounds(c) and floor_kind.get(c, "") == "water" and not reefs.has(c)
 
 
 func in_bounds(c: Vector2i) -> bool:

@@ -136,6 +136,8 @@ var ending_done := false
 func build() -> void:
 	Lines.use("res://data/dialogue/ch1.json")
 	chapter_title = Lines.t("meta.chapter_title")
+	area_name = Lines.t("meta.area")
+	next_chapter = 2
 	W = 48
 	H = 50
 	canvas_mod.color = Color(0.5, 0.5, 0.74)
@@ -440,7 +442,7 @@ func _spawn_crew(at: Vector2) -> void:
 
 # ── 체크포인트 ──────────────────────────────────────
 func _save_checkpoint(id: String) -> void:
-	Game.checkpoint = {"id": id, "stats": Game.stats.duplicate(), "scout": scout_freed, "armory": armory_burned,
+	Game.checkpoint = {"chapter": 1, "id": id, "stats": Game.stats.duplicate(), "scout": scout_freed, "armory": armory_burned,
 		"guards": guard_group.size(), "food": player.nutrition.state()}
 	Game.save_progress()
 	if id != "stealth":
@@ -473,6 +475,43 @@ func restore_checkpoint(cp: Dictionary) -> void:
 		_add_scout(player.global_position + Vector2(-20, 24))
 		_refresh_side()
 	Game.show_hint(Lines.t("hint.checkpoint"))
+
+
+## 검증용 --start=gate|winch|ending
+func skip_to(id: String) -> void:
+	match id:
+		"gate":
+			skip_to_gate()
+		"winch":
+			skip_to_winch()
+		"ending":
+			skip_to_ending()
+
+
+func checkpoint_name(id: String) -> String:
+	return Hud.CHECKPOINT_NAMES.get(id, id)
+
+
+func report() -> Dictionary:
+	return {"capture": capture, "gate_open": gate_open, "ending": ending_done, "scout": scout_freed, "armory": armory_burned}
+
+
+## 클리어 결과: 시간·처치·들킨 횟수·경보·골라서 하는 목표, 경보 없이 끝내면 칭호
+func result_info(st: Dictionary) -> Dictionary:
+	var badge := ""
+	if st.get("alarms", 0) == 0 and st.get("detected", 0) == 0:
+		badge = "칭호 「보이지 않는 자」 — 한 번도 들키지 않고 성문까지"
+	elif st.get("alarms", 0) == 0:
+		badge = "칭호 「밤의 그림자」 — 경보 종 한 번 울리지 않고 성문까지"
+	var t: float = st.get("time", 0.0)
+	return {"head": "CHAPTER 1 클리어", "title": "트로이의 성문을 열었다", "badge": badge,
+		"badge_hint": "경보 종을 한 번도 울리지 않고 끝내면 칭호를 얻는다",
+		"rows": [
+			"시간 %d분 %02d초   ·   처치 %d (조용히 %d)" % [int(t) / 60, int(t) % 60, st.get("kills", 0), st.get("silent", 0)],
+			"들킨 횟수 %d   ·   경보 %d   ·   부하가 쓰러진 횟수 %d   ·   체크포인트에서 다시 %d" % [st.get("detected", 0), st.get("alarms", 0), st.get("downs", 0), st.get("retries", 0)],
+			"골라서 하는 목표   %s 정찰병 구출   ·   %s 무기고 불태우기" % ["●" if st.get("scout", false) else "○", "●" if st.get("armory", false) else "○"],
+		],
+		"next": "다음: CHAPTER 2 — 귀환의 시작 (영양·부하를 이어받는다)"}
 
 
 ## 검증용(--start=gate): 잠입을 건너뛰고 부하와 함께 성문 경비대 앞에서 시작
@@ -1237,6 +1276,11 @@ func _end_ending() -> void:
 	ending_done = true
 	sail_stop()
 	Game.mark_cleared(1)
+	# 챕터 2로 넘길 것: 오디세우스 영양, 살아 나온 부하(정찰병 포함), 트로이에서 실은 식량
+	var crew := []
+	for c in squad.members:
+		crew.append([c.role, c.display_name])
+	Game.set_carry(2, {"food": player.nutrition.state(), "crew": crew, "rations": 6, "fullness": 100.0})
 	Game.cutscene = false
 	if Game.hud:
 		Game.hud.cinematic = false

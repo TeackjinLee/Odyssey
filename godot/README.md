@@ -10,10 +10,12 @@
 | [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
 | [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
 | [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
-| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`) |
+| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`), 챕터 2 맵·항해 모드([CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md)) |
+| [docs/NUTRITION.md](docs/NUTRITION.md) | 영양(탄수화물·단백질·지방)·채집·사냥·낚시·배의 식량 창고 — 모든 챕터 공통 |
 
-현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지 플레이할 수 있다. 진행은 체크포인트마다 저장되어
-타이틀의 "이어 하기"로 이어서 한다.
+현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지, **CHAPTER 2 — 귀환의 시작**(항해 모드 기반: 이스마로스 약탈과 탈출)을
+끝까지 플레이할 수 있다. 챕터 1을 깨면 결과 화면의 "다음 챕터"로 넘어가고 영양·살아남은 부하를 이어받는다.
+진행은 체크포인트마다 저장되어 타이틀의 "이어 하기"로 이어서 한다.
 
 ## 실행
 
@@ -22,6 +24,7 @@ Godot 4.7 이상(`brew install --cask godot`). 이 폴더에서:
 ```bash
 godot --path .                # 타이틀 화면부터
 godot --path . -- --play      # 바로 챕터 1
+godot --path . -- --chapter=2 # 바로 챕터 2 (챕터 1을 깬 적이 없으면 기본 영양·부하 셋)
 godot -e --path .             # 에디터로 열기
 ```
 
@@ -96,6 +99,25 @@ Master/Music/SFX), 전체 화면, 키 바꾸기(동작을 누르고 새 키, Esc
 7. 클리어 화면 — 시간·처치(조용히)·들킨 횟수·경보·부하가 쓰러진 횟수·체크포인트에서 다시 한 횟수·골라서 하는 목표.
    경보 0이면 칭호 「밤의 그림자」, 한 번도 안 들키면 「보이지 않는 자」. 타이틀의 챕터 이름 옆에 ✓
 
+## 챕터 2 진행 (항해 모드 기반)
+
+맵은 64×56칸, 거의 바다다. 오른쪽 위가 키코네스족의 땅 **이스마로스**, 가운데 작은 섬과 암초들. 자세한 것은 [docs/maps/CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md).
+
+1. **항해** — 오디세우스는 갤리선을 몬다(몸은 배 위에 숨고 배가 키를 받는다). W/S 노 단계(뒤로·멈춤·천천히·힘껏 — 힘껏은
+   노꾼 힘을 쓴다), A/D 키(느리면 잘 안 돎), Shift 돛(바람을 등지면 빨라지고 맞바람에 펴면 밀림). 해안·암초에 빠르게 부딪히면 선체가 상한다.
+   오른쪽 위 배 칸: 선체·노 단계·노꾼 힘·돛·바람 나침반·식량 창고·부하 배부름·항해 하루. 하단 슬롯도 배 조작으로 바뀐다
+2. **상륙** — 해안 표시에 배를 멈추고 E. 부하 셋(챕터 1에서 정찰병을 구했으면 넷)과 내린다
+3. **약탈** — 키코네스 마을의 곡식 창고 셋을 길게 E로 턴다(창고 하나 = 식량 5몫). 양·염소·닭, 올리브·산딸기·무화과·잣.
+   음식은 **길게 E = 오디세우스가 먹기, 짧게 E = 배 창고에 넣기**
+4. **반격** — 마지막 창고를 털면 새벽, 해안 양쪽에서 먼저, 이어 내륙에서 두 번 키코네스족이 몰려온다(마지막엔 전사장 — 보스).
+   해안의 배 앞에서 E를 4초 길게 눌러 **배를 띄운다**(맞으면 끊김 — 2 위치 사수로 부하를 곁에). 260px보다 멀리 쓰러진 부하는 두고 간다
+5. **탈출** — 제우스의 북풍이 남쪽으로 세게 분다. 해안에서 떠난 키코네스 배 셋이 쫓아와 화살을 쏜다. 갑판의 궁병·창병이 맞쏘고,
+   힘껏 저어 뱃머리로 들이받으면 크게 부서진다. 화면 아래쪽 먼바다(57~63, 49~55)에 닿으면 클리어 — 하루가 지나 부하가 창고에서 먹는다.
+   부하를 하나도 잃지 않으면 칭호 「아무도 두고 오지 않은 자」
+
+**식량 창고**: 항해 하루(배 위 50초)마다 부하가 1몫씩 먹는다. 모자라면 배부름이 줄고, 50 아래면 부하의 회복·공격력(갑판 사격 포함)이 준다.
+챕터 2 체크포인트: 상륙 · 반격 시작 · 출항.
+
 **체크포인트**: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 쓰러지면 "체크포인트에서 다시"로 그 단계부터 하고,
 골라서 하는 목표(정찰병·무기고)와 경보로 는 경비는 그대로, 기록은 체크포인트 때 값으로 돌아간다(`chapter1_troy.gd`의 `restore_checkpoint`).
 
@@ -115,6 +137,9 @@ scripts/
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
     chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
+    chapter2_ismaros.gd 챕터 2 바다 맵·상륙/약탈/반격/승선/탈출·바다 길찾기(sea_path)·바람
+    ship.gd            배(Ship): 관성 이동·노 단계·돛·바람·키·암초 충돌·들이받기·갑판 사격·적 배 AI·봇, 임시 그림
+    rations.gd         배의 식량 창고와 부하 배부름(항해 하루마다 먹음) — docs/NUTRITION.md §7
     food_source.gd     먹을 것이 있는 지점(채집·고기·낚시터) — 음식 값은 data/food.json
     lines.gd           챕터 글 읽기(Lines): data/dialogue/<챕터>.json의 대사·튜토리얼 카드·목표·알림·이름
     squad.gd           부대 명령과 진형(넓으면 V자, 좁으면 한 줄)
@@ -134,6 +159,7 @@ scripts/
   ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
 data/food.json         음식 표(탄·단·지, 먹는 횟수, 다시 열리는 시간)
 data/dialogue/common.json 모든 챕터가 같이 쓰는 글(영양 안내 등)
+data/dialogue/ch2.json 챕터 2 글
 data/dialogue/ch1.json 챕터 1 글 — 대사·튜토리얼 카드·목표·알림. 글 속 {동작}(예: {interact})은 지금 묶인 키로 보인다
 assets/                생성된 임시 그림 (sprites/, env/, ui/) · 소리 (audio/sfx·amb·music)
 tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 소리는 ffmpeg)
@@ -242,13 +268,16 @@ godot --path . -- --start=ending                                  # 바로 엔�
 godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기
 godot --path . -- --start=gate --menu=settings                    # 설정 화면을 띄운 채로(--menu=pause는 일시정지)
 godot --path . -- --continue                                      # 저장된 체크포인트에서 바로 이어 하기
+godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=300   # 챕터 2 봇: 항해 → 상륙 → 약탈 → 반격 → 승선 → 탈출
+godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 상륙한 뒤부터 (--start=retreat 반격, --start=escape 출항)
 ```
 
 `--fixed-fps 60`(Godot 엔진 인자)을 주면 한 프레임을 늘 1/60초로 치고 실시간을 기다리지 않아 몇 배 빨리 끝난다.
 느린 컴퓨터에서 실시간으로 돌리면 프레임이 떨어져 봇이 지는 일이 있으니 봇 검증은 이 인자로 한다.
 마지막 대규모 전투에 무작위가 섞여 있으니 봇은 2~3번 돌려 본다.
 
-`--god`(무적), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
+`--god`(무적, 배도 안 가라앉음), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
+챕터 2는 `ending`이 true면 클리어 — `hull`(선체), `rations`(창고)·`fullness`(배부름)·`day`, `crew`·`lost`(잃은 부하), `looted`, `boats`(남은 적 배)도 찍힌다.
 
 ## 수치 조정
 
@@ -262,3 +291,6 @@ godot --path . -- --continue                                      # 저장된 �
   부대 특수 명령 `squad.gd`의 `SPECIAL_CD`, `companion.gd`의 `WALL_TIME`·`JAVELIN_*`
 - 튜토리얼 카드: `chapter1_troy.gd`의 `_tut()`(줄에 넣기)·`_tut_once()`(한 번만)·`_tut_urgent()`(바로 띄우기)·`_watch_firsts()`, 그리는 곳 `hud.gd`의 `_draw_tutorial()`
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`
+- 배: `ship.gd`의 `OAR_SPEED`·`SAIL_SPEED`·`ACCEL`·`TURN_RATE`·`TURN_FULL`·`ROW_DRAIN`·`BUMP_*`·`RAM_*`·`DECK_FIRE`, 적 배 `as_enemy_boat()`
+- 챕터 2 흐름: `chapter2_ismaros.gd`의 `LAND_SPEED`·`LOOT_UNITS`·`CARRY_DIST`·`COUNTER_*`·`LAUNCH_TIME`·`REEFS`·`BOATS`, 바람 `_wind_base`·`wind_strength`
+- 식량 창고: `rations.gd`의 `DAY_LEN`·`FED_GAIN`·`MISS_LOSS`·`HUNGRY`·`START_STORE`
