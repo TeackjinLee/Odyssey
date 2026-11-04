@@ -1,0 +1,15 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) layout.png = the layout reference: pixel-art isometric chibi hero ODYSSEUS (bare head, gold bronze armor) with EMPTY HANDS, shown in a grid on magenta. Columns = animation frames, rows top to bottom = facing directions: row 1 SOUTH (front, facing viewer), row 2 SOUTH-EAST, row 3 EAST (right side), row 4 NORTH-EAST (back-right), row 5 NORTH (back, facing away).
+2) weapons.png = the weapon designs to use: a short bronze sword, and a round bronze shield with a red center disk, shown from front, three-quarter, side and back.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+TASK: redraw the EXACT same grid (6 columns x 5 rows: a charged spin slash (crouch, coil, spin out, spin back, sweep, finish)), same cell positions, same size, same body poses, same face/armor/hair/colors, same pixel style and magenta #FF00FF background - but now the hero HOLDS the weapons in every cell:
+- RIGHT hand (the striking fist, the arm that swings): the short bronze sword with a gold hilt, blade pointing along the swing: the blade is the continuation of the forearm and points in the direction the fist travels / the arm points. During the swing the blade points forward-and-across; at wind-up it points back/up; in overhead frames it points up then down. The blade must clearly look different from frame to frame, following the arm.
+- LEFT hand: the round bronze shield strapped to the left forearm, held in front of the chest/guard. Keep the left arm exactly as in the layout.
+- DEPTH IS IMPORTANT: if the shield or the sword is on the far side of the body from the camera, it is PARTLY HIDDEN behind the torso/head/legs (occluded) - draw only the visible part. Back views (row 4 and 5): the shield arm is away from the camera side / mostly hidden behind the body; show only the rim peeking out or the shield's outer face from behind. Sword in a back view: hand and hilt in front of nothing special, but the blade passes behind the body when it points away from the camera.
+- Keep the shield facing the correct way: in front/three-quarter views we see its red face; in side view we see its thin edge; in back views we see the plain back with strap.
+- Sizes: sword blade length about the hero's torso height; shield diameter about the hero's head size times 1.3.
+- Nothing else changes: no labels, no text, no numbers, no grid lines, no shadows, no motion blur, no speed lines.
+- Pixel art, crisp 1px dark outlines, no anti-aliasing.
+- Frames 3-5 are the spin: the sword arm is extended straight out to the side with the blade continuing the arm outward.
+Output: ONE image 2560x1536, the same grid as layout.png, every figure exactly in its cell, nothing cut off (leave room for the sword tips).

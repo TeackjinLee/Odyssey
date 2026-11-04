@@ -1,0 +1,11 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) pose.png = the hero standing in the NORTH-EAST facing (we see his BACK and right shoulder, he looks toward the upper-right).
+2) side.png = the SAME 4-frame bow shot seen from the side (EAST). Copy this motion, but seen from the north-east camera angle.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame BOW SHOT animation of the SAME hero as pose.png (same helmet, crest, red cape, star shield slung on his back next to the quiver, the sword in a scabbard at his left hip), seen from the NORTH-EAST: we see his BACK and right shoulder.
+He shoots toward the UPPER-RIGHT corner of the image: the arrow and the left arm holding the bow point UP-RIGHT at about 45 degrees, away from the viewer, the bow is foreshortened and partly hidden by his left shoulder, the right elbow is pulled back toward the viewer.
+Frame 1 nock (bow raised up-right), frame 2 half draw, frame 3 full draw (right hand at his cheek), frame 4 release (arrow gone, right hand snapping back). The arrow is NEVER horizontal.
+
+Layout: ONE image 1536x1024, 2 columns x 2 rows, every cell 768x512, frames in reading order. Same character size as pose.png (about 320px tall), feet on the same ground line near the bottom of each cell.
+Style: solid flat magenta background #FF00FF, no shadow, no text; crisp pixel art like pose.png, 1px dark outline, isometric 3/4 top-down view.

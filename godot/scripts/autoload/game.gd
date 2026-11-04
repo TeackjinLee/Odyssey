@@ -22,6 +22,14 @@ var side_markers: Array = []
 var autoplay := false
 ## 자동 플레이 봇이 들키지 않게 활·뒤 처치로 지나가는지 (--auto=stealth)
 var stealth_bot := false
+## 오디세우스가 입은 옷(= assets/sprites/<이름>.png). 시트가 없는 이름은 기본 옷으로 돌아간다
+const OUTFITS := ["odysseus_ch1", "odysseus", "odysseus_helm", "odysseus_king", "odysseus_sea", "odysseus_beggar", "odysseus_beggar_hood"]
+## 챕터별 기본 옷(기획: 전투 갑옷 1·3·4, 항해복 2·5, 거지 변장 6). 시트가 없으면 기본 옷
+const CHAPTER_OUTFITS := {1: "odysseus_ch1", 2: "odysseus_sea", 3: "odysseus_king", 4: "odysseus_king", 5: "odysseus_sea", 6: "odysseus_beggar_hood"}
+## 무기를 숨기는 옷(변장)
+const UNARMED_OUTFITS := ["odysseus_beggar", "odysseus_beggar_hood"]
+var outfit := "odysseus"
+var outfit_locked := false   # --outfit으로 골랐으면 챕터가 바꾸지 않는다
 ## 연출 중: 오디세우스가 입력을 받지 않는다(Player.script_goal이 있으면 그리로 걷는다)
 var cutscene := false
 var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "detected": 0, "retries": 0}
@@ -89,6 +97,31 @@ func _ready() -> void:
 	if pg is Dictionary:
 		progress.merge(pg, true)
 	apply_settings()
+	for a in cmd:
+		if a.begins_with("--outfit="):
+			set_outfit(a.get_slice("=", 1))
+			outfit_locked = true
+
+
+## 옷을 바꾼다. 시트가 있는 이름만 받는다. 플레이어가 있으면 바로 갈아입힌다
+func set_outfit(id: String) -> void:
+	if not ResourceLoader.exists("res://assets/sprites/%s.png" % id):
+		return
+	outfit = id
+	if player and player.has_method("wear"):
+		player.wear(id)
+
+
+## 챕터 번호(1부터)의 기본 옷으로 갈아입는다
+func apply_chapter_outfit(chapter: int) -> void:
+	if not outfit_locked:
+		set_outfit(CHAPTER_OUTFITS.get(chapter, "odysseus"))
+
+
+## 입을 수 있는 다음 옷(시트가 있는 것만)
+func next_outfit() -> String:
+	var have: Array = OUTFITS.filter(func(n): return ResourceLoader.exists("res://assets/sprites/%s.png" % n))
+	return have[(have.find(outfit) + 1) % have.size()] if have.size() > 0 else outfit
 
 
 # ── 설정·저장 ─────────────────────────────────────────
@@ -164,7 +197,7 @@ func reset_keys() -> void:
 	settings["keys"] = {}
 	for action in KEYS:
 		_set_keys(action, KEYS[action])
-	_set_keys("attack", [KEY_J])
+	_set_keys("attack", [KEY_Z])
 	_set_keys("block", [KEY_K])
 	save_settings()
 
@@ -225,9 +258,9 @@ func _register_input() -> void:
 		var mb := InputEventMouseButton.new()
 		mb.button_index = pair[1]
 		InputMap.action_add_event(pair[0], mb)
-	var j := InputEventKey.new()
-	j.physical_keycode = KEY_J
-	InputMap.action_add_event("attack", j)
+	var z := InputEventKey.new()
+	z.physical_keycode = KEY_Z
+	InputMap.action_add_event("attack", z)
 	var k := InputEventKey.new()
 	k.physical_keycode = KEY_K
 	InputMap.action_add_event("block", k)

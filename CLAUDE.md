@@ -37,9 +37,8 @@ godot --path . -- --play --god --at=37,38                # 오디세우스를 �
 python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
 python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로, 끝에서 gen_env_redraw가 받은 troy_city·troy_coast로 덮어씀)
 python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
-python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (병사는 --sheet=<시트>)
-python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (병사는 --sheet=<시트>)
-python3 tools/gen_soldier.py . [시트]                   # 병사·NPC 원본(<시트>_8dir.webp + 동작 줄) → assets/sprites/<시트>.*
+python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (다른 캐릭터·옷: SPRITE_CHAR=<이름>)
+python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
 python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
 python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)
 ```

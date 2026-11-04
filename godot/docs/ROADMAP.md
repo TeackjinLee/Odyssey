@@ -42,7 +42,8 @@
 - [ ] 오디세우스 나머지 7동작 `C-ODY-idle` `-hit` `-death` `-block` `-dodge` `-bow` `-interact` (요청 14개 준비됨)
 - [ ] 오디세우스 투구·망토 레이어 `C-ODY-helmet` `-cape`
 - [ ] 무기: 검·방패 4면·활(평상·당김) `W-*`
-- [ ] 병사 7종 + 시논: 기본 8방향 8장 → 동작 (`C-GRK-*` `C-TRO-*` `C-NPC-sinon`)
+- [x] 병사 7종 기본 8방향 + 걷기·공격·피격·쓰러짐(대장은 공격3·강공격까지) — 다른 컴퓨터 작업에서 받아 시트화
+- [ ] 시논(`C-NPC-sinon`)·병사 나머지 동작(달리기·막기·구르기 등은 지금 기본 포즈 변형)
 - [ ] 환경 추가: 경보 종·권양기·화로·그리스 깃발·꺼진 횃불·열린 성문·탄 집 4 + 무기고(멀쩡·탄)·짐더미 `E-TROY-*` — 안내 그림 요청 `env_requests/extra_redraw` 준비됨(받으면 `gen_env_extra.py`가 바로 잘라 넣음)
 - [x] 맵 개편용: 신전·분수·종탑·좌판(`troy_city`), 해안·부두·배·나무(`troy_coast`) — 안내 그림판으로 다시 그려 받음, 바다는 셰이더 — [maps/CH1_TROY.md](maps/CH1_TROY.md) §4
 - [ ] 이펙트 한 장: 타격·패링·막힘·먼지·함성 고리·조용한 처치 `F-*`
@@ -51,9 +52,9 @@
 코드
 - [ ] 받은 나머지 7동작 넣기: `gen_hero.py`에 손 위치, `.json`의 `drawn`, `pack_strip.py`의 `FLIGHT`/`HEAD_SCALE` 정하기
 - [ ] 투구·망토 레이어: 몸 그림에서 머리·어깨 자동 찾기 + 틀린 프레임 표, 챕터 스크립트의 `outfit = {body, head, cape}` (OUTFIT.md)
-- [x] 병사 변환: `split_rows.py`·`pack_strip.py --sheet=<시트>`, `tools/gen_soldier.py` (기본 8방향 + 그린 동작 줄 → 시트)
+- [x] 병사 변환: `SPRITE_CHAR=<시트>`로 `split_rows.py`·`pack_strip.py` → `gen_hero.py` (ch1_kit/README.md)
   `assets/sprites/<병사>.png/.json`(칸 128·`scale` 0.5, 무기 포함·손 위치 불필요)을 만든다
-- [x] 병사 동작이 빠졌을 때 대체 규칙: 기본 8방향이 없으면 임시 인물 그대로, 동작 줄이 없으면 기본 포즈 변형(`gen_soldier.py` 설명)
+- [x] 병사 동작이 빠졌을 때 대체 규칙: 그린 동작이 없으면 기본 포즈 변형(`gen_hero.py`), 원본이 없으면 `gen_characters.py` 임시 인물
 - [x] `fx.gd`: 그림 이펙트(`assets/fx/<이름>.png`+`.json`)가 있으면 그림, 없으면 지금 도형 — hit·block·parry·dust·shout·takedown·decoy_dust
 - [ ] `hud.gd`: 아이콘·틀 그림, 의심·알아챔 아이콘, 한글 픽셀 글꼴
 - [ ] 무기 그림 교체 후 `weapons.json`의 `grip` 다시 찍기

@@ -56,6 +56,12 @@ static func character_drawn(sheet: String) -> Array:
 	return _meta[sheet].get("drawn", [])
 
 
+## 칼·방패를 몸과 함께 그린 동작들 — 이 동작 동안은 따로 그린 무기를 숨긴다
+static func character_armed(sheet: String) -> Array:
+	character_frames(sheet)
+	return _meta[sheet].get("armed", [])
+
+
 static var _weapons: Dictionary = {}
 
 

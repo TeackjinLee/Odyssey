@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 5-frame animation (DEATH, falling backward) of the SAME character as in "pose.png":
+A TROJAN CAPTAIN mini-boss, cute stocky chibi exactly like pose.png, about 25% BIGGER and broader in every cell, thick black beard, ornate gold crested helmet with a tall WHITE horsehair crest, gold muscle cuirass, deep purple tunic and a long deep purple cape, gold greaves; a broad bronze sword in the RIGHT fist and a large gold round shield with a purple center strapped on the LEFT forearm.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 stagger: struck hard, torso bent, one step back, arms loose.
+- Frame 2 knees buckling, arms dropping, head lowering.
+- Frame 3 kneeling, upper body tipping backward away from the facing direction.
+- Frame 4 hitting the ground on his back.
+- Frame 5 lying still on his back, knees bent up, eyes closed (this frame is held). Keep the fallen body COMPACT so it fits inside the cell.
+- No effect lines, no dust, no blood.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 5 columns x 3 rows, every cell 307x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (as tall as in pose.png (a big captain) when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- WEAPONS EXACTLY LIKE pose.png in EVERY frame: his weapon slipping from the RIGHT fist and lying beside him in the last frames, his shield (exactly as in pose.png) STRAPPED on the LEFT forearm (moves with that arm, never in front of the face, never floating).

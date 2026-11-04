@@ -673,11 +673,17 @@ def main():
     root = Path(sys.argv[1])
     out = root / "assets" / "sprites"
     out.mkdir(parents=True, exist_ok=True)
+    # 그려 받은 기본 8방향(assets/source/<이름>_8dir.webp)이 있는 캐릭터는 gen_hero.py가 시트·초상화를 만든다 — 덮어쓰지 않는다
+    drawn = {name for name in KITS if (root / f"assets/source/{name}_8dir.webp").exists()}
     for name, kit in KITS.items():
+        if name in drawn:
+            print("건너뜀(그려 받은 시트)", name)
+            continue
         make_sheet(name, kit, out)
         print("시트", name)
     for name in ("odysseus_sword", "greek_sword", "greek_spear", "greek_archer"):
-        make_portrait(name, KITS[name], root / "assets" / "ui")
+        if name not in drawn:
+            make_portrait(name, KITS[name], root / "assets" / "ui")
 
 
 if __name__ == "__main__":

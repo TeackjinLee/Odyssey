@@ -2,7 +2,7 @@ class_name Player
 extends Actor
 ## 오디세우스. 이동·달리기, 검 3연타 + 강공격, 방패 막기(막기 직후 0.2초는 패링), 구르기, 활 조준·발사,
 ## 상호작용(E 길게), 전투의 함성(R), 부대 명령(1~4). 알아채지 못한 적의 뒤에서 E를 누르면 조용히 처치한다.
-## 조준은 마우스를 움직이거나 누르면 마우스 쪽, J·K·방향키를 누르면 키보드 조준(이동·바라보는 방향, 그쪽 가까운 적에 맞춤).
+## 조준은 마우스를 움직이거나 누르면 마우스 쪽, Z·K·방향키를 누르면 키보드 조준(이동·바라보는 방향, 그쪽 가까운 적에 맞춤).
 ## 공격하는 동안 실제 판정 범위(부채꼴·화살 길)를 바닥에 그린다(draw_reach, 레벨의 sight_layer).
 
 const SWORD_COMBO := [
@@ -58,7 +58,7 @@ var script_goal := Vector2.INF
 
 
 func _ready() -> void:
-	sheet = "odysseus" if ResourceLoader.exists("res://assets/sprites/odysseus.png") else "odysseus_sword"
+	sheet = Game.outfit if ResourceLoader.exists("res://assets/sprites/%s.png" % Game.outfit) else "odysseus_sword"
 	team = Team.GREEK
 	display_name = "오디세우스"
 	max_hp = 140.0
@@ -92,6 +92,8 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		if event.pressed:
 			aim_mouse = true
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_O:
+		Game.set_outfit(Game.next_outfit())
 	elif event is InputEventKey and event.pressed and not event.echo \
 			and (event.physical_keycode in KEY_AIM_KEYS or event.is_action("attack") or event.is_action("block")):
 		aim_mouse = false
@@ -377,6 +379,13 @@ func takedown(e: Enemy) -> void:
 	face(e.global_position - global_position)
 	_start_attack(TAKEDOWN)
 	e.silent_kill(true)
+
+
+## 옷 갈아입기: 몸 시트만 바꾼다(손 위치 표·무기 겹치기는 시트에서 읽는다)
+func wear(outfit: String) -> void:
+	if weapons != null:
+		set_sheet(outfit)
+		Fx.text(global_position + Vector2(0, -head_height), "옷 갈아입음", Color(1, 0.9, 0.6))
 
 
 func _switch_weapon() -> void:

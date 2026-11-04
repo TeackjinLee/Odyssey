@@ -1,0 +1,22 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) base_armor.png = the CURRENT 8-direction character sheet (layout, body shape, face, pixel style, camera). Copy the layout and the 8 facings EXACTLY.
+2) concepts.png = a concept board of costume ideas (only the costume named below matters).
+3) head.png = the bare curly head and face to keep.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 8-direction CHARACTER SHEET for an isometric Greek action RPG: the SAME character as base_armor.png (same face, curly dark-brown hair, short dark beard, same chibi proportions, same size, same pixel density, same outline), but WEARING A DIFFERENT OUTFIT:
+__OUTFIT__
+BARE HEAD (no helmet, no hood up) and NO CAPE.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to base_armor.png.
+- Top row left to right: NORTH (back), NORTH-EAST (back-right), EAST (right side), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front), SOUTH-WEST (front-left), WEST (left side), NORTH-WEST (back-left).
+- Standing battle-ready idle pose exactly like base_armor.png in every cell, same position, same scale, feet on the same baseline.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text.
+- 2D pixel art, crisp 1px dark outline, hard pixel clusters, no anti-aliasing blur, no smooth gradients.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- EMPTY HANDS: no sword, no shield, no bow. Right hand a closed fist as if gripping a sword hilt, left forearm held as if a round shield is strapped on. Both hands clearly visible.
+- Keep at least one crimson accent. No fine patterns (no border motifs, no tears, no bandage lines).

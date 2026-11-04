@@ -1,0 +1,12 @@
+block_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-0364-7ad2-943c-5e5ba6f4da92/exec-e3e6ae7b-a49f-4dcd-8c75-8b11e1d98052.png
+block_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-03ea-7791-9962-80c62b71d2e7/exec-e217d152-a04c-4a68-9e2c-aa7ca5581085.png
+bow_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-035b-7c92-9398-5de5f7729a22/exec-c77da5d1-3273-4f43-8604-06e5bb668ddd.png
+bow_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-035a-73b3-928b-bdaba4d96ad2/exec-e68436cc-4e3c-43d1-861f-3336578816d5.png
+death_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-03e9-7ea3-8915-f082988752a6/exec-4b607d24-91fa-4dd1-b3b7-0e9d293d3f62.png
+death_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-036e-73b0-8a73-279d1fa2d050/exec-5c3cbe22-8560-40b3-a910-92a954071dfd.png
+dodge_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-034d-7ef2-af8a-b8560faac548/exec-40a76ebc-5019-476d-8420-706b2609f761.png
+dodge_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-0357-7d00-9450-4d9469dae7f4/exec-4bf9aa12-a409-4700-9f52-0cbcd4dd9f2e.png
+hit_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-0355-7e10-8721-7033e74e67c4/exec-7c0f835d-17ff-4bb4-b343-a07cfc1bbf9a.png
+hit_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-0449-7a93-9d70-e76864c60255/exec-96b73e23-eddd-462c-9d42-c01970a98c13.png
+idle_E-SE-Sa /Users/itaegjin/.codex/generated_images/01a1a21d-0345-78f0-acde-c00958dbc383/exec-f80711d6-594f-401f-8501-7a86ac95e80e.png
+idle_NE-Na /Users/itaegjin/.codex/generated_images/01a1a21d-03ea-7e10-9f00-ce2bbefb83de/exec-ed1118ad-d8a8-4dd1-8190-408ef77d32e0.png

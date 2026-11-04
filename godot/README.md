@@ -32,11 +32,11 @@ godot -e --path .             # 에디터로 열기
 | 키 | 동작 |
 |---|---|
 | WASD | 이동 (Shift 달리기, 스태미나 소모) |
-| J / 좌클릭 | 검 3연타. 공격 중에 누른 입력은 0.4초 기억했다가 다음 타로 잇는다 |
+| Z / 좌클릭 | 검 3연타. 공격 중에 누른 입력은 0.4초 기억했다가 다음 타로 잇는다 |
 | F | 강공격 — 방패 막기를 뚫고 크게 밀어냄 (스태미나 25, 1.2초 쿨타임) |
 | K / 우클릭 | 방패 막기. 막기 시작 0.2초 안에 맞으면 패링(공격자 경직) |
 | Space | 구르기 (무적 0.28초, 공격 후딜을 끊을 수 있음) |
-| Q | 검 ↔ 활. 활은 공격 키(J/좌클릭)를 누르고 있다가 놓으면 발사(오래 당길수록 강함) |
+| Q | 검 ↔ 활. 활은 공격 키(Z/좌클릭)를 누르고 있다가 놓으면 발사(오래 당길수록 강함) |
 | E | 대화·조사. 쓰러진 부하 일으키기·포로 풀기·불 지르기는 길게, 권양기는 누르고 있는 동안만 돈다. 적 뒤에서 조용히 처치, 횃불대 옆에서 횃불 끄기 |
 | R | 전투의 함성 — 주변 아군 회복과 8초 공격력 증가, 가까운 적 경직 (20초) |
 | C | 미끼 던지기 — 조준한 쪽(최대 170px)으로 돌멩이, 떨어진 곳 둘레의 보초가 살피러 간다(알아채지는 않음, 6초) |
@@ -44,9 +44,9 @@ godot -e --path .             # 에디터로 열기
 | 5 | 부대 특수 명령(조준한 곳, 18초): 검병 방패벽(5초간 제자리에서 앞쪽 화살·공격을 막음) · 창병 창 던지기 · 궁병 일제 사격(원 안 화살비, 무기고를 태웠으면 불화살) |
 | F1 / Tab | 조작법 |
 | Esc | 일시정지 메뉴: 계속하기 · 설정(음량·전체 화면·키 바꾸기) · 체크포인트에서 다시 · 처음부터 · 타이틀로 |
-| 방향키·WASD + Enter/E | 메뉴·결과 화면 버튼 고르기·누르기. 대화는 E / Space / J / 클릭으로 넘김 |
+| 방향키·WASD + Enter/E | 메뉴·결과 화면 버튼 고르기·누르기. 대화는 E / Space / Z / 클릭으로 넘김 |
 
-**조준**: 마우스를 움직이거나 누르면 마우스 쪽을 노린다. J·K·방향키를 누르면 키보드 조준으로 바뀌어,
+**조준**: 마우스를 움직이거나 누르면 마우스 쪽을 노린다. Z·K·방향키를 누르면 키보드 조준으로 바뀌어,
 이동 방향(서 있으면 바라보는 방향)으로 노리고 그쪽 가까운 적(검 60px·70°, 활·부대 명령 320px·40°이고 가로막히지 않은 적)에
 맞춘다. 맞춘 적 발밑에 붉은 고리가 뜬다. WASD·F는 둘 다에서 쓰므로 조준 방식을 바꾸지 않는다(`player.gd`의 `KEY_AIM_KEYS` + 공격·방패 키).
 
@@ -178,9 +178,8 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
   json `{"frame": [폭, 높이], "frames": 수, "fps": 초당, "anchor": [x, y](생략하면 가운데), "scale": 1}`.
   이름 = ART_PLAN의 `F-<이름>`: hit · block · parry(맞음·막음·패링 불꽃) · dust(구르기) · shout(함성 고리) · takedown · decoy_dust.
   없으면 지금처럼 코드로 그린다(`fx.gd`의 `anim`·`impact`)
-- **병사·NPC** 그려 받은 그림: `assets/source/<시트>_8dir.webp`(기본 8방향) + 동작 줄 `<시트>_<동작>_8dir.webp`
-  (`split_rows.py … --sheet=<시트>` → `pack_strip.py . <동작> … --sheet=<시트>`) → `python3 tools/gen_soldier.py . [시트]`.
-  기본 8방향이 없으면 지금 임시 인물을 그대로 두고, 동작 줄이 없으면 기본 포즈를 기울이고 눌러 만든다
+- **병사·NPC** 그려 받은 그림: `assets/source/<시트>_8dir.webp` + 동작 줄 → `SPRITE_CHAR=<시트> SPRITE_SRC_H=320`으로
+  `split_rows.py`·`pack_strip.py` → `gen_hero.py` (방법은 `docs/sprite_request/ch1_kit/README.md`)
 - **환경** `assets/env/env.json`의 `props`: 소품마다 `file`·`anchor`(발자국 중심 지점)·`footprint`(칸 수)
 - **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = `env.json`의 `floor_atlas.rows` 순서
   (cobble plaza dirt grass road ash + water sand planks), 열 = 변형 4개. `water`·`sand` 칸은 챕터가 막힌 칸으로 둔다
@@ -206,7 +205,7 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 ### 그려 받은 오디세우스와 무기
 
 - 원본 `assets/source/odysseus_8dir.webp`(마젠타 배경, 4×2 칸) → `python3 tools/gen_hero.py .` →
-  `assets/sprites/odysseus.png`(128×128 칸, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
+  `assets/sprites/odysseus.png`(144×144 칸 — 투구 볏·점프가 잘리지 않게 위 여유를 둠, `scale` 0.5로 그려 1280×720 창에서 원본 픽셀 1:1)
 - 걷기·달리기는 그려 받은 그림(`assets/source/odysseus_{walk,run}_8dir.webp`, 줄 = 남→남동→…→남서)을 쓴다.
   걷기 12열(18fps), 달리기 12열(한 주기 = 두 걸음, 26fps). 첫 프레임 손 위치는 `gen_hero.py`의 `STRIP_HANDS`.
   둘 다 남·남동·동·북동·북을 방향마다 한 장(4×3 격자)씩 받아(`odysseus_<동작>_<방향>.webp`) `tools/pack_strip.py`가

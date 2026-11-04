@@ -1,0 +1,13 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) base_armor.png = the 8-direction character sheet. Copy its layout and the position and size of every figure EXACTLY.
+2) concepts.png = concept board; concept 01 CLASSIC KING's long red cape is the style reference.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Create a CAPE-ONLY overlay sheet: in each of the 8 cells draw ONLY the deep crimson cloak. It is fastened at the two shoulders with a small gold clasp and hangs straight down to about the knees, slightly wider than the shoulders, simple folded shape with 2-3 pixel highlight folds.
+- NORTH, NORTH-EAST, NORTH-WEST (back views): the cape covers the character's whole back from shoulders to knees (the cape is in FRONT of the body there).
+- SOUTH, SOUTH-EAST, SOUTH-WEST (front views): only the parts of the cape that show behind and beside the body: the two shoulder edges and the lower hem peeking out beside the legs (the body hides the rest; draw the full cape shape as if behind the body, it will be placed underneath).
+- EAST, WEST (side views): the cape hangs straight behind the character's back, seen from the side as a long panel behind the torso and legs., positioned exactly where it belongs on that cell's character in base_armor.png (same facing, same size), so it could be pasted over (or under) the base sheet.
+Draw NOTHING else: no head, no hair, no face, no body, no armor, no legs, no hands. Everything outside the item is flat magenta #FF00FF.
+
+Layout: ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512 like base_armor.png (top row N, NE, E, SE; bottom row S, SW, W, NW).
+Style: 2D pixel art matching base_armor.png, crisp 1px dark outline, hard pixel clusters, no anti-aliasing, no shadows, no labels, no text. No fine patterns.

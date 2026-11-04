@@ -1,0 +1,18 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) style_ref.png = ONLY the layout, camera, chibi proportions, size, pixel style and the 8 facings to copy EXACTLY. Its character (Odysseus) is NOT the one to draw: do not copy his helmet, crest, red cape, star shield or bow.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 8-direction CHARACTER SHEET for the same isometric Greek action RPG as style_ref.png. Draw a TROJAN SWORDSMAN enemy, cute stocky chibi about 3 heads tall like the reference, black beard, stern face, steel-grey Phrygian helmet (forward-curving peak) with a gold crest, dark purple-grey scale armor over a deep purple tunic, steel greaves, dark sandals; a curved bronze sword in the RIGHT fist and a dark round shield with a gold rim and gold center strapped on the LEFT forearm.
+Same rendering quality, outline, shading and colour richness as style_ref.png.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: same figure size and position in every cell, feet on the same baseline, nothing cut off.
+- Top row left to right: NORTH (back), NORTH-EAST (back-right), EAST (right side), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front), SOUTH-WEST (front-left), WEST (left side), NORTH-WEST (back-left).
+- Standing battle-ready idle in every cell, weapons held as described.
+- DEPTH: whatever is on the far side of the body is hidden behind it (back views show the back, the shield only as a rim).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).

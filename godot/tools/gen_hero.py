@@ -8,7 +8,9 @@
 출력(assets/sprites/): <이름>.png + .json (gen_characters.py와 같은 시트 규칙 + scale·hands)
   hands[동작][프레임][방향] = [오른손 x, y, 왼손 x, y]  (프레임 안 픽셀 좌표)
 
-사용: python3 gen_hero.py <godot 프로젝트 폴더>
+사용: python3 gen_hero.py <godot 프로젝트 폴더> [옷 이름=odysseus]
+  옷 이름이 odysseus_sea면 assets/source/odysseus_sea_8dir.webp(+있으면 _walk/_run/_attack…)를 읽어 assets/sprites/odysseus_sea.png/.json을 만든다.
+  걷기·달리기·공격 그림이 없는 옷은 기본 8방향 한 장에서 움직임을 만든다(칼 쥔 손 위치만 HANDS_SRC를 쓴다).
 """
 import json
 import math
@@ -17,8 +19,8 @@ from pathlib import Path
 
 from PIL import Image
 
-FRAME = 128
-ANCHOR = (64, 120)
+FRAME = 192             # 투구 볏·점프, 베기 궤적·쓰러진 몸이 잘리지 않게 여유를 둔 정사각 칸
+ANCHOR = (96, 180)
 TARGET_H = 104          # 시트 안 캐릭터 키(px). 게임에서는 scale배로 그린다
 DISPLAY_SCALE = 0.5     # 640×360 기준 화면에서 키 약 52px, 1280×720 창에서는 시트 픽셀 1:1
 
@@ -60,6 +62,92 @@ def cut_cells(src):
         feet = cell.crop((0, bb[3] - int((bb[3] - bb[1]) * 0.12), cw, bb[3])).getbbox()
         foot_x = (feet[0] + feet[2]) / 2
         out[d] = (cell, (foot_x, bb[3]), bb[3] - bb[1])
+    return out
+
+
+# 장비 겹치기: 옷 이름 → (몸 시트 이름, [(장비 이름, 방식), ...]). 장비 그림 assets/source/odysseus_<장비>_gear.webp는 기본 8방향 시트(odysseus_8dir)와
+# 같은 칸 배치에서 그 장비만 마젠타 위에 그린 것. 머리를 찾아 프레임마다 머리 위치·폭에 맞춰 붙인다(걷기·달리기·공격 줄에도 같은 방식)
+#  방식 "over" = 몸 위에(투구), "cape" = 북·북동·북서에서만 몸 위, 나머지 방향은 몸 뒤(망토·두건). 앞에서부터 차례로 쌓는다
+GEAR = {
+    "odysseus_helm": ("odysseus", [("helm", "over")]),
+    "odysseus_king": ("odysseus", [("cape", "cape"), ("helm", "over")]),
+    "odysseus_beggar_hood": ("odysseus_beggar", [("hood", "cape")]),
+}
+GEAR_CUT = 0.172   # 투구: 앞쪽 방향은 앞 테두리를 머리 맨 위에서 키의 이만큼 아래까지만 남겨 눈·수염이 가려지지 않게
+GEAR_CUT_ARC = 0.008   # 자른 선을 가운데가 처지는 호로(키 비율) — 직선이 티 나지 않게
+CUT_GEARS = ()   # 01번식 투구는 얼굴이 이미 열려 있어 자르지 않는다
+GEAR_TINT = {"hood": (1.08, 0.94, 0.74)}   # 받은 두건이 보랏빛이라 갈색 쪽으로
+BACK_DIRS = (5, 6, 7)
+# 투구 방향별 맞춤: 방향 → (크기 배율, 위로 올리는 양(머리 폭 비율)). 뒤쪽은 머리카락이 투구 위로 삐져나오지 않게 키우고 올린다
+GEAR_FIT = {d: (0.9, 0.17) for d in range(8)}
+
+
+def head_box(cell):
+    bb = cell.getbbox()
+    head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
+    return bb, head
+
+
+METAL_GEARS = ("helm",)
+
+
+def metal_box(cell):
+    """장비 칸에서 금속(금색) 픽셀만의 바깥 상자 — 붉은 볏은 빼고 잰다."""
+    mask = Image.new("L", cell.size, 0)
+    mp, cp = mask.load(), cell.load()
+    for y in range(cell.height):
+        for x in range(cell.width):
+            r, g, b, a = cp[x, y]
+            if a > 200 and r > 140 and g > 90 and b < 120 and g > r * 0.45:
+                mp[x, y] = 255
+    return mask.getbbox()
+
+
+def load_gear(root, gear, body):
+    """방향 → (장비 RGBA, 기준 머리 가운데 x, 기준 머리 위 y, 기준 머리 폭)."""
+    src = Image.open(root / f"assets/source/odysseus_{gear}_gear.webp").convert("RGB")
+    base = cut_cells(Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB"))
+    cells = cut_cells(src)
+    out = {}
+    for d, (cell, _, _) in cells.items():
+        if gear in GEAR_TINT:
+            t = GEAR_TINT[gear]
+            cell.putdata([(min(255, int(r * t[0])), min(255, int(g * t[1])), min(255, int(b * t[2])), a) for r, g, b, a in cell.getdata()])
+        height = base[d][2]
+        bb, head = head_box(base[d][0])
+        hx = (head[0] + head[2]) / 2
+        if gear in CUT_GEARS and d not in BACK_DIRS:
+            hw = head[2] - head[0]
+            for x in range(cell.width):
+                t = max(0.0, 1 - ((x - hx) / (hw * 0.5)) ** 2)
+                y0 = bb[1] + int((GEAR_CUT + GEAR_CUT_ARC * t) * height)
+                for y in range(y0, cell.height):
+                    cell.putpixel((x, y), (0, 0, 0, 0))
+        out[d] = (cell, hx, bb[1], head[2] - head[0])
+        if gear in METAL_GEARS:  # 볏이 맨 위라 맨 윗선 대신 금속 부분(투구 몸통)의 위·가운데·폭으로 맞춘다
+            m = metal_box(cell)
+            out[d] = (cell, (m[0] + m[2]) / 2, m[1], m[2] - m[0])
+    return out
+
+
+def put_gears(cell, d, gears, hb=None):
+    """cell 위에 장비들을 그 칸의 머리 위치·폭에 맞춰 얹은(또는 몸 뒤에 깐) 새 그림. gears = [(장비 dict, 방식)].
+    hb = (bb, head)를 주면 그 머리 상자를 쓴다(칼을 머리 위로 든 그림처럼 맨 윗선이 머리가 아닐 때)."""
+    bb, head = hb or head_box(cell)
+    hx = (head[0] + head[2]) / 2
+    out = cell.copy()
+    for g, mode in gears:
+        img, hx0, top0, hw0 = g[d]
+        fit = GEAR_FIT.get(d, (1.0, 0.0)) if g is not None and mode == "over" else (1.0, 0.0)
+        s = (head[2] - head[0]) / hw0 * fit[0]
+        sized = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+        layer = Image.new("RGBA", cell.size, (0, 0, 0, 0))
+        layer.paste(sized, (round(hx - hx0 * s), round(bb[1] - top0 * s - fit[1] * (head[2] - head[0]))))
+        if mode == "cape" and d not in BACK_DIRS:
+            layer.alpha_composite(out)
+            out = layer
+        else:
+            out.alpha_composite(layer)
     return out
 
 
@@ -141,44 +229,41 @@ def track_loop(cells, start):
     return out
 
 
-# 공격 줄: 프레임마다 검을 쥔 주먹(휘두르는 손) 위치, 방패 손은 방향마다 하나 (받은 그림의 칸 안 픽셀).
-# 그려 받은 그림이 방향마다 다른 손으로 칠 때가 있어 '오른손'이 아니라 '치는 주먹'을 따라간다
+# 공격 줄: 프레임마다 검을 쥔 주먹(휘두르는 손) 위치, 방패 손은 방향마다 하나 (받은 그림의 칸 안 픽셀, 칸 256).
+# 방향 2 S · 1 SE · 0 E · 7 NE · 6 N 다섯 방향만 그려 받고, 나머지 셋(3 4 5)은 STRIP_MIRROR로 좌우를 뒤집어 만든다.
+# 그려 받은 그림이 방향마다 다른 손으로 칠 때가 있어 '오른손'이 아니라 '치는 주먹'을 따라간다 (격자를 얹어 눈으로 찍은 값)
 ATTACK_HANDS = {
     "attack1": {
-        2: [(50, 127), (103, 130), (148, 113), (93, 138)], 1: [(50, 130), (100, 130), (190, 113), (118, 135)],
-        0: [(68, 130), (155, 113), (180, 103), (120, 133)], 7: [(90, 133), (175, 100), (190, 90), (140, 100)],
-        6: [(150, 115), (165, 90), (175, 72), (155, 118)], 5: [(65, 115), (60, 100), (35, 92), (65, 105)],
-        4: [(68, 105), (75, 100), (35, 98), (75, 110)], 3: [(65, 110), (72, 108), (30, 113), (62, 120)],
+        2: [(62, 138), (82, 112), (172, 105), (102, 132)], 1: [(68, 149), (108, 123), (180, 122), (137, 134)],
+        0: [(85, 143), (169, 98), (188, 108), (162, 92)], 7: [(150, 100), (184, 115), (193, 105), (167, 128)],
+        6: [(183, 152), (174, 99), (70, 109), (172, 119)],
     },
     "attack2": {
-        2: [(120, 165), (118, 130), (25, 105), (92, 140)], 1: [(115, 160), (115, 130), (40, 105), (88, 140)],
-        0: [(125, 155), (148, 108), (52, 100), (125, 135)], 7: [(135, 145), (175, 95), (185, 72), (155, 130)],
-        6: [(148, 140), (162, 85), (190, 75), (148, 118)], 5: [(150, 140), (150, 80), (180, 72), (150, 122)],
-        4: [(150, 138), (145, 85), (165, 75), (140, 125)], 3: [(95, 138), (65, 105), (30, 98), (55, 122)],
+        2: [(120, 165), (89, 120), (43, 105), (112, 150)], 1: [(130, 162), (104, 109), (50, 99), (117, 139)],
+        0: [(155, 163), (164, 108), (68, 98), (117, 143)], 7: [(163, 165), (189, 155), (193, 127), (172, 150)],
+        6: [(175, 190), (179, 141), (193, 126), (167, 161)],
     },
     "attack3": {
-        2: [(65, 105), (65, 28), (55, 75), (95, 172), (60, 118)], 1: [(65, 100), (75, 25), (75, 70), (95, 175), (70, 125)],
-        0: [(95, 100), (90, 15), (95, 72), (118, 170), (140, 110)], 7: [(138, 95), (115, 15), (145, 85), (125, 170), (135, 115)],
-        6: [(150, 88), (130, 15), (150, 80), (148, 172), (155, 115)], 5: [(145, 85), (130, 15), (150, 75), (150, 165), (150, 110)],
-        4: [(70, 115), (125, 15), (55, 120), (70, 170), (60, 120)], 3: [(62, 100), (110, 15), (40, 120), (90, 170), (55, 115)],
+        2: [(85, 82), (94, 45), (80, 125), (102, 140), (86, 150)], 1: [(85, 74), (94, 29), (150, 112), (172, 129), (166, 120)],
+        0: [(95, 83), (104, 38), (168, 123), (142, 138), (166, 123)], 7: [(170, 57), (159, 22), (178, 137), (172, 167), (166, 137)],
+        6: [(170, 56), (154, 26), (188, 108), (182, 161), (191, 101)],
     },
     "heavy": {
-        2: [(45, 100), (55, 112), (25, 85), (150, 72), (115, 105), (145, 100)],
-        1: [(45, 105), (55, 110), (30, 85), (40, 105), (155, 100), (150, 100)],
-        0: [(70, 115), (65, 105), (30, 90), (40, 90), (160, 105), (148, 100)],
-        7: [(120, 100), (90, 120), (40, 85), (55, 90), (155, 100), (120, 115)],
-        6: [(125, 100), (110, 120), (150, 85), (150, 90), (150, 85), (130, 120)],
-        5: [(125, 108), (110, 125), (140, 85), (130, 95), (145, 85), (130, 110)],
-        4: [(55, 95), (40, 100), (25, 95), (25, 95), (140, 85), (40, 110)],
-        3: [(60, 110), (25, 90), (30, 95), (35, 100), (30, 110), (25, 110)],
+        2: [(75, 145), (79, 140), (58, 98), (57, 92), (125, 102), (120, 150)],
+        1: [(45, 129), (49, 139), (58, 66), (57, 69), (100, 118), (100, 110)],
+        0: [(45, 148), (49, 153), (53, 86), (207, 73), (186, 88), (170, 113)],
+        7: [(65, 147), (84, 148), (53, 92), (74, 67), (176, 62), (190, 117)],
+        6: [(85, 205), (179, 161), (198, 121), (181, 97), (171, 96), (195, 116)],
     },
 }
 ATTACK_LEFT = {
-    "attack1": {2: (138, 108), 1: (148, 108), 0: (140, 108), 7: (125, 105), 6: (75, 110), 5: (150, 80), 4: (112, 118), 3: (115, 118)},
-    "attack2": {2: (130, 125), 1: (140, 115), 0: (145, 115), 7: (125, 100), 6: (70, 120), 5: (65, 118), 4: (68, 118), 3: (115, 112)},
-    "attack3": {2: (125, 110), 1: (125, 118), 0: (125, 125), 7: (115, 130), 6: (60, 115), 5: (55, 120), 4: (100, 125), 3: (120, 120)},
-    "heavy": {2: (125, 100), 1: (125, 105), 0: (115, 120), 7: (85, 120), 6: (45, 100), 5: (45, 115), 4: (115, 120), 3: (110, 120)},
+    "attack1": {2: (155, 105), 1: (150, 110), 0: (125, 110), 7: (120, 110), 6: (100, 105)},
+    "attack2": {2: (172, 130), 1: (170, 130), 0: (165, 150), 7: (120, 150), 6: (90, 160)},
+    "attack3": {2: (170, 128), 1: (140, 110), 0: (150, 115), 7: (110, 110), 6: (90, 110)},
+    "heavy": {2: (160, 115), 1: (150, 110), 0: (165, 125), 7: (120, 125), 6: (100, 130)},
 }
+
+SHOULDER_AT = 0.40   # 칼끝 각도를 잴 때 어깨 높이(키 비율)
 
 # 그림이 어색한 방향은 다른 방향 줄을 가져다 쓴다: 방향 → (가져올 방향, 좌우 뒤집기)
 STRIP_REUSE = {}
@@ -204,11 +289,11 @@ def head_width(cells, cols):
     return sorted(ws)[len(ws) // 2]
 
 
-def strip_frames(root, anim, k=None, cols=6, ref=None):
+def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=None):
     """그려 받은 동작 줄 → {방향: [(FRAME 그림, [손 4값]), ...]}, 배율, 머리 폭. 없으면 None.
     가로 위치는 머리 중심, 세로는 그 줄에서 가장 낮은 발을 ANCHOR에 맞춘다(뛸 때 뜨는 높이는 그대로).
     ref = (걷기 배율, 걷기 머리 폭)을 주면 머리 폭 비율로 배율을 맞춘다(공격 그림)."""
-    path = root / f"assets/source/odysseus_{anim}_8dir.webp"
+    path = root / f"assets/source/{name}_{anim}_8dir.webp"
     if not path.exists():
         return None, k, None
     src = Image.open(path).convert("RGB")
@@ -228,14 +313,18 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
         k = ref[0] * ref[1] / head_w
     elif k is None:
         hs = sorted(c.getbbox()[3] - c.getbbox()[1] for c in cells.values())
-        k = TARGET_H / hs[len(hs) // 2]
+        k = (ARMED_BODIES[name] if isinstance(ARMED_BODIES.get(name), int) else TARGET_H) / hs[len(hs) // 2]
+    if gear:
+        for (d, col), c in list(cells.items()):
+            cells[d, col] = put_gears(c, d, gear)
     out = {}
     for d in range(8):
         base = max(cells[d, c].getbbox()[3] for c in range(cols))
         fx, fy = math.cos(math.radians(d * 45)), math.sin(math.radians(d * 45)) * 0.5
         frames = []
         tracked = [None, None]
-        if anim in STRIP_TRACK:
+        armed_body = name in ARMED_BODIES
+        if anim in STRIP_TRACK and not armed_body:
             h0 = strip_hand0(anim, d, cw)
             row = [cells[d, c] for c in range(cols)]
             for j, on in enumerate(STRIP_TRACK[anim][d]):
@@ -247,27 +336,109 @@ def strip_frames(root, anim, k=None, cols=6, ref=None):
             head = cell.crop((0, bb[1], cell.width, bb[1] + int((bb[3] - bb[1]) * 0.15))).getbbox()
             hx = (head[0] + head[2]) / 2
             if col == 0:
-                hx0 = hx
+                hx0, top0 = hx, bb[1]
             frame, _, (ox, oy) = to_pose(cell, (hx, base), 0, k)
-            if anim in ATTACK_HANDS:
+            if armed_body:   # 무기가 그림에 있어 손 위치는 쓰이지 않는다
+                r = l = (hx, bb[1] + (bb[3] - bb[1]) * 0.5)
+            elif anim in ATTACK_HANDS:
                 src_d = STRIP_MIRROR.get(anim, {}).get(d)
                 if src_d is None:
                     r, l = ATTACK_HANDS[anim][d][col], ATTACK_LEFT[anim][d]
                 else:   # 뒤집어 만든 줄: 원래 줄의 칠 주먹·방패 손을 칸 폭 기준으로 뒤집는다
                     (rx, ry), (lx, ly) = ATTACK_HANDS[anim][src_d][col], ATTACK_LEFT[anim][src_d]
                     r, l = (cw - rx, ry), (cw - lx, ly)
+                # 방패 손은 첫 장 위치를 몸(머리)이 움직인 만큼 따라 옮긴다: 내딛고 웅크릴 때 방패가 몸에서 떨어지지 않게
+                l = (l[0] + (hx - hx0), l[1] + (bb[1] - top0))
             else:
                 h0 = strip_hand0(anim, d, cw)
                 sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)
                 r = tracked[0][col] if tracked[0] else (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
                 l = tracked[1][col] if tracked[1] else (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
+            if anim in ATTACK_HANDS and not armed_body:
+                # 칼끝 각도(도, 화면 좌표): 어깨 → 치는 주먹 방향. 어깨는 머리 가운데 x, 키의 40% 높이로 잡는다
+                sx, sy = hx, bb[1] + SHOULDER_AT * (bb[3] - bb[1])
+                hands.append(round(math.degrees(math.atan2(r[1] - sy, r[0] - sx)), 1))
             frames.append((frame, hands))
         out[d] = frames
     for d, (src_d, flip) in STRIP_REUSE.get(anim, {}).items():
         out[d] = [(f.transpose(Image.FLIP_LEFT_RIGHT), [FRAME - h[0], h[1], FRAME - h[2], h[3]]) if flip else (f, h)
                   for f, h in out[src_d]]
     return out, k, head_w
+
+
+# 칼·방패·활을 몸 그림에 함께 그려 받은 캐릭터(1장 오디세우스): 모든 동작에서 게임이 따로 그린 무기를 숨기고,
+# 그려 받은 동작 줄이 있으면 전부 쓴다(손 위치 표는 필요 없다). 키는 투구 볏까지 포함이라 조금 크게 잡는다
+# 값이 숫자면 그 키로 방향마다 맞추고, 다른 캐릭터 이름이면 그 캐릭터 기본 시트와 같은 배율(원본 픽셀당)을 써서
+# 원래 그려 받은 키 차이(대장은 더 크게, 투구 없는 궁수는 작게)를 그대로 살린다. 적·동료는 기본 8방향만 받아 동작은 변형으로 만든다
+ARMED_BODIES = {"odysseus_ch1": 118, **{n: "odysseus_ch1" for n in (
+    "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain")}}
+
+
+def armed_k(root, body, height):
+    """무기 그린 몸의 기본 포즈 배율. 다른 캐릭터를 가리키면 그 캐릭터 기본 시트 키(가운데값)로 잰 배율."""
+    v = ARMED_BODIES[body]
+    if isinstance(v, str):
+        hs = sorted(h for _, _, h in cut_cells(Image.open(root / f"assets/source/{v}_8dir.webp").convert("RGB")).values())
+        return ARMED_BODIES[v] / hs[len(hs) // 2]
+    return v / height
+
+
+# 칼·방패를 든 공격 그림 한 장: 19칸(공격1 4·공격2 4·공격3 5·강공격 6) × 8줄(게임 방향 0 동 ~ 7 북동 순서).
+# 무기가 몸과 함께 그려져 있어 이 동작들 동안 게임은 따로 그린 칼·방패를 숨긴다(시트 json "armed")
+ARMED_SRC = "assets/source/{}_attacks_armed.webp"
+ARMED_COLS = [("attack1", 4), ("attack2", 4), ("attack3", 5), ("heavy", 6)]
+
+
+# 받은 그림은 기준 격자(시트의 공격 프레임을 칸마다 LK배로 줄여 칸 아래·가운데에 붙인 그림) 위에 다시 그린 것이라,
+# 칸 위치를 그대로 시트 프레임으로 되돌린다. 머리 위치(투구 얹기)도 칼이 없는 기준 격자에서 잰다
+ARMED_LAYOUT = "docs/sprite_request/weapon_requests/full/layout.png"
+ARMED_LAYOUT_K = 0.912   # 기준 격자를 만들 때 프레임을 줄인 배율
+ARMED_LAYOUT_FRAME, ARMED_LAYOUT_ANCHOR = 144, (72, 136)   # 기준 격자를 만들 때의 프레임 크기·발 위치
+
+
+def armed_frames(root, body, gear, old):
+    """칼·방패를 든 공격 그림 → {동작: {방향: [(FRAME 그림, 손 값)]}}. 없으면 {}.
+    손 값은 예전 줄(old)의 것을 그대로 둔다(무기를 따로 안 그리므로 쓰이지 않음)."""
+    path = root / ARMED_SRC.format(body)
+    if not path.exists():
+        return {}
+    src = Image.open(path).convert("RGB")
+    lay = Image.open(root / ARMED_LAYOUT).convert("RGB")
+    ncol = sum(n for _, n in ARMED_COLS)
+    cw, ch = lay.width // ncol, lay.height // 8   # 기준 격자 칸
+    sw, sh = src.width / ncol, src.height / 8     # 받은 그림 칸
+    fw = round(ARMED_LAYOUT_FRAME * ARMED_LAYOUT_K)
+    foot = ((cw - fw) // 2 + ARMED_LAYOUT_ANCHOR[0] * ARMED_LAYOUT_K, (ch - fw) + ARMED_LAYOUT_ANCHOR[1] * ARMED_LAYOUT_K)
+
+    def cut(img, x0, y0, x1, y1, size=None):
+        cell = img.crop((round(x0), round(y0), round(x1), round(y1)))
+        if size:
+            cell = cell.resize(size, Image.LANCZOS)
+        cell = cell.convert("RGBA")
+        px = cell.load()
+        for y in range(cell.height):
+            for x in range(cell.width):
+                if is_bg(px[x, y]):
+                    px[x, y] = (0, 0, 0, 0)
+        return cell
+
+    out, c0 = {}, 0
+    for anim, n in ARMED_COLS:
+        out[anim] = {}
+        for d in range(8):
+            frames = []
+            for i in range(n):
+                c = c0 + i
+                cell = cut(src, c * sw, d * sh, (c + 1) * sw, (d + 1) * sh, (cw, ch))
+                if gear:
+                    cell = put_gears(cell, d, gear, head_box(cut(lay, c * cw, d * ch, (c + 1) * cw, (d + 1) * ch)))
+                frame, _, _ = to_pose(cell, foot, 0, 1 / ARMED_LAYOUT_K)
+                h = old[anim][d][i][1] if old.get(anim) else [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
+                frames.append((frame, h))
+            out[anim][d] = frames
+        c0 += n
+    return out
 
 
 # ── 동작 = 포즈 변형 ──────────────────────────────────
@@ -349,12 +520,16 @@ def affine(p):
     return fwd, coeffs
 
 
-def build(root):
-    src = Image.open(root / "assets/source/odysseus_8dir.webp").convert("RGB")
+def build(root, name="odysseus"):
+    body, gnames = GEAR.get(name, (name, []))
+    src = Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB")
     cells = cut_cells(src)
+    gear = [(load_gear(root, g, body), mode) for g, mode in gnames]
+    if gear:
+        cells = {d: (put_gears(c, d, gear), foot, h) for d, (c, foot, h) in cells.items()}
     poses, hands0 = {}, {}
     for d, (cell, foot, height) in cells.items():
-        pose, k, (ox, oy) = to_pose(cell, foot, height)
+        pose, k, (ox, oy) = to_pose(cell, foot, height, armed_k(root, body, height) if body in ARMED_BODIES else None)
         poses[d] = pose
         if d in HANDS_SRC:
             rx, ry, lx, ly = HANDS_SRC[d]
@@ -364,15 +539,27 @@ def build(root):
     strips = {}
     k = None
     n_frames = {a[0]: a[1] for a in ANIMS}
-    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"])
-    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head))
+    unit_ref = ARMED_BODIES.get(body)
+    # 다른 캐릭터와 같은 배율을 쓰는 병사: 그 캐릭터 걷기 줄의 배율을 그대로 쓴다(같은 SPRITE_SRC_H로 묶었으므로 같은 원본 픽셀 크기)
+    k_ref = strip_frames(root, "walk", cols=n_frames["walk"], name=unit_ref)[1] if isinstance(unit_ref, str) else None
+    strips["walk"], k, walk_head = strip_frames(root, "walk", k=k_ref, cols=n_frames["walk"], name=body, gear=gear)
+    strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head), name=body, gear=gear)
     for anim in ATTACK_HANDS:
         if strips["walk"]:
-            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head))
+            strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=body, gear=gear)
+    if body in ARMED_BODIES and strips["walk"]:
+        # pack_strip.py가 모든 동작을 같은 배율로 묶어 두었으므로 걷기 배율 k를 그대로 쓴다(머리 폭 맞춤은 볏 때문에 어긋난다)
+        for anim, n, _, _ in ANIMS:
+            if anim != "walk":
+                strips[anim], _, _ = strip_frames(root, anim, k=k, cols=n, name=body, gear=gear)
+    armed = armed_frames(root, body, gear, strips)
+    strips.update(armed)
+    if body in ARMED_BODIES:
+        armed = {a: None for a, *_ in ANIMS}
     total = sum(a[1] for a in ANIMS)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
-            "drawn": [a for a, s in strips.items() if s]}
+            "drawn": [a for a, s in strips.items() if s], "armed": list(armed)}
     col = 0
     for anim, n, fps, loop in ANIMS:
         meta["anims"][anim] = {"start": col, "frames": n, "fps": fps, "loop": loop}
@@ -396,10 +583,14 @@ def build(root):
             meta["hands"][anim].append(row_hands)
         col += n
     out = root / "assets/sprites"
-    sheet.save(out / "odysseus.png")
-    (out / "odysseus.json").write_text(json.dumps(meta, ensure_ascii=False))
-    if (root / PORTRAIT_SRC).exists():
+    sheet.save(out / f"{name}.png")
+    (out / f"{name}.json").write_text(json.dumps(meta, ensure_ascii=False))
+    if name == "odysseus" and (root / PORTRAIT_SRC).exists():
         make_portrait(root)
+    elif (root / f"assets/source/{name}_portrait.webp").exists():
+        # 따로 그려 받은 초상화(정사각, 얼굴이 크게): HUD 칸 40×40의 2배로 줄인다
+        Image.open(root / f"assets/source/{name}_portrait.webp").convert("RGBA").resize(
+            (PORTRAIT_SIZE, PORTRAIT_SIZE), Image.LANCZOS).save(root / f"assets/ui/portrait_{name}.png")
     else:
         # 초상화: 남쪽 포즈 머리
         cell, foot, height = cells[2]
@@ -407,7 +598,7 @@ def build(root):
         head_w = int(height * 0.36)
         cx = (bb[0] + bb[2]) // 2
         crop = cell.crop((cx - head_w // 2, bb[1] - 4, cx + head_w // 2, bb[1] - 4 + head_w))
-        crop.resize((40, 40), Image.LANCZOS).save(root / "assets/ui/portrait_odysseus.png")
+        crop.resize((40, 40), Image.LANCZOS).save(root / f"assets/ui/portrait_{name}.png")
     return poses
 
 
@@ -438,5 +629,6 @@ def make_portrait(root):
 
 
 if __name__ == "__main__":
-    build(Path(sys.argv[1]))
-    print("odysseus 시트 생성")
+    outfit = sys.argv[2] if len(sys.argv) > 2 else "odysseus"
+    build(Path(sys.argv[1]), outfit)
+    print(f"{outfit} 시트 생성")
