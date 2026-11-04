@@ -10,7 +10,8 @@ gen_environment.py · gen_env_from_sheet.py 뒤에 돌린다. env.json에 항목
 - 소품: temple(3×3 아테나 신전) · steps(신전 계단) · lion(사자상) · fountain(2×2 분수) · stall_red/stall_white(차양 좌판)
         bell_tower(2×2 나무 종탑) · ladder(목마 사다리) · column_broken(부러진 기둥) · cypress · pine · pot(화분)
         rock · galley(5×2 갤리선) · boat(2×1 작은 배) · pier_post(부두 말뚝)
-그림을 받으면 gen_env_from_sheet.py처럼 받은 그림에서 잘라 같은 이름으로 덮어쓰면 코드는 그대로다.
+다시 그려 받은 그림(assets/source/troy_city.webp·troy_coast.webp)이 있으면 마지막에 gen_env_redraw.py가 잘라 같은 이름으로 덮어쓴다
+(임시 그림의 기준점을 물려받으므로 이 스크립트를 먼저 돌려야 한다).
 """
 import json
 import math
@@ -289,6 +290,9 @@ def main(root):
     meta["props"].update(props)
     (out / "env.json").write_text(json.dumps(meta, ensure_ascii=False))
     print("맵 개편용 임시 그림:", ", ".join(props), "+ 바닥", ", ".join(k for k, _ in EXTRA_FLOORS))
+    # 다시 그려 받은 그림(assets/source/troy_city·troy_coast)이 있으면 임시 그림을 덮어쓴다
+    from gen_env_redraw import apply
+    apply(root)
 
 
 if __name__ == "__main__":

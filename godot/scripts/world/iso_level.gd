@@ -33,6 +33,8 @@ var _source_id := 0
 var _cam_pos := Vector2.ZERO
 ## 연출: 카메라가 오디세우스 대신 따라갈 것(null이면 오디세우스)
 var camera_target: Node2D = null
+## 바다 칸 셰이더(water.gdshader) — 물 칸 지도는 _apply_floor에서 넣는다
+var water_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -131,6 +133,11 @@ func _make_tileset() -> TileSet:
 	for r in rows.size():
 		for v in variants:
 			src.create_tile(Vector2i(v, r))
+	if FLOOR_ROWS.has("water"):
+		water_material = ShaderMaterial.new()
+		water_material.shader = load("res://scripts/world/water.gdshader")
+		for v in variants:
+			src.get_tile_data(Vector2i(v, FLOOR_ROWS["water"]), 0).material = water_material
 	return ts
 
 
@@ -142,6 +149,20 @@ func _apply_floor() -> void:
 			var kind: String = floor_kind.get(c, "cobble")
 			var v := int(abs(hash(c)) % variants)
 			ground.set_cell(c, _source_id, Vector2i(v, FLOOR_ROWS[kind]))
+	if water_material:
+		var img := Image.create(W, H, false, Image.FORMAT_L8)
+		for c in floor_kind:
+			if c.x < 0 or c.y < 0 or c.x >= W or c.y >= H:
+				continue
+			if floor_kind[c] == "water":
+				img.set_pixelv(c, Color.WHITE)
+			elif floor_kind[c] == "planks":
+				img.set_pixelv(c, Color(0.5, 0.5, 0.5))
+		water_material.set_shader_parameter("water_map", ImageTexture.create_from_image(img))
+		water_material.set_shader_parameter("map_size", Vector2(W, H))
+		water_material.set_shader_parameter("origin", Iso.origin)
+		water_material.set_shader_parameter("ex", Iso.ex)
+		water_material.set_shader_parameter("ey", Iso.ey)
 
 
 func _build_astar() -> void:

@@ -285,6 +285,10 @@ func build() -> void:
 		add_prop("pine", c, true, false)
 	for c in [Vector2i(0, 9), Vector2i(1, 21), Vector2i(0, 33), Vector2i(1, 45)]:
 		add_prop("cypress", c, true, false)
+	for c in [Vector2i(16, 1), Vector2i(20, 0), Vector2i(0, 15), Vector2i(1, 28), Vector2i(0, 40)]:
+		add_prop("olive", c, true, false)
+	for c in [Vector2i(13, 0), Vector2i(27, 1), Vector2i(1, 4), Vector2i(0, 25), Vector2i(1, 37), Vector2i(1, 48)]:
+		add_prop("bush", c, true, false)
 
 
 func start() -> void:

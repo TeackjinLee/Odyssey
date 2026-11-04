@@ -155,9 +155,13 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 
 다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .`
 
-- 맵 개편용 소품·바닥은 받기 전이라 `tools/gen_env_extra.py`의 임시 생성 그림이다:
-  temple · steps · lion · fountain · stall_red/white · bell_tower · ladder · column_broken · cypress · pine · pot · rock ·
-  galley · boat · pier_post, 바닥 water · sand · planks. `troy_city`·`troy_coast` 그림(ART_PLAN §4.4)을 받으면 같은 이름으로 덮어쓴다
+- 맵 개편용 소품·바닥은 `tools/gen_env_extra.py`가 임시 그림을 만든 뒤, 끝에서 `gen_env_redraw.py`가 다시 그려 받은 그림
+  (`assets/source/troy_city.webp`·`troy_coast.webp`)을 잘라 같은 이름으로 덮어쓴다: temple · steps · lion · fountain · stall_red/white ·
+  bell_tower · ladder · column_broken · cypress · pine · olive · bush · pot · rock · galley · boat · pier_post, 바닥 water · sand · planks.
+  받은 그림은 안내 그림판(`docs/sprite_request/env_requests/<city|coast>_redraw/guide.png`)과 같은 자리라 `boxes.json` 상자로 자르고,
+  기준점은 임시 그림의 것을 물려받는다(그래서 늘 `gen_env_extra.py`부터 돌린다)
+- **바다**는 칸 그림 대신 셰이더(`scripts/world/water.gdshader`)로 그린다: 월드 좌표라 이음매가 없고, 물결이 흐르고 반짝임이 깜박이며,
+  뭍·성벽과 닿는 곳에 거품, 부두(planks) 앞쪽 물에 부두 옆면·그림자. 물 칸 지도는 `iso_level.gd`의 `_apply_floor`가 넣는다
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
   성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`
