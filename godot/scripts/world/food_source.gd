@@ -20,7 +20,7 @@ func setup(id: String, look_kind := "") -> FoodSource:
 	look = look_kind
 	left = int(info.get("servings", 1))
 	label = "%s %s" % [info.get("name", id), info.get("verb", "먹기")]
-	if Game.level and Game.level.get("rations") != null and info.get("kind", "") != "fish":
+	if Game.level and Game.level.get("rations") != null and info.get("kind", "") != "fish" and not info.has("no_store"):
 		label = "%s — 길게: %s · 짧게: 배 창고에(+%d)" % [info.get("name", id), info.get("verb", "먹기"), Rations.units_of(info)]
 	hold_time = 3.5 if info.get("kind", "") == "fish" else (1.0 if info.get("kind", "") == "meat" else 0.7)
 	radius = 26.0
@@ -47,6 +47,9 @@ func _eat(by) -> void:
 func tap(by) -> void:
 	var r = Game.level.get("rations") if Game.level else null
 	if r == null or not by is Player or info.get("kind", "") == "fish":
+		return
+	if info.has("no_store"):
+		Game.show_hint(String(info["no_store"]))
 		return
 	var n: int = r.add(Rations.units_of(info))
 	Fx.text(global_position + Vector2(0, -30), "창고 +%d" % n if n > 0 else "창고가 가득 찼다", Color(0.75, 0.9, 1.0))

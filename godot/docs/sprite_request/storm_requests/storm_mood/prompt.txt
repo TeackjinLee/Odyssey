@@ -1,0 +1,24 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Attached images:
+1) style_env.png = the STYLE reference (our isometric night Troy sheet: palette, outline, pixel density).
+2) game_storm_now.png = the CURRENT game screen of the storm scene (camera angle, zoom, ship size). It looks flat and cheap:
+   the sea is only noise stripes and the rain is thin lines. Make the TARGET LOOK of this same screen, much better.
+Make the image 1536x1024 (landscape).
+
+Pixel art game screen mock-up, NO user interface: a violent night storm at sea in ancient Greece, seen from the SAME
+2:1 isometric game camera as game_storm_now.png (looking down about 30 degrees, no horizon, no sky visible, only sea surface).
+A small Greek galley (one mast, sail furled and lashed to the yard, a row of oars, dark wet wooden hull, about the same size
+and place as in game_storm_now.png, bow to the upper right) struggles in the middle. A big wave breaks against its LEFT side
+and throws a tall burst of white spray over the deck.
+The sea fills the whole frame: heavy rolling swells running diagonally across the screen, deep near-black navy troughs,
+steel-blue faces, grey-blue crests with ragged white foam lips, long lace-like foam streaks blown along the wind,
+scattered whitecaps breaking, wind-blown spray mist. Slanted rain streaks over everything, small rain splashes on the water.
+Big moving shadows of storm clouds darken parts of the sea. A lightning strike far to the upper left lights one patch of the sea
+pale cold blue-white for an instant (the light falls on the water, the bolt itself enters from the top edge).
+A couple of dark jagged sea rocks with foam around them, like the rocks in game_storm_now.png.
+Colors: cold and dark: navy, slate, steel blue, grey-green foam shadows, off-white foam; the only warm color is a tiny
+lantern on the ship. Keep it readable: the ship and the breaking waves must stand out from the dark sea.
+Style: 2D pixel art, crisp hard-edged pixels, no anti-aliasing blur, no soft airbrush glow, no photo texture,
+limited palette, matching the outline, palette and pixel density of the attached style reference.
+No text, no letters, no UI, no frame border, no characters' faces close-up.

@@ -63,6 +63,10 @@ var weapons: WeaponLayer
 var script_goal := Vector2.INF
 ## 타고 있는 배(Ship). 타는 동안은 숨겨지고, 배가 키 입력을 받는다(챕터 2 항해 모드)
 var riding: Node2D = null
+## 로토스 열매(food.json의 effect "forget")를 먹으면 이만큼(초) 고향을 잊는다: 걸음이 흐트러지고 느려지며 달리지 못한다.
+## 레벨은 그동안 목표 표시를 숨긴다(on_forget). 챕터 2 로토스 섬
+const FORGET_TIME := 16.0
+var forget_t := 0.0
 
 
 func _ready() -> void:
@@ -120,6 +124,7 @@ func _physics_process(delta: float) -> void:
 	if since_hurt > 5.0:
 		hp = minf(max_hp, hp + max_hp * 0.04 * regen_mult() * delta)
 	_update_nutrition(delta)
+	forget_t = maxf(0.0, forget_t - delta)
 	if Game.cutscene:
 		return
 	if Game.autoplay or Input.is_action_just_pressed("interact"):
@@ -217,6 +222,7 @@ func _assist_target(mv: Vector2, far: bool) -> Actor:
 
 func think(delta: float) -> void:
 	_read_input()
+	_forget_input(delta)
 	_update_nutrition(delta)
 	heavy_cd = max(0.0, heavy_cd - delta)
 	skill_cd = max(0.0, skill_cd - delta)
@@ -275,7 +281,7 @@ func _free_move(delta: float) -> void:
 		body.pause()
 		return
 	if inp["interact"]:
-		var it: Interactable = Game.level.find_interactable(global_position)
+		var it: Interactable = Game.level.find_interactable(global_position, Game.autoplay)
 		if it:
 			if it.hold_time <= 0.0:
 				it.use(self)
@@ -459,6 +465,23 @@ func eat(food_id: String) -> void:
 		Fx.text(global_position + Vector2(0, -head_height - 16), "넘쳐서 지방 +%d" % roundi(r["to_fat"]), Color(0.95, 0.85, 0.7))
 	Sfx.play("eat", -6.0)
 	Game.stats["meals"] = Game.stats.get("meals", 0) + 1
+	if f.get("effect", "") == "forget":
+		forget_t = FORGET_TIME
+		Game.stats["lotus"] = Game.stats.get("lotus", 0) + 1
+		if Game.level and Game.level.has_method("on_forget"):
+			Game.level.on_forget()
+
+
+## 고향을 잊은 동안: 가려는 방향이 천천히 흔들리며 빗나가고, 걸음이 느리고, 달리기·구르기를 못 한다
+func _forget_input(delta: float) -> void:
+	if forget_t <= 0.0:
+		return
+	forget_t -= delta
+	var mv: Vector2 = inp["move"]
+	var k := clampf(forget_t / 3.0, 0.0, 1.0)
+	inp["move"] = mv.rotated(k * 0.9 * sin(forget_t * 1.3) + k * 0.4 * sin(forget_t * 3.1)) * (1.0 - 0.45 * k)
+	inp["run"] = false
+	inp["dodge"] = false
 
 
 func use_stamina(amount: float) -> bool:
@@ -677,7 +700,8 @@ func _bot_input() -> Dictionary:
 			if hp < max_hp * 0.5 and skill_cd <= 0.0:
 				out["skill"] = true
 		return out
-	var it: Interactable = Game.level.find_interactable(global_position)
+	# 봇은 로토스 열매(먹으면 고향을 잊음)는 건드리지 않는다
+	var it: Interactable = Game.level.find_interactable(global_position, true)
 	if it:
 		out["interact"] = true
 		out["interact_held"] = true

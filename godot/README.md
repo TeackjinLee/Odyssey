@@ -101,7 +101,8 @@ Master/Music/SFX), 전체 화면, 키 바꾸기(동작을 누르고 새 키, Esc
 
 ## 챕터 2 진행 (항해 모드 기반)
 
-맵은 64×56칸, 거의 바다다. 오른쪽 위가 키코네스족의 땅 **이스마로스**, 가운데 작은 섬과 암초들. 자세한 것은 [docs/maps/CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md).
+맵은 64×104칸, 거의 바다다. 위쪽(y 0~55)은 오른쪽 위가 키코네스족의 땅 **이스마로스**, 가운데 작은 섬과 암초들.
+아래쪽(y 58~)은 폭풍에 밀려 닿는 **로토스 섬**. 자세한 것은 [docs/maps/CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md).
 
 1. **항해** — 오디세우스는 갤리선을 몬다(몸은 배 위에 숨고 배가 키를 받는다). W/S 노 단계(뒤로·멈춤·천천히·힘껏 — 힘껏은
    노꾼 힘을 쓴다), A/D 키(느리면 잘 안 돎), Shift 돛(바람을 등지면 빨라지고 맞바람에 펴면 밀림). 해안·암초에 빠르게 부딪히면 선체가 상한다.
@@ -112,11 +113,17 @@ Master/Music/SFX), 전체 화면, 키 바꾸기(동작을 누르고 새 키, Esc
 4. **반격** — 마지막 창고를 털면 새벽, 해안 양쪽에서 먼저, 이어 내륙에서 두 번 키코네스족이 몰려온다(마지막엔 전사장 — 보스).
    해안의 배 앞에서 E를 4초 길게 눌러 **배를 띄운다**(맞으면 끊김 — 2 위치 사수로 부하를 곁에). 260px보다 멀리 쓰러진 부하는 두고 간다
 5. **탈출** — 제우스의 북풍이 남쪽으로 세게 분다. 해안에서 떠난 키코네스 배 셋이 쫓아와 화살을 쏜다. 갑판의 궁병·창병이 맞쏘고,
-   힘껏 저어 뱃머리로 들이받으면 크게 부서진다. 화면 아래쪽 먼바다(57~63, 49~55)에 닿으면 클리어 — 하루가 지나 부하가 창고에서 먹는다.
-   부하를 하나도 잃지 않으면 칭호 「아무도 두고 오지 않은 자」
+   힘껏 저어 뱃머리로 들이받으면 크게 부서진다. 화면 아래쪽 먼바다(57~63, 49~55)에 닿으면 탈출
+6. **폭풍** — 비·번개 속에서 32초를 버틴다. 파도는 바람 쪽에서 오니 뱃머리나 고물로 받는다(옆구리로 맞으면 선체·부하가 크게 다침,
+   목표 표시를 따라가면 바람을 등진다). 노는 파도에 휩쓸려 느리고, 돛을 펴 두면 찢어진다. 버티면 여러 날 밀려 다닌다(식량 창고에서 사흘 치). 남쪽 로토스 섬 앞바다에서 깬다
+7. **로토스 섬** — 북쪽 해안에 배를 대고 내리면 뒤쪽 부하 둘이 정찰을 떠나 로토스 열매를 먹고 **고향을 잊는다**(명령을 듣지 않고 앉아 있음).
+   다가가 길게 E로 붙잡으면 묶인 채 따라온다. 다른 부하도 열매 곁(120px)에 5초 넘게 있으면 끌려가 먹는다 — 해안에서 2 위치 사수로 세워 두고 혼자 가는 게 정답.
+   로토스 열매는 배 창고에 넣지 못하고, 오디세우스가 먹으면 16초 동안 걸음이 흐트러지고 목표 표시가 사라진다. 로토파고스(분홍빛 섬사람)는 말을 걸면 열매를 권한다
+8. **출항** — 해안의 배 앞에서 길게 E(2초). 고향을 잊은 채 남은 부하는 섬에 남는다. 섬에서 멀리(22칸) 벗어나면 클리어 — 하루가 지나 부하가 창고에서 먹는다.
+   이스마로스와 로토스 섬에서 부하를 하나도 잃지 않으면 칭호 「아무도 두고 오지 않은 자」
 
 **식량 창고**: 항해 하루(배 위 50초)마다 부하가 1몫씩 먹는다. 모자라면 배부름이 줄고, 50 아래면 부하의 회복·공격력(갑판 사격 포함)이 준다.
-챕터 2 체크포인트: 상륙 · 반격 시작 · 출항.
+챕터 2 체크포인트: 상륙 · 반격 시작 · 출항 · 폭풍 · 로토스 섬.
 
 **체크포인트**: 잠입 시작(시논 대화 뒤) · 부하 합류 · 권양기 앞. 쓰러지면 "체크포인트에서 다시"로 그 단계부터 하고,
 골라서 하는 목표(정찰병·무기고)와 경보로 는 경비는 그대로, 기록은 체크포인트 때 값으로 돌아간다(`chapter1_troy.gd`의 `restore_checkpoint`).
@@ -137,7 +144,9 @@ scripts/
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
     chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
-    chapter2_ismaros.gd 챕터 2 바다 맵·상륙/약탈/반격/승선/탈출·바다 길찾기(sea_path)·바람
+    chapter2_ismaros.gd 챕터 2 바다 맵·상륙/약탈/반격/승선/탈출·폭풍·로토스 섬·바다 길찾기(sea_path)·바람
+    storm_fx.gd       폭풍 화면 효과(빗줄기·번개, 화면 좌표)
+    sea_fx.gd         폭풍 바다 이펙트(파도머리·빗방울·거품 띠·물안개·뱃머리 물보라·뱃전 파도, 월드 좌표)
     ship.gd            배(Ship): 관성 이동·노 단계·돛·바람·키·암초 충돌·들이받기·갑판 사격·적 배 AI·봇, 임시 그림
     rations.gd         배의 식량 창고와 부하 배부름(항해 하루마다 먹음) — docs/NUTRITION.md §7
     food_source.gd     먹을 것이 있는 지점(채집·고기·낚시터) — 음식 값은 data/food.json
@@ -174,13 +183,16 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 
 ### 소리
 
+바다 무늬·폭풍 이펙트: 받은 `assets/source/sea_storm`·`sea_calm`·`storm_fx.webp` → `python3 tools/gen_storm.py .` → `assets/env/sea_*.png`·`assets/fx/storm_*`
+(요청 묶음 `docs/sprite_request/storm_requests/`, 칸 좌표는 그 안 `storm_fx/boxes.json`). 바다 무늬가 없으면 셰이더 줄무늬로 그린다.
+
 모든 소리는 `tools/gen_audio.py`가 합성한다(녹음·외부 소리 없음): `python3 tools/gen_audio.py .` (`sfx`·`amb`·`music` 중 골라서도 됨, 음악은 1분쯤).
 느낌은 영화 《오디세이》(2026, 루드비히 고란손 음악)처럼 — 오케스트라 없이 고대 악기(리라·아울로스·청동 징·두드린 쇠붙이),
 그 소리를 일그러뜨린 신시, 말 없는 목소리·합창. 선율·화성은 이 게임용으로 새로 만든 것이다.
 
 - 효과음 `assets/audio/sfx/<이름>.wav`(변형은 `_1`…`_n`): swing·swing_heavy·hit·hit_heavy·block·parry·bow·arrow_hit·cry·shout·death·step·
-  bell·horn·gate·winch·ui·ui_ok·checkpoint·alert·takedown·torch_out·torch_on·fire_burst·stone·switch
-- 환경음 `assets/audio/amb/`: wind(늘) · fire(성문이 열리면 크게) · sea(동쪽 해안에 가까울수록) · battle(성문 사수 동안)
+  bell·horn·gate·winch·ui·ui_ok·checkpoint·alert·takedown·torch_out·torch_on·fire_burst·stone·switch·eat·cluck·bleat·splash·oar·ram·thunder·wave
+- 환경음 `assets/audio/amb/`: wind(늘) · fire(성문이 열리면 크게) · sea(동쪽 해안에 가까울수록) · battle(성문 사수 동안) · rain(챕터 2 폭풍)
 - 음악 `assets/audio/music/`: theme(타이틀) · stealth(잠입) · battle(들켜 싸울 때, 권양기) · siege(성문 사수) · ending(출항) · victory · defeat
   — 들키면 전투 곡으로 바뀌고 싸움이 끝나고 6초 뒤 잠입 곡으로 돌아간다(`chapter1_troy.gd`의 `_update_audio`)
 - 녹음·작곡한 소리로 바꾸려면 **같은 이름**의 `.wav`/`.ogg`를 덮어쓰면 된다(코드 수정 없음). 파일이 없으면 효과음은 코드 합성음, 음악은 조용히 넘어간다
@@ -262,14 +274,14 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 ```bash
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
-godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장
+godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장 (--nohud: HUD 없이, 그림 요청 첨부용)
 godot --headless --fixed-fps 60 --path . -- --start=winch --auto --quit-after=300   # 권양기 앞에서 시작해 사수까지
 godot --path . -- --start=ending                                  # 바로 엔딩(부두 → 출항 → 챕터 2 예고)
 godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기
 godot --path . -- --start=gate --menu=settings                    # 설정 화면을 띄운 채로(--menu=pause는 일시정지)
 godot --path . -- --continue                                      # 저장된 체크포인트에서 바로 이어 하기
-godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=300   # 챕터 2 봇: 항해 → 상륙 → 약탈 → 반격 → 승선 → 탈출
-godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 상륙한 뒤부터 (--start=retreat 반격, --start=escape 출항)
+godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=400   # 챕터 2 봇: 항해 → 상륙 → 약탈 → 반격 → 승선 → 탈출 → 폭풍 → 로토스 섬 → 출항
+godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 상륙한 뒤부터 (--start=retreat 반격, escape 출항, storm 폭풍, lotus 로토스 섬 앞바다, lotus_land 로토스 섬 상륙)
 ```
 
 `--fixed-fps 60`(Godot 엔진 인자)을 주면 한 프레임을 늘 1/60초로 치고 실시간을 기다리지 않아 몇 배 빨리 끝난다.
@@ -277,7 +289,8 @@ godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 
 마지막 대규모 전투에 무작위가 섞여 있으니 봇은 2~3번 돌려 본다.
 
 `--god`(무적, 배도 안 가라앉음), `--play`(타이틀 건너뛰기)도 있다. `REPORT`의 `step`이 4이고 `capture`가 100이면 클리어, `ending`이 true면 엔딩까지 끝난 것이다.
-챕터 2는 `ending`이 true면 클리어 — `hull`(선체), `rations`(창고)·`fullness`(배부름)·`day`, `crew`·`lost`(잃은 부하), `looted`, `boats`(남은 적 배)도 찍힌다.
+챕터 2는 `ending`이 true면 클리어 — `hull`(선체), `rations`(창고)·`fullness`(배부름)·`day`, `crew`·`lost`(잃은 부하), `looted`, `boats`(남은 적 배),
+`step`(7이면 로토스 섬 출항 뒤), `bound`(끌고 온 부하), `lotus_eaten`(오디세우스가 로토스를 먹은 횟수 — 봇은 0이어야 함)도 찍힌다.
 
 ## 수치 조정
 
@@ -293,4 +306,6 @@ godot --path . -- --chapter=2 --start=landing                     # 챕터 2를 
 - 권양기 시간·내려가는 빠르기: `chapter1_troy.gd`의 `WINCH_TIME`·`REOPEN_TIME`·`CLOSE_TIME`·`WINCH_DROP`
 - 배: `ship.gd`의 `OAR_SPEED`·`SAIL_SPEED`·`ACCEL`·`TURN_RATE`·`TURN_FULL`·`ROW_DRAIN`·`BUMP_*`·`RAM_*`·`DECK_FIRE`, 적 배 `as_enemy_boat()`
 - 챕터 2 흐름: `chapter2_ismaros.gd`의 `LAND_SPEED`·`LOOT_UNITS`·`CARRY_DIST`·`COUNTER_*`·`LAUNCH_TIME`·`REEFS`·`BOATS`, 바람 `_wind_base`·`wind_strength`
+- 폭풍: `chapter2_ismaros.gd`의 `STORM_TIME`·`STORM_WIND`·`STORM_SPEED`·`SURGE_EVERY`·`SURGE_DMG`·`SURGE_CREW_DMG`·`STORM_REEFS`
+- 로토스 섬: `chapter2_ismaros.gd`의 `STORM_DAYS`·`SCOUTS`·`LURE_DIST`·`LURE_TIME`·`LOTUS_TREES`·`LOTUS_EXIT_DIST`, 고향을 잊는 시간 `player.gd`의 `FORGET_TIME`
 - 식량 창고: `rations.gd`의 `DAY_LEN`·`FED_GAIN`·`MISS_LOSS`·`HUNGRY`·`START_STORE`
