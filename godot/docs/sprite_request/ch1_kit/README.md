@@ -37,4 +37,14 @@
 트로이 검병·창병·궁수·대장, 그리스 검병·창병·궁수를 같은 화풍의 기본 8방향으로 받았다(`style_ref.png` = 1장 오디세우스 시트,
 배치·화풍만 참고). `assets/source/<이름>_8dir.webp` → `python3 tools/gen_hero.py . <이름>`.
 `ARMED_BODIES`에서 이 7종은 오디세우스 기본 시트와 같은 배율을 써서 그려 받은 키 차이(대장은 크게)를 살린다.
-동작은 아직 기본 8방향의 변형이다. **`tools/gen_characters.py`를 다시 돌리면 이 7종 시트를 옛 64px 그림으로 덮어쓴다.**
+`tools/gen_characters.py`는 그려 받은 원본이 있는 캐릭터를 건너뛴다(덮어쓰지 않음).
+
+**트로이 검병 동작(`units/trojan_sword/`):** 적이 쓰는 걷기·공격1·2·피격·쓰러짐 13장을 받았다(`armed_patch.py <폴더> unit`이
+오디세우스 전용 문구를 병사 무기 문구로 바꾼다). `SPRITE_CHAR=trojan_sword SPRITE_SRC_H=320`으로 묶고, `gen_hero.py`는
+병사 걷기 줄에 1장 오디세우스 걷기와 같은 배율을 써서 키 차이를 살린다(고정 배율이면 걷기도 키를 216에 억지로 맞추지 않는다).
+나머지 6종 동작은 아직 기본 8방향의 변형이다.
+
+**HUD 초상화:** `extra/portrait`로 받은 그림을 `assets/source/odysseus_ch1_portrait.webp`로 두면 `gen_hero.py`가
+`portrait_odysseus_ch1.png`(80×80)를 만들고, HUD는 입은 옷의 초상화를 쓴다.
+**활쏘기 북동:** 세 번 실패한 뒤 옆모습 줄(`side.png`)을 같이 붙이고 "45도 위로"를 강조한 한 방향 요청(`extra/bow_NEd`)으로 받았다.
+크게(키 480) 그려 와서 다른 방향 키(327)에 맞춰 줄인 뒤 묶었다.

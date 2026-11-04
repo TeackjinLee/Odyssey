@@ -149,7 +149,7 @@ def main(root, anim, cols=4, rows=3, n=None):
         else:
             hs = sorted(f.height for f, _ in fr)
             k = CHAR_H / hs[len(hs) // 2]
-        drawn[d] = [fit(f, k, 1.0 if flight or (SRC_H and anim != "walk") else FIT_TOL) for f, _ in fr]
+        drawn[d] = [fit(f, k, 1.0 if flight or SRC_H else FIT_TOL) for f, _ in fr]
         base = max(b for _, b in fr)
         lift[d] = [round((base - b) * k) if flight else 0 for _, b in fr]
     sheet = Image.new("RGB", (CELL * n, CELL * len(ROWS)), MAGENTA)

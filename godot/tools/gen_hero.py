@@ -539,7 +539,10 @@ def build(root, name="odysseus"):
     strips = {}
     k = None
     n_frames = {a[0]: a[1] for a in ANIMS}
-    strips["walk"], k, walk_head = strip_frames(root, "walk", cols=n_frames["walk"], name=body, gear=gear)
+    unit_ref = ARMED_BODIES.get(body)
+    # 다른 캐릭터와 같은 배율을 쓰는 병사: 그 캐릭터 걷기 줄의 배율을 그대로 쓴다(같은 SPRITE_SRC_H로 묶었으므로 같은 원본 픽셀 크기)
+    k_ref = strip_frames(root, "walk", cols=n_frames["walk"], name=unit_ref)[1] if isinstance(unit_ref, str) else None
+    strips["walk"], k, walk_head = strip_frames(root, "walk", k=k_ref, cols=n_frames["walk"], name=body, gear=gear)
     strips["run"], _, _ = strip_frames(root, "run", cols=n_frames["run"], ref=(k, walk_head), name=body, gear=gear)
     for anim in ATTACK_HANDS:
         if strips["walk"]:
@@ -584,6 +587,10 @@ def build(root, name="odysseus"):
     (out / f"{name}.json").write_text(json.dumps(meta, ensure_ascii=False))
     if name == "odysseus" and (root / PORTRAIT_SRC).exists():
         make_portrait(root)
+    elif (root / f"assets/source/{name}_portrait.webp").exists():
+        # 따로 그려 받은 초상화(정사각, 얼굴이 크게): HUD 칸 40×40의 2배로 줄인다
+        Image.open(root / f"assets/source/{name}_portrait.webp").convert("RGBA").resize(
+            (PORTRAIT_SIZE, PORTRAIT_SIZE), Image.LANCZOS).save(root / f"assets/ui/portrait_{name}.png")
     else:
         # 초상화: 남쪽 포즈 머리
         cell, foot, height = cells[2]

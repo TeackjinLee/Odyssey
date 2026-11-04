@@ -1,0 +1,7 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) concept.png = the hero Odysseus to portray (copy his face, helmet, crest, cape and armor colors EXACTLY).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+A square 1024x1024 pixel-art CHARACTER PORTRAIT for a game HUD: head and shoulders of the hero in concept.png, three-quarter view facing slightly to the right, determined cunning expression, dark eyebrows, brown eyes, short dark beard, bronze Corinthian helmet with gold scroll ornaments (face fully visible) and the tall red horsehair crest (the crest may be cut by the top edge), red cape and round gold shoulder clasps visible at the bottom.
+The face fills most of the image (it will be shrunk to 40x40 pixels, so the face must be BIG and readable).
+Background: flat dark charcoal blue #252C34. Crisp pixel art, chunky readable pixel clusters, 1px dark outline, no text, no frame, no border.

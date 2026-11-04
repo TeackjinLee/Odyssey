@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """motion_request.py가 만든 요청 폴더의 prompt.txt를 '무기 든 1장 오디세우스'용으로 고친다.
 맨손 문구를 칼·별 방패·등의 활을 든 문구로 바꾸고, 공격에는 베기 효과(궤적)를 넣어 역동적으로 그리게 한다.
-사용: python3 armed_patch.py <요청 폴더>
+사용: python3 armed_patch.py <요청 폴더> [unit]
+  unit: 병사(적·동료)용 — 오디세우스 전용 문구(별 방패·등의 활)를 pose.png의 무기·방패로 바꾼다
 """
 import re
 import sys
@@ -49,8 +50,19 @@ def patch(job: Path):
     p.write_text(t)
 
 
+def unitize(job: Path):
+    p = job / "prompt.txt"
+    t = p.read_text()
+    t = t.replace("the bronze sword GRIPPED", "his weapon (exactly as in pose.png) GRIPPED").replace("the round bronze star shield", "his shield (exactly as in pose.png)")
+    t = t.replace(", the bow and quiver stay slung on his back", "").replace(" The red cape and the helmet crest follow the motion.", "")
+    t = t.replace("the sword tip path", "the weapon tip path").replace("drawn BEHIND the sword blade", "drawn BEHIND the weapon")
+    p.write_text(t)
+
+
 if __name__ == "__main__":
     for job in sorted(Path(sys.argv[1]).iterdir()):
         if (job / "prompt.txt").exists():
             patch(job)
+            if len(sys.argv) > 2 and sys.argv[2] == "unit":
+                unitize(job)
             print("고침", job.name)

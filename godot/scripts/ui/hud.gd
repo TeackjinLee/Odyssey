@@ -247,7 +247,9 @@ func _draw_hud() -> void:
 
 func _draw_player(p: Player) -> void:
 	_panel(Rect2(6, 6, 178, 48))
-	var tex := _portrait("res://assets/ui/portrait_odysseus.png")
+	var tex := _portrait("res://assets/ui/portrait_%s.png" % p.sheet)   # 입은 옷의 초상화가 있으면 그것
+	if tex == null:
+		tex = _portrait("res://assets/ui/portrait_odysseus.png")
 	if tex == null:
 		tex = _portrait("res://assets/ui/portrait_odysseus_sword.png")
 	canvas.draw_rect(Rect2(9, 9, 42, 42), Color(0.2, 0.15, 0.12))
