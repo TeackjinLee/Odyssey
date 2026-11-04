@@ -16,13 +16,15 @@ sys.path.insert(0, str(HERE.parent))
 import armed_patch  # noqa: E402
 
 ANIMS = {"sword": "walk,attack1,attack2,hit,death", "spear": "walk,attack1,attack2,hit,death",
-         "archer": "walk,bow,hit,death", "captain": "walk,attack1,attack2,attack3,hit,death"}
+         "archer": "walk,bow,hit,death", "sinon": "walk", "captain": "walk,attack1,attack2,attack3,hit,death"}
 THRUST = ("- His weapon is a LONG SPEAR: every strike is a straight THRUST of the spear tip toward the facing direction "
           "(both hands may guide the shaft), the spear stays fully inside the cell. The trail is a straight streak along the thrust, not a crescent.")
 ARCHER = ("- WEAPONS EXACTLY LIKE pose.png in EVERY frame: his bow (exactly as in pose.png) held in the LEFT fist, the quiver on his back. "
           "NO shield, NO sword.")
 ARCHER_BOW = ("- He holds his bow (exactly as in pose.png) in the LEFT fist with an arrow nocked on the string from frame 1 to 3; "
               "frame 4 the arrow has left. The quiver stays on his back. NO shield, NO sword. Draw the bow and string crisply, never cut off.")
+UNARMED = ("- EMPTY HANDS in EVERY frame: no weapon, no shield; a loose rope hangs from both wrists and swings with the arms. "
+           "Keep him slightly hunched and sly, exactly like pose.png.")
 HEAVY_LAYOUT = ("- ONE image 1536x1024, 3 columns x 2 rows, every cell 512x512: frames 1-3 in the top row, frames 4-6 in the bottom row "
                 "(guide.png shows the same 6 frames in one row, left to right), no gaps. \n"
                 "- All 6 cells show the SAME facing, frames in reading order (left to right, then the second row).")
@@ -45,6 +47,8 @@ def tweak(job: Path, kind: str):
         t = t.replace(armed_patch.BOW, ARCHER_BOW)
         t = t.replace(armed_patch.ACTION_HANDS["death"], ARCHER.replace("held in the LEFT fist", "slipping from the LEFT fist and lying beside him in the last frames"))
         t = t.replace(armed_patch.ARMED, ARCHER)
+    if kind == "sinon":
+        t = t.replace(armed_patch.ARMED, UNARMED)
     t = t.replace("the bronze sword slipping", "his weapon slipping")
     if kind == "spear" and anim.startswith("attack"):
         t = t.replace("- Do NOT draw the stick lines", THRUST + "\n- Do NOT draw the stick lines")
@@ -85,7 +89,7 @@ def main(names, only=None):
     spec.loader.exec_module(mr)
     mr.GROUPS["heavy"] = [["E"], ["SE"], ["S"], ["NE"], ["N"]]
     for name in names:
-        kind = name.split("_")[1]
+        kind = name.split("_")[1] if "_" in name else name
         if not (HERE / f"{name}_motion.txt").exists():
             (HERE / f"{name}_motion.txt").write_text(motion_text(name) + "\n")
         out = HERE / name
@@ -101,7 +105,7 @@ def main(names, only=None):
         for job in sorted(out.iterdir()):
             if (job / "prompt.txt").exists() and (not only or job.name.split("_")[0] in anims):
                 armed_patch.patch(job)
-                if kind == "archer":
+                if kind in ("archer", "sinon"):
                     tweak(job, kind)
                 armed_patch.unitize(job)
                 tweak(job, kind)

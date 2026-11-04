@@ -306,7 +306,7 @@ func start() -> void:
 	player.face(_gdir(Vector2(1, 0)))
 	_start_pos = player.position
 	sinon = Npc.new()
-	sinon.setup("greek_archer", Lines.t("names.sinon"), _talk_sinon)
+	sinon.setup("sinon", Lines.t("names.sinon"), _talk_sinon)
 	sinon.position = Iso.grid_to_world(START_CELL + Vector2(2.6, 0.6))
 	world.add_child(sinon)
 	var south := _gdir(Vector2(0, 1))

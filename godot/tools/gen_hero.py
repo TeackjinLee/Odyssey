@@ -372,7 +372,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
 # 값이 숫자면 그 키로 방향마다 맞추고, 다른 캐릭터 이름이면 그 캐릭터 기본 시트와 같은 배율(원본 픽셀당)을 써서
 # 원래 그려 받은 키 차이(대장은 더 크게, 투구 없는 궁수는 작게)를 그대로 살린다. 적·동료는 기본 8방향만 받아 동작은 변형으로 만든다
 ARMED_BODIES = {"odysseus_ch1": 118, **{n: "odysseus_ch1" for n in (
-    "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain")}}
+    "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain", "sinon")}}
 
 
 def armed_k(root, body, height):

@@ -151,3 +151,8 @@ portrait/trojan_archer /Users/itaegjin/.codex/generated_images/01a1a4f3-ebd2-776
 portrait/trojan_captain /Users/itaegjin/.codex/generated_images/01a1a4f3-efe5-7f00-8206-c336b801845c/exec-c446c143-cd49-4c49-b85b-e272849e6a9a.png
 portrait/trojan_spear /Users/itaegjin/.codex/generated_images/01a1a4f3-f119-7271-a7b1-d6003b61a939/exec-0e39dc13-8172-4408-a2f0-324c31c00ec0.png
 portrait/trojan_sword /Users/itaegjin/.codex/generated_images/01a1a4f3-f774-7323-bef1-6cab9e0feb97/exec-d7a47824-a522-4892-8ed7-98a2ab33ad25.png
+sinon/walk_Ea /Users/itaegjin/.codex/generated_images/01a1a521-8496-7eb0-8198-99161d5f0329/exec-439becdd-87b8-43aa-bd92-a9f358ebda06.png
+sinon/walk_NEa /Users/itaegjin/.codex/generated_images/01a1a521-8498-77b2-9c2d-fd93cbe76593/exec-5c9a9f86-72e0-4f2b-8eb7-4573da4d197c.png
+sinon/walk_Na /Users/itaegjin/.codex/generated_images/01a1a521-849e-7ac3-a53e-63c8066e473e/exec-f37e0620-7ef7-427e-8f49-de8ffe9ed9a3.png
+sinon/walk_SEa /Users/itaegjin/.codex/generated_images/01a1a521-84bf-7eb1-b0ef-dcc273b74684/exec-e4f7ddfb-dfae-4180-bd73-6909c4d35cbd.png
+sinon/walk_Sa /Users/itaegjin/.codex/generated_images/01a1a521-8497-76a3-8a84-3954c3892ff2/exec-73e364e4-7715-4348-96bf-0bd6c9d63ac3.png
