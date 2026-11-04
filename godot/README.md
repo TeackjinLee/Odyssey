@@ -198,6 +198,12 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 - 녹음·작곡한 소리로 바꾸려면 **같은 이름**의 `.wav`/`.ogg`를 덮어쓰면 된다(코드 수정 없음). 파일이 없으면 효과음은 코드 합성음, 음악은 조용히 넘어간다
 - 크기: 효과음은 부르는 곳의 dB, 음악은 `bgm.gd`의 `MUSIC_DB`, 환경음은 `_update_audio`의 0~1 값
 
+### 영상
+
+타이틀에서 챕터를 고르면 `assets/video/ch<n>_intro.ogv`가 있을 때 먼저 튼다(`main.gd`의 `play_intro`, Enter·Esc·E·Space·Z·클릭으로 건너뜀).
+원본 `assets/source/video/ch<n>_intro.mp4` → `python3 tools/gen_video.py .` → `.ogv`(Godot는 Theora만 재생, 변환에 Godot 무비 메이커를 쓴다 — 창이 잠깐 뜬다).
+챕터 1 오프닝은 실사풍 4컷(`docs/sprite_request/TROY_INTRO_VIDEO.md`)을 이어 붙인 것. 체크포인트·다시 하기·검증 인자(`--play` 등)로 시작하면 틀지 않는다(`--intro`면 튼다).
+
 ### 핵심 규칙
 
 - **좌표**: 모든 위치는 화면(월드) 좌표, 인물 위치는 발 밑. 격자 칸은 64×32 마름모(2:1).
@@ -277,6 +283,7 @@ godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장 (--nohud: HUD 없이, 그림 요청 첨부용)
 godot --headless --fixed-fps 60 --path . -- --start=winch --auto --quit-after=300   # 권양기 앞에서 시작해 사수까지
 godot --path . -- --start=ending                                  # 바로 엔딩(부두 → 출항 → 챕터 2 예고)
+godot --path . -- --intro                                         # 챕터 1 오프닝 영상부터(끝나면 챕터 1)
 godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기
 godot --path . -- --start=gate --menu=settings                    # 설정 화면을 띄운 채로(--menu=pause는 일시정지)
 godot --path . -- --continue                                      # 저장된 체크포인트에서 바로 이어 하기

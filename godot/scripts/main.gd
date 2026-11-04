@@ -13,6 +13,7 @@ extends Node
 ##   --god          오디세우스가 죽지 않음(흐름 확인용)
 ##   --menu=pause   1초 뒤 일시정지 메뉴를 띄움 (--menu=settings는 설정 화면)
 ##   --at=x,y       오디세우스를 그 칸에 옮겨 놓음(맵 화면 확인용, 적은 그대로)
+##   --intro        챕터 오프닝 영상부터(--chapter=n과 같이. 타이틀에서 챕터를 고르면 영상이 있을 때 늘 먼저 나온다)
 
 const CHAPTERS := [
 	["CHAPTER 1", "트로이의 목마", "트로이 성에 잠입하라", true],
@@ -27,6 +28,8 @@ var level: Node = null
 var hud: Hud = null
 var menu: Control = null
 var args := {}
+var intro: VideoStreamPlayer = null   # 틀고 있는 오프닝 영상
+var _intro_chapter := 1
 
 
 func _ready() -> void:
@@ -36,6 +39,8 @@ func _ready() -> void:
 	if args.has("continue") and not Game.progress.get("checkpoint", {}).is_empty():
 		Game.checkpoint = Game.progress["checkpoint"].duplicate(true)
 		start_chapter(true)
+	elif args.has("intro"):
+		play_intro(int(args.get("chapter", "1")))
 	elif args.has("play") or args.has("auto") or args.has("start") or args.has("showcase") or args.has("chapter"):
 		start_chapter(false, int(args.get("chapter", "1")))
 	else:
@@ -140,8 +145,61 @@ func _showcase() -> void:
 		dummy.attack_cd = 9999.0
 
 
+## 챕터 오프닝 영상(assets/video/ch<n>_intro.ogv — tools/gen_video.py)을 틀고, 끝나거나 건너뛰면 그 챕터를 시작한다.
+## 영상이 없는 챕터는 바로 시작한다. 건너뛰기: Enter·Esc·{interact}·{dodge}·{attack}·클릭
+func play_intro(n: int) -> void:
+	var path := "res://assets/video/ch%d_intro.ogv" % n
+	if not ResourceLoader.exists(path):
+		start_chapter(false, n)
+		return
+	_clear()
+	Bgm.stop(0.8)
+	Bgm.amb_stop_all(0.8)
+	_intro_chapter = n
+	menu = Control.new()
+	menu.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(menu)
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	menu.add_child(bg)
+	intro = VideoStreamPlayer.new()
+	intro.stream = load(path)
+	intro.expand = true
+	intro.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro.finished.connect(_end_intro)
+	menu.add_child(intro)
+	var skip := Label.new()
+	skip.text = Game.keys_text("Enter · {interact} 건너뛰기")
+	skip.add_theme_font_size_override("font_size", 7)
+	skip.modulate = Color(1, 1, 1, 0.45)
+	skip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	skip.position = Vector2(430, 342)
+	skip.size = Vector2(200, 12)
+	menu.add_child(skip)
+	intro.play()
+
+
+func _end_intro() -> void:
+	if intro == null:
+		return
+	intro = null
+	start_chapter(false, _intro_chapter)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if intro == null or not event.is_pressed() or event.is_echo():
+		return
+	for a in ["ui_accept", "ui_cancel", "pause", "interact", "dodge", "attack"]:
+		if event.is_action_pressed(a):
+			get_viewport().set_input_as_handled()
+			_end_intro()
+			return
+
+
 func _clear() -> void:
 	get_tree().paused = false
+	intro = null
 	for n in [level, hud, menu]:
 		if n and is_instance_valid(n):
 			n.queue_free()
@@ -186,7 +244,7 @@ func _show_menu() -> void:
 		var c: Array = CHAPTERS[i]
 		var done := "  ✓" if Game.is_cleared(i + 1) else ""
 		var ch := i + 1
-		var b := _menu_button("%s  %s%s%s" % [c[0], c[1], done, "" if c[3] else "  (준비 중)"], y, func(): start_chapter(false, ch))
+		var b := _menu_button("%s  %s%s%s" % [c[0], c[1], done, "" if c[3] else "  (준비 중)"], y, func(): play_intro(ch))
 		b.disabled = not c[3]
 		if first == null and c[3]:
 			first = b

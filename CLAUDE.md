@@ -28,7 +28,7 @@ ODYSSEY — 오디세우스의 귀환. 《오디세이아》 바탕의 2.5D 쿼�
 
 ```bash
 godot --path .                                          # 타이틀부터
-godot --path . -- --play                                # 바로 챕터 1
+godot --path . -- --play                                # 바로 챕터 1 (--intro면 오프닝 영상부터)
 godot --path . -- --chapter=2                           # 바로 챕터 2 (--start=landing|retreat|escape|storm|lotus|lotus_land)
 godot --headless --path . --import                      # 그림 가져오기(처음 한 번)
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
@@ -44,6 +44,7 @@ python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 �
 python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
 python3 tools/gen_storm.py .                            # 받은 바다 무늬·폭풍 이펙트 → assets/env/sea_*·assets/fx/storm_* (요청 묶음 storm_requests/)
 python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
+python3 tools/gen_video.py .                            # 컷신 영상 assets/source/video/*.mp4 → assets/video/*.ogv (Godot 무비 메이커로, 창이 잠깐 뜬다)
 python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)
 ```
 
