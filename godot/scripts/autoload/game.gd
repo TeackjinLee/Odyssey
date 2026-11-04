@@ -29,6 +29,7 @@ var stats := {"kills": 0, "time": 0.0, "downs": 0, "silent": 0, "alarms": 0, "de
 var checkpoint: Dictionary = {}
 
 var ui_font: SystemFont
+var _key_re: RegEx
 
 const SETTINGS_PATH := "user://settings.json"
 const SAVE_PATH := "user://save.json"
@@ -171,6 +172,21 @@ func key_label(action: String) -> String:
 		if ev is InputEventKey:
 			return OS.get_keycode_string(ev.physical_keycode)
 	return "-"
+
+
+## 글 속 {동작}을 지금 묶인 키 이름으로 바꾼다. 예: "{interact} — 말 걸기" → "E — 말 걸기".
+## 키를 바꾸면 바로 반영되게 HUD가 그릴 때마다 부른다(튜토리얼 카드·목표·알림·대사).
+func keys_text(s: String) -> String:
+	if s.find("{") < 0:
+		return s
+	if _key_re == null:
+		_key_re = RegEx.create_from_string("\\{([a-z_]+)\\}")
+	var out := s
+	for m in _key_re.search_all(s):
+		var a := m.get_string(1)
+		if InputMap.has_action(a):
+			out = out.replace(m.get_string(), key_label(a))
+	return out
 
 
 ## 진행 저장: 체크포인트가 생기거나 바뀔 때, 챕터를 깼을 때

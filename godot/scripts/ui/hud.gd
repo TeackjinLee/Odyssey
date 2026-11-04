@@ -282,7 +282,7 @@ func _draw_squad() -> void:
 		var st := ""
 		var col := Color(0.8, 0.8, 0.8)
 		if c.state == Actor.St.DOWNED:
-			st = "쓰러짐 — 가까이 가서 E 길게"
+			st = "쓰러짐 — 가까이 가서 %s 길게" % Game.key_label("interact")
 			col = Color(1, 0.45, 0.4)
 		elif c.state == Actor.St.ATTACK or (c.target and c.target.is_alive()):
 			st = "교전 중"
@@ -299,7 +299,7 @@ func _draw_quest() -> void:
 	var y: float = 72.0 + Game.squad.members.size() * 27 + 12
 	_panel(Rect2(6, y, 200, 36 + objective_text.count("\n") * 10))
 	_text(Vector2(11, y + 11), objective_title, 8, GOLD)
-	canvas.draw_multiline_string(Game.ui_font, Vector2(11, y + 23), "▸ " + objective_text, HORIZONTAL_ALIGNMENT_LEFT, 192, 8, 2 + objective_text.count("\n"), Color(1, 1, 1))
+	canvas.draw_multiline_string(Game.ui_font, Vector2(11, y + 23), "▸ " + Game.keys_text(objective_text), HORIZONTAL_ALIGNMENT_LEFT, 192, 8, 2 + objective_text.count("\n"), Color(1, 1, 1))
 
 
 func _draw_minimap(p: Player) -> void:
@@ -382,7 +382,7 @@ func _draw_interact(p: Player) -> void:
 	if it == null or dialogue.size() > 0:
 		return
 	var sp: Vector2 = get_viewport().get_canvas_transform() * (it.global_position + Vector2(0, -56))
-	var label := "[E] " + it.label + ("  (누르고 있기)" if it.progress >= 0.0 else "  (길게)" if it.hold_time > 0.0 else "")
+	var label := "[%s] " % Game.key_label("interact") + it.label + ("  (누르고 있기)" if it.progress >= 0.0 else "  (길게)" if it.hold_time > 0.0 else "")
 	var f: Font = Game.ui_font
 	var tw := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 10
 	var r := Rect2(sp.x - tw / 2, sp.y - 10, tw, 13)
@@ -400,14 +400,15 @@ func _draw_tutorial() -> void:
 		return
 	var done := tut_done > 0.0
 	var a: float = clamp(tut_done, 0.0, 1.0) if done else clamp(tut_t * 4.0, 0.0, 1.0)
-	var lines := tut_text.count("\n") + 1
+	var text := Game.keys_text(tut_text)
+	var lines := text.count("\n") + 1
 	var h := 18.0 + lines * 11.0
 	var r := Rect2(160, 274 - h, 320, h)
 	canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.86 * a))
 	var edge := Color(0.45, 0.95, 0.5, a) if done else Color(GOLD, a * (0.75 + 0.25 * sin(tut_t * 5.0)))
 	canvas.draw_rect(r, edge, false, 1.0)
 	_text(r.position + Vector2(8, 11), "✓ 완료" if done else "튜토리얼", 7, edge)
-	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(8, 24), tut_text, HORIZONTAL_ALIGNMENT_LEFT, 304, 8, lines,
+	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(8, 24), text, HORIZONTAL_ALIGNMENT_LEFT, 304, 8, lines,
 		Color(0.7, 0.7, 0.7, a) if done else Color(1, 1, 1, a))
 
 
@@ -415,11 +416,12 @@ func _draw_hint() -> void:
 	if hint_time <= 0.0 or hint_text == "":
 		return
 	var a: float = clamp(hint_time, 0.0, 1.0)
+	var hint_s := Game.keys_text(hint_text)
 	# 길면 두 줄로 접는다(아래 슬롯과 겹치지 않게 위로 늘림)
-	var two: bool = Game.ui_font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > 490.0
+	var two: bool = Game.ui_font.get_string_size(hint_s, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > 490.0
 	var r := Rect2(70, 290 - (11 if two else 0), 500, 29 if two else 18)
 	canvas.draw_rect(r, Color(0, 0, 0, 0.55 * a))
-	canvas.draw_multiline_string(Game.ui_font, Vector2(75, r.position.y + 12), hint_text, HORIZONTAL_ALIGNMENT_CENTER, 490, 8, 2,
+	canvas.draw_multiline_string(Game.ui_font, Vector2(75, r.position.y + 12), hint_s, HORIZONTAL_ALIGNMENT_CENTER, 490, 8, 2,
 		Color(1, 0.92, 0.7, a))
 
 
@@ -432,7 +434,7 @@ func _draw_cinematic() -> void:
 		var a: float = clamp(min(caption_time, caption_len - caption_time) * 2.0, 0.0, 1.0)
 		_text(Vector2(0, 360 - h - 14), caption_text, 10, Color(1, 0.95, 0.85, a), HORIZONTAL_ALIGNMENT_CENTER, 640)
 	if cinematic and dialogue.is_empty():
-		_text(Vector2(0, 360 - 10), "E / Space / 클릭 — 건너뛰기", 6, Color(0.7, 0.7, 0.7, 0.8 * _bars), HORIZONTAL_ALIGNMENT_RIGHT, 630)
+		_text(Vector2(0, 360 - 10), _advance_keys() + " — 건너뛰기", 6, Color(0.7, 0.7, 0.7, 0.8 * _bars), HORIZONTAL_ALIGNMENT_RIGHT, 630)
 
 
 func _draw_title() -> void:
@@ -451,15 +453,20 @@ func _draw_dialogue() -> void:
 	canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.9))
 	canvas.draw_rect(r, GOLD, false, 1.0)
 	_text(r.position + Vector2(10, 14), line[0], 9, GOLD)
-	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(10, 30), line[1], HORIZONTAL_ALIGNMENT_LEFT, 480, 9, 3, Color.WHITE)
-	_text(r.end + Vector2(-150, -6), "E / Space / 클릭 ▶", 7, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_RIGHT, 144)
+	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(10, 30), Game.keys_text(line[1]), HORIZONTAL_ALIGNMENT_LEFT, 480, 9, 3, Color.WHITE)
+	_text(r.end + Vector2(-150, -6), _advance_keys() + " ▶", 7, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_RIGHT, 144)
+
+
+## 대화 넘기기·연출 건너뛰기 키(상호작용 / 구르기 / 공격)
+func _advance_keys() -> String:
+	return "%s / %s / 클릭" % [Game.key_label("interact"), Game.key_label("dodge")]
 
 
 func _draw_help() -> void:
 	var r := Rect2(150, 40, 340, 270)
 	canvas.draw_rect(r, Color(0.04, 0.03, 0.04, 0.92))
 	canvas.draw_rect(r, GOLD, false, 1.0)
-	_text(r.position + Vector2(0, 16), "조작법  (F1 / Tab 닫기 · Esc 일시정지·키 바꾸기)", 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
+	_text(r.position + Vector2(0, 16), Game.keys_text("조작법  ({help} 닫기 · {pause} 일시정지·키 바꾸기)"), 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, r.size.x)
 	var k := func(a): return Game.key_label(a)
 	var rows := [
 		["%s%s%s%s" % [k.call("move_up"), k.call("move_left"), k.call("move_down"), k.call("move_right")], "이동 (%s 달리기)" % k.call("run")],
