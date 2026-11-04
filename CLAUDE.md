@@ -35,7 +35,7 @@ godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
 godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=400   # 챕터 2 봇(로토스 섬까지), ending true면 클리어
 godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
-godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음)
+godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음, --nohud면 HUD 없이)
 godot --path . -- --play --god --at=37,38                # 오디세우스를 그 칸에 옮겨 맵 보기 (--menu=pause|settings, --continue)
 python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
 python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로, 끝에서 gen_env_redraw가 받은 troy_city·troy_coast로 덮어씀)

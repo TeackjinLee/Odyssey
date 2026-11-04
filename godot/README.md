@@ -270,7 +270,7 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 ```bash
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420   # 봇이 챕터 1을 끝까지 진행하고 결과(JSON) 출력(들키면 싸워서 지나감)
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇: 활·뒤 처치로 지나감, 결과의 alarms가 0이어야 함
-godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장
+godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 성문 앞에서 시작, 5초 뒤 화면 저장 (--nohud: HUD 없이, 그림 요청 첨부용)
 godot --headless --fixed-fps 60 --path . -- --start=winch --auto --quit-after=300   # 권양기 앞에서 시작해 사수까지
 godot --path . -- --start=ending                                  # 바로 엔딩(부두 → 출항 → 챕터 2 예고)
 godot --path . -- --play --at=37,38 --god                          # 오디세우스를 그 칸에 옮겨 맵 보기

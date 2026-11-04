@@ -229,6 +229,8 @@ func _label(parent: Control, s: String, pos: Vector2, size: int, color: Color) -
 
 func _take_shot(path: String, delay: float, count := 1) -> void:
 	await get_tree().create_timer(delay, true, false, true).timeout
+	if args.has("nohud") and hud:
+		hud.visible = false   # 그림 요청용 화면(--nohud): HUD 없이 월드만
 	for i in count:
 		await RenderingServer.frame_post_draw
 		var img := get_viewport().get_texture().get_image()
