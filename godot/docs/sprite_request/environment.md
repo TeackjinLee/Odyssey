@@ -15,8 +15,8 @@
 | 불꽃·연기 | `troy_fire.webp` | ✅ |
 | 꺼진 횃불대 | (`torch_post`를 가공) | ✅ |
 | 경보 종·권양기·화로·그리스 깃발·화살 + 무기고·시장 소품 | `troy_extra.webp` | 다음 (§1) |
-| 신전·분수·종탑·좌판·사자상·사다리·반 높이 성벽 (맵 개편) | `troy_city.webp` | 요청 준비됨 (§3) |
-| 바다·해안·부두·배·나무 (맵 개편) | `troy_coast.webp` | 요청 준비됨 (§4) |
+| 신전·분수·종탑·좌판·사자상·사다리·반 높이 성벽 (맵 개편) | `troy_city.webp` | 요청 준비됨 — 안내 그림판 `env_requests/city_redraw` 권장 (§3) |
+| 바다·해안·부두·배·나무 (맵 개편) | `troy_coast.webp` | 요청 준비됨 — 안내 그림판 `env_requests/coast_redraw` 권장 (§4) |
 
 ---
 
