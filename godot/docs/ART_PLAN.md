@@ -154,11 +154,12 @@
 
 ### 4.2b 동물·음식 `C-ANI` (영양 — [NUTRITION.md](NUTRITION.md))
 
-지금은 코드로 그린 임시 그림(`scripts/actors/animal.gd` · `scripts/world/food_source.gd`). 크기는 사람 키(약 52px) 기준.
+시트(`assets/sprites/animal_<종류>.png`, `tools/gen_animal.py`)가 있으면 그것, 없으면 코드로 그린 임시 그림(`scripts/actors/animal.gd` · `scripts/world/food_source.gd`). 크기는 사람 키(약 52px) 기준.
+요청 묶음: [sprite_request/animal_kit/](sprite_request/animal_kit/README.md) — 동물마다 기본 8방향 → 걷기·달아나기 → 쉬기·쓰러짐(SE·NE), 음식 12가지 한 장. 🟡 요청 준비됨
 
 | ID | 내용 | 챕터 | 동작 | 상태 |
 |---|---|---|---|---|
-| `C-ANI-chicken` | 닭 (키 약 16px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
+| `C-ANI-chicken` | 닭 (키 약 18px) | 1 | 쉬기(모이 쪼기)·걷기·달아나기·쓰러짐, 남동·북동 | ✅ `animal_chicken` |
 | `C-ANI-goat` | 염소 (키 약 28px) | 1 | 4방향 걷기·달아나기·쓰러짐 | ⬜ (코드 그림) |
 | `C-ANI-sheep` | 양 | 3 | 같음 | ⬜ |
 | `C-ANI-boar` `C-ANI-deer` | 멧돼지·사슴 | 4 | 같음 | ⬜ |

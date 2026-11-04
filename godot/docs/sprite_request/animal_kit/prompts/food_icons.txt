@@ -1,0 +1,26 @@
+Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+
+Pixel art FOOD ICON SHEET for the same isometric Greek action RPG as style_ref.png: small food objects lying on the ground that the hero picks up and eats (Homer's Odyssey, ancient Greece).
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, each cell 384x341, ONE object centered in each cell, every object filling about 60% of its cell, nothing cut off.
+- Cells left to right, top row first:
+- Cell 1: a raw MEAT haunch on a white bone (red meat, a rim of cream fat)
+- Cell 2: a whole silver-grey SEA BREAM fish lying on its side, gold stripe on the head
+- Cell 3: a FISHING FLOAT: a small cork float, red top half and white bottom half, a thin line going up
+- Cell 4: a small pile of three purple FIGS and a bunch of dark purple GRAPES
+- Cell 5: a round flat BARLEY BREAD loaf, golden-brown crust with a cross cut on top
+- Cell 6: a short OLIVE twig with silver-green leaves and six dark green and black OLIVES
+- Cell 7: a wild BRAMBLE sprig with green leaves and red-and-dark-red RASPBERRIES
+- Cell 8: a small pile of pine nuts and brown ALMONDS in their shells
+- Cell 9: a piece of golden HONEYCOMB dripping honey
+- Cell 10: a thorny LOTUS-tree twig (Ziziphus) with glossy reddish-brown date-like LOTUS FRUITS and a faint dreamy pale glow
+- Cell 11: a round white SHEEP'S-MILK CHEESE wheel with a wedge cut out, on a small woven reed mat
+- Cell 12: a clay BOWL of cooked barley porridge (a ration), terracotta with a black meander band
+- Seen from the same isometric 3/4 top-down angle (camera looks down about 30 degrees), resting on the ground.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.

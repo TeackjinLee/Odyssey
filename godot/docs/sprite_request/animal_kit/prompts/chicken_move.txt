@@ -1,0 +1,19 @@
+Create exactly ONE image from the prompt below. Attached images, in this order:
+1) chicken_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as chicken_base.png (an ancient Mediterranean ROOSTER: plump round body, rust-red and golden-brown feathers, cream neck hackles, a tall bright red comb and wattles, yellow beak and legs, a dark glossy green-black sickle tail curving up) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking: strutting, head bobbing forward and back, legs stepping, facing SE
+- Row 2: walking: strutting, head bobbing forward and back, legs stepping, facing NE
+- Row 3: running away in panic: body leaning forward, wings half spread and flapping, legs a blur of long strides, facing SE
+- Row 4: running away in panic: body leaning forward, wings half spread and flapping, legs a blur of long strides, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.

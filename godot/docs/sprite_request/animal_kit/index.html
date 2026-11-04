@@ -1,0 +1,376 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>동물·음식 그림 요청</title>
+<style>
+:root { --bg:#16191d; --fg:#e8e2d6; --card:#22262c; --line:#3a3f47; --acc:#e0b860; }
+body { background:var(--bg); color:var(--fg); font:14px/1.5 -apple-system,sans-serif; margin:0 auto; max-width:980px; padding:16px; }
+section { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin:12px 0; }
+section:has(input:checked) { opacity:.45; }
+h2 { font-size:16px; margin:0 0 8px; color:var(--acc); }
+.att { display:flex; gap:12px; flex-wrap:wrap; }
+figure { margin:0; } img { max-height:180px; max-width:100%; border:1px solid var(--line); }
+figcaption { font-size:12px; }
+textarea { width:100%; height:160px; background:#111; color:var(--fg); border:1px solid var(--line); font:12px monospace; }
+button { background:var(--acc); border:0; border-radius:4px; padding:4px 10px; cursor:pointer; margin:4px 8px 4px 0; }
+code { color:var(--acc); }
+</style></head><body>
+<h1>동물·음식 그림 요청 (16개)</h1>
+<p>동물마다 <b>기본 8방향을 먼저</b> 받고, 받은 그림을 <code>received/&lt;종류&gt;_base.png</code>로 저장한 뒤 이 쪽을 새로고침하면 다음 요청의 첨부 그림이 보인다.</p>
+<section><h2>01. 닭 — 기본 8방향</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure><figure><img src="size_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) size_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/chicken_base.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the chicken is next to Odysseus in the game (the chicken box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer&#x27;s Odyssey). Draw an ancient Mediterranean ROOSTER: plump round body, rust-red and golden-brown feathers, cream neck hackles, a tall bright red comb and wattles, yellow beak and legs, a dark glossy green-black sickle tail curving up.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 16 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>02. 닭 — 걷기·달아나기</h2>
+<div class="att"><figure><img src="received/chicken_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) chicken_base.png</figcaption></figure><figure><img src="layout_move.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_move.png</figcaption></figure></div>
+<p>저장 이름: <code>received/chicken_move.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) chicken_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as chicken_base.png (an ancient Mediterranean ROOSTER: plump round body, rust-red and golden-brown feathers, cream neck hackles, a tall bright red comb and wattles, yellow beak and legs, a dark glossy green-black sickle tail curving up) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking: strutting, head bobbing forward and back, legs stepping, facing SE
+- Row 2: walking: strutting, head bobbing forward and back, legs stepping, facing NE
+- Row 3: running away in panic: body leaning forward, wings half spread and flapping, legs a blur of long strides, facing SE
+- Row 4: running away in panic: body leaning forward, wings half spread and flapping, legs a blur of long strides, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>03. 닭 — 쉬기·쓰러짐</h2>
+<div class="att"><figure><img src="received/chicken_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) chicken_base.png</figcaption></figure><figure><img src="layout_idle.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_idle.png</figcaption></figure></div>
+<p>저장 이름: <code>received/chicken_idle.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) chicken_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_idle.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as chicken_base.png (an ancient Mediterranean ROOSTER: plump round body, rust-red and golden-brown feathers, cream neck hackles, a tall bright red comb and wattles, yellow beak and legs, a dark glossy green-black sickle tail curving up) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: idle: pecking the ground twice, then lifting the head and looking around, facing SE
+- Row 2: idle: pecking the ground twice, then lifting the head and looking around, facing NE
+- Row 3: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing SE
+- Row 4: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>04. 염소 — 기본 8방향</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure><figure><img src="size_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) size_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/goat_base.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the goat is next to Odysseus in the game (the goat box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer&#x27;s Odyssey). Draw a Greek mountain GOAT: shaggy long coat in cream with patches of warm brown, a darker brown stripe down the back, long curved horns sweeping backward, a pointed chin beard, small upright ears, thin legs with dark hooves.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 28 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>05. 염소 — 걷기·달아나기</h2>
+<div class="att"><figure><img src="received/goat_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) goat_base.png</figcaption></figure><figure><img src="layout_move.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_move.png</figcaption></figure></div>
+<p>저장 이름: <code>received/goat_move.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) goat_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as goat_base.png (a Greek mountain GOAT: shaggy long coat in cream with patches of warm brown, a darker brown stripe down the back, long curved horns sweeping backward, a pointed chin beard, small upright ears, thin legs with dark hooves) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing SE
+- Row 2: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing NE
+- Row 3: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing SE
+- Row 4: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>06. 염소 — 쉬기·쓰러짐</h2>
+<div class="att"><figure><img src="received/goat_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) goat_base.png</figcaption></figure><figure><img src="layout_idle.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_idle.png</figcaption></figure></div>
+<p>저장 이름: <code>received/goat_idle.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) goat_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_idle.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as goat_base.png (a Greek mountain GOAT: shaggy long coat in cream with patches of warm brown, a darker brown stripe down the back, long curved horns sweeping backward, a pointed chin beard, small upright ears, thin legs with dark hooves) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: idle: lowering the head to graze, chewing, lifting the head again, facing SE
+- Row 2: idle: lowering the head to graze, chewing, lifting the head again, facing NE
+- Row 3: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing SE
+- Row 4: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>07. 양 — 기본 8방향</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure><figure><img src="size_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) size_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/sheep_base.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the sheep is next to Odysseus in the game (the sheep box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer&#x27;s Odyssey). Draw an ancient Greek SHEEP: a round fluffy body of off-white wool in chunky curled clumps, a dark charcoal-brown face and legs, small floppy ears, small curled horns, a short woolly tail.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 30 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>08. 양 — 걷기·달아나기</h2>
+<div class="att"><figure><img src="received/sheep_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) sheep_base.png</figcaption></figure><figure><img src="layout_move.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_move.png</figcaption></figure></div>
+<p>저장 이름: <code>received/sheep_move.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) sheep_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as sheep_base.png (an ancient Greek SHEEP: a round fluffy body of off-white wool in chunky curled clumps, a dark charcoal-brown face and legs, small floppy ears, small curled horns, a short woolly tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing SE
+- Row 2: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing NE
+- Row 3: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing SE
+- Row 4: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>09. 양 — 쉬기·쓰러짐</h2>
+<div class="att"><figure><img src="received/sheep_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) sheep_base.png</figcaption></figure><figure><img src="layout_idle.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_idle.png</figcaption></figure></div>
+<p>저장 이름: <code>received/sheep_idle.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) sheep_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_idle.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as sheep_base.png (an ancient Greek SHEEP: a round fluffy body of off-white wool in chunky curled clumps, a dark charcoal-brown face and legs, small floppy ears, small curled horns, a short woolly tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: idle: grazing with the head down, chewing, a small ear twitch, facing SE
+- Row 2: idle: grazing with the head down, chewing, a small ear twitch, facing NE
+- Row 3: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing SE
+- Row 4: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>10. 멧돼지 — 기본 8방향</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure><figure><img src="size_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) size_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/boar_base.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the boar is next to Odysseus in the game (the boar box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer&#x27;s Odyssey). Draw a WILD BOAR: heavy front-loaded body, coarse dark brown-black bristly hair, a stiff bristle ridge along the spine, a long snout with a pink-grey disc nose, curved WHITE TUSKS, small fierce eyes, short legs, a thin tufted tail.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 30 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>11. 멧돼지 — 걷기·달아나기</h2>
+<div class="att"><figure><img src="received/boar_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) boar_base.png</figcaption></figure><figure><img src="layout_move.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_move.png</figcaption></figure></div>
+<p>저장 이름: <code>received/boar_move.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) boar_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as boar_base.png (a WILD BOAR: heavy front-loaded body, coarse dark brown-black bristly hair, a stiff bristle ridge along the spine, a long snout with a pink-grey disc nose, curved WHITE TUSKS, small fierce eyes, short legs, a thin tufted tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing SE
+- Row 2: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing NE
+- Row 3: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, bristles raised, facing SE
+- Row 4: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, bristles raised, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>12. 멧돼지 — 쉬기·쓰러짐</h2>
+<div class="att"><figure><img src="received/boar_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) boar_base.png</figcaption></figure><figure><img src="layout_idle.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_idle.png</figcaption></figure></div>
+<p>저장 이름: <code>received/boar_idle.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) boar_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_idle.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as boar_base.png (a WILD BOAR: heavy front-loaded body, coarse dark brown-black bristly hair, a stiff bristle ridge along the spine, a long snout with a pink-grey disc nose, curved WHITE TUSKS, small fierce eyes, short legs, a thin tufted tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: idle: rooting the ground with its snout, then lifting the head and sniffing, facing SE
+- Row 2: idle: rooting the ground with its snout, then lifting the head and sniffing, facing NE
+- Row 3: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing SE
+- Row 4: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>13. 사슴 — 기본 8방향</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure><figure><img src="size_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) size_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/deer_base.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the deer is next to Odysseus in the game (the deer box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer&#x27;s Odyssey). Draw a RED DEER STAG: slender reddish-brown body, a pale cream rump patch and belly, a darker neck mane, tall branching ANTLERS with several points, large ears, long thin legs with dark hooves, a short tail.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 44 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>14. 사슴 — 걷기·달아나기</h2>
+<div class="att"><figure><img src="received/deer_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) deer_base.png</figcaption></figure><figure><img src="layout_move.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_move.png</figcaption></figure></div>
+<p>저장 이름: <code>received/deer_move.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) deer_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_move.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as deer_base.png (a RED DEER STAG: slender reddish-brown body, a pale cream rump patch and belly, a darker neck mane, tall branching ANTLERS with several points, large ears, long thin legs with dark hooves, a short tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing SE
+- Row 2: walking slowly: a calm four-legged walk cycle, legs moving in the natural diagonal order, facing NE
+- Row 3: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing SE
+- Row 4: running away in panic: a fast gallop, legs stretched far forward and back, body leaning forward, ears back, facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>15. 사슴 — 쉬기·쓰러짐</h2>
+<div class="att"><figure><img src="received/deer_base.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) deer_base.png</figcaption></figure><figure><img src="layout_idle.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>2) layout_idle.png</figcaption></figure></div>
+<p>저장 이름: <code>received/deer_idle.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) deer_base.png = THE animal to draw (design, colours, size, pixel style) — copy it exactly; use its SOUTH-EAST cell for the SE rows and its NORTH-EAST cell for the NE rows.
+2) layout_idle.png = ONLY the grid layout and facing arrow of each row (do NOT draw the white lines, the labels or the arrows).
+
+Pixel art ANIMATION SHEET of the same animal as deer_base.png (a RED DEER STAG: slender reddish-brown body, a pale cream rump patch and belly, a darker neck mane, tall branching ANTLERS with several points, large ears, long thin legs with dark hooves, a short tail) for an isometric Greek action RPG.
+
+Layout (very important):
+- ONE image 1536x1024, 6 columns x 4 rows, each cell 256x256, the animal the SAME SIZE in every cell (as big as possible while nothing is cut off), feet on the same baseline in every cell of a row.
+- Each row is one animation, 6 frames from left to right, looping smoothly where it loops.
+- SE = facing south-east (head toward the lower-right, front-right of the body visible). NE = facing north-east (head toward the upper-right, back-right of the body visible).
+- Row 1: idle: lifting the head alert, ears turning, then lowering the head to graze, facing SE
+- Row 2: idle: lifting the head alert, ears turning, then lowering the head to graze, facing NE
+- Row 3: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing SE
+- Row 4: death: hit and flinching (frame 1), legs buckling (2-3), falling over onto its side (4-5), lying still on its side on the ground (6, a little red blood spot under it), facing NE
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section><section><h2>16. 음식 12가지</h2>
+<div class="att"><figure><img src="style_ref.png" draggable="true" onerror="this.replaceWith('(아직 없음 — 앞 요청 결과)')"><figcaption>1) style_ref.png</figcaption></figure></div>
+<p>저장 이름: <code>received/food_icons.png</code></p>
+<textarea readonly>Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+
+Pixel art FOOD ICON SHEET for the same isometric Greek action RPG as style_ref.png: small food objects lying on the ground that the hero picks up and eats (Homer&#x27;s Odyssey, ancient Greece).
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, each cell 384x341, ONE object centered in each cell, every object filling about 60% of its cell, nothing cut off.
+- Cells left to right, top row first:
+- Cell 1: a raw MEAT haunch on a white bone (red meat, a rim of cream fat)
+- Cell 2: a whole silver-grey SEA BREAM fish lying on its side, gold stripe on the head
+- Cell 3: a FISHING FLOAT: a small cork float, red top half and white bottom half, a thin line going up
+- Cell 4: a small pile of three purple FIGS and a bunch of dark purple GRAPES
+- Cell 5: a round flat BARLEY BREAD loaf, golden-brown crust with a cross cut on top
+- Cell 6: a short OLIVE twig with silver-green leaves and six dark green and black OLIVES
+- Cell 7: a wild BRAMBLE sprig with green leaves and red-and-dark-red RASPBERRIES
+- Cell 8: a small pile of pine nuts and brown ALMONDS in their shells
+- Cell 9: a piece of golden HONEYCOMB dripping honey
+- Cell 10: a thorny LOTUS-tree twig (Ziziphus) with glossy reddish-brown date-like LOTUS FRUITS and a faint dreamy pale glow
+- Cell 11: a round white SHEEP&#x27;S-MILK CHEESE wheel with a wedge cut out, on a small woven reed mat
+- Cell 12: a clay BOWL of cooked barley porridge (a ration), terracotta with a black meander band
+- Seen from the same isometric 3/4 top-down angle (camera looks down about 30 degrees), resting on the ground.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.</textarea><button>요청 글 복사</button>
+<label><input type="checkbox"> 받음</label></section>
+<script>
+document.querySelectorAll("section button").forEach(b => b.onclick = () => {
+  navigator.clipboard.writeText(b.previousElementSibling.value); b.textContent = "복사됨"; setTimeout(() => b.textContent = "요청 글 복사", 1200);
+});
+</script></body></html>

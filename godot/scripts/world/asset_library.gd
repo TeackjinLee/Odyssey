@@ -22,7 +22,7 @@ static func character_frames(sheet: String) -> SpriteFrames:
 	var anims: Dictionary = meta["anims"]
 	for anim_name in anims:
 		var a: Dictionary = anims[anim_name]
-		for d in 8:
+		for d in int(meta.get("dirs", 8)):   # 동물 시트는 2줄(남동·북동)
 			var key := "%s_%d" % [anim_name, d]
 			sf.add_animation(key)
 			sf.set_animation_speed(key, float(a["fps"]))

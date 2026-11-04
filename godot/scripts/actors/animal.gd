@@ -3,7 +3,8 @@ extends Node2D
 ## 사냥감(docs/NUTRITION.md §4.2): 집 둘레를 어슬렁거리다가 오디세우스가 다가오거나(달리면 더 멀리서) 맞으면 달아난다.
 ## 놀라면 울어서 주변 보초가 의심한다. 잡으면 그 자리에 고기(FoodSource)가 남는다.
 ## 그룹 "animals" — Combat이 오디세우스·부하(그리스)의 공격에만 넣는다. 적·부하 AI는 신경 쓰지 않는다.
-## 그림은 아직 코드로 그린 임시 그림(_draw). 받으면 assets/sprites/animal_<종류>.png로 바꾼다(ART_PLAN C-ANI-*).
+## 그림: assets/sprites/animal_<종류>.png가 있으면 그 시트(tools/gen_animal.py — 줄 0 남동·1 북동, 서쪽은 뒤집음),
+## 없으면 코드로 그린 임시 그림(_draw). ART_PLAN C-ANI-*.
 
 const KINDS := {
 	"chicken": {"hp": 8.0, "walk": 22.0, "flee": 92.0, "scare": 60.0, "food": "chicken", "cry": "cluck", "size": 1.4},
@@ -30,6 +31,8 @@ var _knock := Vector2.ZERO
 var _flash := 0.0
 var _t := 0.0
 var _left := false
+var _up := false   # 북쪽(화면 위)으로 가는 중 — 시트의 북동 줄
+var body: AnimatedSprite2D = null
 var _moving := false
 var _cry_cd := 0.0
 var _dead := false
@@ -48,6 +51,16 @@ func _ready() -> void:
 	_goal = home
 	_wait = randf_range(0.5, 2.5)
 	_t = randf() * 10.0
+	var sheet := "animal_%s" % kind
+	if ResourceLoader.exists("res://assets/sprites/%s.png" % sheet):
+		body = AnimatedSprite2D.new()
+		body.centered = false
+		body.sprite_frames = AssetLibrary.character_frames(sheet)
+		body.offset = -AssetLibrary.character_anchor(sheet)
+		var k := AssetLibrary.character_scale(sheet)
+		body.scale = Vector2(k, k)
+		add_child(body)
+		_animate()
 
 
 func is_alive() -> bool:
@@ -83,11 +96,14 @@ func _scare(from: Vector2) -> void:
 func _die() -> void:
 	_dead = true
 	remove_from_group("animals")
+	_animate()
 	var meat := FoodSource.new().setup(cfg["food"], "meat")
 	meat.position = position
 	get_parent().add_child(meat)
 	Sfx.at(cfg["cry"], global_position, -6.0)
 	var tw := create_tween()
+	if body:
+		tw.tween_interval(1.2)   # 쓰러지는 동작을 보이고 나서 사라짐
 	tw.tween_property(self, "modulate:a", 0.0, 0.6)
 	tw.tween_callback(queue_free)
 
@@ -130,6 +146,7 @@ func _process(delta: float) -> void:
 	_moving = vel.length() > 4.0
 	if _moving:
 		_left = vel.x < 0.0
+		_up = vel.y < -1.0
 		var next := global_position + vel * delta
 		if Game.level and Game.level.is_blocked_world(next):
 			# 막히면 미끄러지듯 한 축만, 그것도 막히면 방향을 바꿈
@@ -144,10 +161,28 @@ func _process(delta: float) -> void:
 				_goal = home
 				_flee_from = global_position + vel
 		global_position = next
+	_animate()
 	queue_redraw()
 
 
+## 시트 동작 고르기: 쓰러짐 > 달아나기 > 걷기 > 쉬기, 줄은 남동/북동, 서쪽은 뒤집기
+func _animate() -> void:
+	if body == null:
+		return
+	var a := "death" if _dead else ("run" if _moving and _flee_t > 0.0 else ("walk" if _moving else "idle"))
+	var key := "%s_%d" % [a, 1 if _up else 0]
+	if body.animation != key:
+		body.play(key)
+	body.flip_h = _left
+	body.modulate = Color(1, 1, 1).lerp(Color(1, 0.4, 0.4), _flash)
+
+
 func _draw() -> void:
+	if body:
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(cfg.get("size", 1.0), cfg.get("size", 1.0) * 0.5))
+		draw_circle(Vector2.ZERO, 6.0, Color(0, 0, 0, 0.25))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 	var s: float = cfg.get("size", 1.0)
 	var f := -1.0 if _left else 1.0
 	var bob := absf(sin(_t * (14.0 if _flee_t > 0.0 else 8.0))) * (1.5 if _moving else 0.0)

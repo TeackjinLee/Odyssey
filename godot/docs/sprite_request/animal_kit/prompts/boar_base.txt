@@ -1,0 +1,18 @@
+Create exactly ONE image from the prompt below. Attached images, in this order:
+1) style_ref.png = ONLY the pixel style, outline, shading, palette and the isometric camera angle to copy. Its character (Odysseus) is NOT to be drawn.
+2) size_ref.png = ONLY how small the boar is next to Odysseus in the game (the boar box), so you know how simple to keep the details. Still draw it LARGE in every cell. Do not draw the boxes or Odysseus.
+
+Pixel art 8-direction ANIMAL SHEET for the same isometric Greek action RPG as style_ref.png (a huntable animal in Homer's Odyssey). Draw a WILD BOAR: heavy front-loaded body, coarse dark brown-black bristly hair, a stiff bristle ridge along the spine, a long snout with a pink-grey disc nose, curved WHITE TUSKS, small fierce eyes, short legs, a thin tufted tail.
+Natural animal proportions (NOT chibi, NOT cartoon eyes), slightly chunky and readable, the same rendering quality, outline, shading and colour richness as style_ref.png. In the game it is about 30 pixels tall, so keep the silhouette simple and bold.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 2 rows, each cell 384x512, identical to style_ref.png: the animal the SAME SIZE and position in every cell, feet on the same baseline, the body filling about 70% of the cell width, nothing cut off.
+- Top row left to right: NORTH (back, head away from viewer), NORTH-EAST (back-right), EAST (right side, head to the right), SOUTH-EAST (front-right).
+- Bottom row left to right: SOUTH (front, head toward viewer), SOUTH-WEST (front-left), WEST (left side, head to the left), NORTH-WEST (back-left).
+- Standing calmly on all legs in every cell.
+- DEPTH: whatever is on the far side of the body is hidden behind it.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, NO labels, no text, no numbers.
+- Crisp 2D pixel art matching style_ref.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur, the same warm Greek palette and rendering quality.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees), like style_ref.png.
