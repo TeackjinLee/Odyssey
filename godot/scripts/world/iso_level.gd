@@ -45,6 +45,12 @@ var _cam_pos := Vector2.ZERO
 var camera_target: Node2D = null
 ## 바다 칸 셰이더(water.gdshader) — 물 칸 지도는 _apply_floor에서 넣는다
 var water_material: ShaderMaterial
+## 맵 밖도 바다로 그림(바다 챕터 — 쿼터뷰 마름모 맵의 모서리가 검게 비지 않게)
+var open_sea := false
+## 바다 무늬가 흘러가는 속도(월드 픽셀/초): 평소·폭풍(셰이더 storm 1일 때)
+var sea_speed := Vector2(5.0, 16.0)
+var _sea_a := Vector2.ZERO
+var _sea_b := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -199,6 +205,21 @@ func _apply_floor() -> void:
 		water_material.set_shader_parameter("origin", Iso.origin)
 		water_material.set_shader_parameter("ex", Iso.ex)
 		water_material.set_shader_parameter("ey", Iso.ey)
+		# 바다 무늬 그림(tools/gen_storm.py)이 있으면 줄무늬 대신 그림
+		var calm := "res://assets/env/sea_calm.png"
+		var rough := "res://assets/env/sea_storm.png"
+		if ResourceLoader.exists(calm) and ResourceLoader.exists(rough):
+			water_material.set_shader_parameter("use_tex", true)
+			water_material.set_shader_parameter("sea_calm_tex", load(calm))
+			water_material.set_shader_parameter("sea_storm_tex", load(rough))
+		if open_sea:
+			var bg := ColorRect.new()
+			bg.material = water_material
+			bg.z_index = -11
+			bg.position = Iso.grid_to_world(Vector2(W, H) * 0.5) - Vector2(4000, 3000)
+			bg.size = Vector2(8000, 6000)
+			bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			add_child(bg)
 
 
 func _build_astar() -> void:
@@ -513,11 +534,14 @@ func find_path(a: Vector2, b: Vector2) -> PackedVector2Array:
 	return out
 
 
-func find_interactable(pos: Vector2) -> Interactable:
+## skip_forget: 먹으면 고향을 잊는 음식(로토스)은 빼고 찾는다(봇)
+func find_interactable(pos: Vector2, skip_forget := false) -> Interactable:
 	var best: Interactable = null
 	var best_d := INF
 	for it in get_tree().get_nodes_in_group("interactable"):
 		if not it.enabled:
+			continue
+		if skip_forget and it is FoodSource and it.info.get("effect", "") == "forget":
 			continue
 		var d: float = it.global_position.distance_to(pos)
 		if d < it.radius and d < best_d:
@@ -538,12 +562,30 @@ func greeks() -> Array:
 func _process(delta: float) -> void:
 	Game.stats["time"] += delta
 	_update_camera(delta)
+	_update_sea(delta)
 	sight_layer.queue_redraw()
 	_update_occlusion(delta)
 	var t := Time.get_ticks_msec() * 0.001
 	for l in lights:
 		if l[3]:
 			l[0].energy = l[1] * (0.85 + 0.1 * sin(t * 7.0 + l[2]) + 0.05 * sin(t * 17.0 + l[2] * 2.0))
+
+
+## 바다 무늬를 바람 쪽(레벨에 wind가 있으면, 격자 공간)으로 흘린다. a = 잔잔한 무늬(느리게), b = 거친 무늬(빠르게)
+func _update_sea(delta: float) -> void:
+	if water_material == null:
+		return
+	var dir := Vector2(1.0, 0.3).normalized()
+	var w: Variant = get("wind")
+	if w is Vector2 and w != Vector2.ZERO:
+		dir = (Iso.ex * w.x + Iso.ey * w.y).normalized()
+	var st: Variant = water_material.get_shader_parameter("storm")
+	var k: float = st if st is float else 0.0
+	var v := lerpf(sea_speed.x, sea_speed.y, k)
+	_sea_a = (_sea_a + dir * sea_speed.x * delta).posmod(512.0)
+	_sea_b = (_sea_b + dir * v * delta).posmod(512.0)
+	water_material.set_shader_parameter("off_a", _sea_a.round())
+	water_material.set_shader_parameter("off_b", _sea_b.round())
 
 
 func _update_camera(delta: float) -> void:

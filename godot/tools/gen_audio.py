@@ -722,6 +722,30 @@ def sfx_ram(seed=0):
     return sat(thud * 1.1 + crack * 0.7 + splinter + wood, 2.0)
 
 
+def sfx_thunder(seed=0):
+    """폭풍의 천둥: 가까이 찢어지는 소리(우지끈) 뒤 낮게 굴러가는 우르릉"""
+    r = np.random.default_rng(600 + seed)
+    n = int(3.6 * SR)
+    t = np.arange(n) / SR
+    crack = fft_filter(r.standard_normal(n), lo=800, hi=7000) * env_exp(n, 0.06, 0.001)
+    crack += fft_filter(r.standard_normal(n), lo=300, hi=2500) * env_exp(n, 0.25, 0.004) * 0.6
+    rumble = ola_filter(r.standard_normal(n), lambda s: (25, 260 * np.exp(-s * 0.6) + 60), block=4096)
+    rumble *= np.minimum(1, t / 0.08) * np.exp(-t / 1.3) * (0.7 + 0.3 * np.sin(2 * np.pi * t * 1.7 + r.uniform(0, 6)) ** 2)
+    return sat(crack * 0.8 + rumble * 2.2, 1.6)
+
+
+def sfx_wave(seed=0):
+    """큰 파도가 뱃전을 때림: 쿵(나무) + 쏴아 덮치는 물"""
+    r = np.random.default_rng(650 + seed)
+    n = int(1.6 * SR)
+    t = np.arange(n) / SR
+    slam = np.sin(2 * np.pi * np.cumsum(70 + 40 * np.exp(-t * 14)) / SR) * env_exp(n, 0.16, 0.002)
+    wash = ola_filter(r.standard_normal(n), lambda s: (150 + 300 * min(1, s * 2), 1800 + 3500 * np.exp(-s * 1.5)), block=2048)
+    wash *= np.minimum(1, t / 0.05) * np.exp(-t / 0.55)
+    spray = fft_filter(r.standard_normal(n), lo=3000, hi=9000) * np.minimum(1, t / 0.1) * np.exp(-t / 0.35) * 0.3
+    return slam * 0.9 + wash * 1.2 + spray
+
+
 SFX = {
     "swing": [lambda s=s: sfx_swing(False, s) for s in range(3)],
     "swing_heavy": [lambda s=s: sfx_swing(True, 10 + s) for s in range(2)],
@@ -755,6 +779,8 @@ SFX = {
     "splash": [sfx_splash],
     "oar": [lambda s=s: sfx_oar(s) for s in range(2)],
     "ram": [sfx_ram],
+    "thunder": [sfx_thunder],
+    "wave": [sfx_wave],
 }
 
 
@@ -834,7 +860,21 @@ def amb_battle(dur=30.0):
     return loopify(out, 2.0)
 
 
-AMB = {"wind": amb_wind, "fire": amb_fire, "sea": amb_sea, "battle": amb_battle}
+def amb_rain(dur=30.0):
+    """폭풍의 비: 촘촘한 빗소리(밝은 쏴) + 갑판·물에 떨어지는 굵은 빗방울 + 낮은 바람 울림"""
+    n = int((dur + 2) * SR)
+    out = []
+    for ch in range(2):
+        r = np.random.default_rng(700 + ch)
+        t = np.arange(n) / SR
+        hiss = fft_filter(r.standard_normal(n), lo=1800, hi=9000) * (0.8 + 0.2 * np.sin(2 * np.pi * t / 6.0 + ch))
+        y = hiss * 0.7 + crackle(n, 60, 710 + ch, 2500, 8000) * 0.9 + crackle(n, 14, 720 + ch, 400, 2200) * 1.1
+        y += fft_filter(r.standard_normal(n), lo=30, hi=140) * 0.5
+        out.append(y)
+    return loopify(np.stack(out, 1), 2.0)
+
+
+AMB = {"wind": amb_wind, "fire": amb_fire, "sea": amb_sea, "battle": amb_battle, "rain": amb_rain}
 
 
 # ── 음악 ──────────────────────────────────────────────

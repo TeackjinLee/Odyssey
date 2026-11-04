@@ -94,6 +94,17 @@ func show_title(lines: Array) -> void:
 	title_time = 4.0
 
 
+## 제목·대사·자막을 지운다(체크포인트에서 다시 할 때 건너뛴 단계의 것이 남지 않게)
+func clear_story() -> void:
+	title_time = 0.0
+	caption_time = 0.0
+	dialogue = []
+	dialogue_i = 0
+	dialogue_done = Callable()
+	# 대사가 세워 둔 일시정지도 푼다(메뉴·결과 화면이 열려 있으면 그대로)
+	get_tree().paused = pause_menu != null or overlay != ""
+
+
 func _process(delta: float) -> void:
 	hint_time = max(0.0, hint_time - delta)
 	title_time = max(0.0, title_time - delta)
@@ -410,7 +421,7 @@ func _draw_ship(p: Player) -> void:
 		_text(Vector2(x + 52, y + 12), "노꾼 힘", 6, Color(0.7, 0.85, 0.7))
 		y += 16
 		var we: float = ship.wind_effect()
-		_text(Vector2(x, y + 6), "돛: " + ("펼침" if ship.sail else "접음"), 7, Color(1, 1, 1) if ship.sail else Color(0.7, 0.7, 0.7))
+		_text(Vector2(x, y + 6), "돛: " + ("찢어짐" if ship.sail_torn else ("펼침" if ship.sail else "접음")), 7, Color(1, 0.55, 0.45) if ship.sail_torn else (Color(1, 1, 1) if ship.sail else Color(0.7, 0.7, 0.7)))
 		if ship.sail:
 			_text(Vector2(x, y + 15), "순풍" if we > 0.45 else ("옆바람" if we > 0.05 else "맞바람!"), 6,
 				Color(0.6, 1, 0.6) if we > 0.45 else (Color(0.9, 0.9, 0.7) if we > 0.05 else Color(1, 0.45, 0.4)))
@@ -612,7 +623,7 @@ func _draw_help() -> void:
 		_text(Vector2(r.position.x + 90, y), rows[i][1], 8)
 
 
-const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞"}
+const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞", "landing": "상륙", "retreat": "반격 시작", "escape": "출항", "storm": "폭풍", "lotus": "로토스 섬"}
 
 
 ## 클리어 결과: 챕터가 result_info로 준 글(제목·칭호·기록 줄·다음 안내)

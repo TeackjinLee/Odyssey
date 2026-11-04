@@ -1,0 +1,20 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Attached images:
+1) style_env.png = the STYLE reference (palette, outline, pixel density).
+2) game_calm_now.png = the current game sea on a calm night (camera angle and scale). Its sea (noise stripes) is what this replaces.
+
+Pixel art texture of a CALM SEA SURFACE at night under the moon (the same sea as a stormy version, just quiet).
+Make the image 1024x1024 (square). It is a SEAMLESS TILEABLE TEXTURE: the left edge must continue exactly into the
+right edge and the top edge into the bottom edge, so that it can be repeated in a grid without any visible seam.
+Seen from the game camera of game_*_now.png: 2:1 isometric, looking down about 30 degrees, NO horizon, NO sky,
+so waves look squashed vertically: crests are long horizontally and thin vertically.
+Draw it as pixel art at HALF resolution blown up 2x: every art pixel is a clean 2x2 block of image pixels (512x512 art pixels).
+Even overall brightness: no light source spot, no vignette, no dark corners, no gradient across the image,
+no objects, no ship, no rocks, no land, no foam lines along any edge. Only open water.
+Style: 2D pixel art, crisp hard-edged pixels, no anti-aliasing blur, no soft airbrush glow, no photo texture,
+limited palette, matching the outline, palette and pixel density of the attached style reference.
+No text, no labels, no grid lines.
+Content: gentle low swells, many short soft horizontal ripple lines in deep blue and slate blue, a few thin pale-blue ripple
+highlights, very few tiny moonlight glints (2 art pixels wide). No foam. Palette of about 6 colors from deep navy (#131f3a)
+to pale blue (#7f9fc4). Quiet and low contrast so ships and islands stand out on it.

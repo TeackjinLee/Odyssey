@@ -32,6 +32,12 @@ const WALL_TIME := 5.0
 ## 창 던지기: 조준한 곳 가까이의 적을 찾는 거리, 피해
 const JAVELIN_RANGE := 230.0
 const JAVELIN_DMG := 22.0
+## 로토스(챕터 2): 열매 쪽으로 걸어감 → 먹고 고향을 잊음(명령을 듣지 않고 그 자리에 앉아 있음) → 오디세우스가 끌고 감(묶여서 무조건 따라옴)
+enum Lotus { NONE, LURED, DAZED, BOUND }
+var lotus := Lotus.NONE
+var lotus_goal := Vector2.ZERO
+var drag_point: Interactable
+var _mutter_t := 0.0
 
 
 func setup(r: String, who: String) -> void:
@@ -56,6 +62,9 @@ func think(delta: float) -> void:
 	if state == St.DOWNED:
 		if wall_time > 0.0:
 			_end_wall()
+		return
+	if lotus == Lotus.LURED or lotus == Lotus.DAZED:
+		_lotus_think(delta)
 		return
 	attack_cd -= delta
 	if wall_time > 0.0:
@@ -85,6 +94,9 @@ func think(delta: float) -> void:
 		retarget = 0.3
 	var sq: Squad = Game.squad
 	var mode: int = Squad.Mode.HOLD if independent else sq.mode
+	if lotus == Lotus.BOUND:
+		mode = Squad.Mode.FOLLOW
+		_mutter(delta, "lotus_bound")
 	var goal: Vector2
 	var speed := walk_speed
 	if target:
@@ -148,7 +160,7 @@ func special(aim_pos: Vector2) -> void:
 		"archer":
 			face(aim_pos - global_position)
 			play_timed("bow", 0.6)
-			Skills.volley(self, aim_pos, bool(Game.level.get("armory_burned")))
+			Skills.volley(self, aim_pos, Game.level.get("armory_burned") == true)
 
 
 func _end_wall() -> void:
@@ -161,6 +173,8 @@ func _end_wall() -> void:
 func _choose_target() -> Actor:
 	var sq: Squad = Game.squad
 	var p: Player = Game.player
+	if lotus != Lotus.NONE:
+		return null
 	if not independent:
 		if sq.mode == Squad.Mode.REGROUP:
 			return null
@@ -273,3 +287,76 @@ func revive(ratio := 0.5) -> void:
 	if revive_point:
 		revive_point.queue_free()
 		revive_point = null
+
+
+# ── 로토스 ────────────────────────────────────────────
+## 로토스 열매 쪽으로 걸어가게 한다(goal = 앉을 자리)
+func lure(goal: Vector2) -> void:
+	lotus = Lotus.LURED
+	lotus_goal = goal
+	target = null
+	if wall_time > 0.0:
+		_end_wall()
+	if state == St.ATTACK or state == St.BLOCK:
+		set_state(St.IDLE)
+
+
+func _lotus_think(delta: float) -> void:
+	if lotus == Lotus.LURED:
+		desired_velocity = nav_velocity(lotus_goal, walk_speed, delta, 5.0)
+		if desired_velocity.length() > 8.0:
+			face(desired_velocity)
+			play("walk")
+		if global_position.distance_to(lotus_goal) < 10.0:
+			_daze()
+		return
+	desired_velocity = Vector2.ZERO
+	play("idle")
+	_mutter(delta, "lotus_dazed")
+
+
+func _daze() -> void:
+	lotus = Lotus.DAZED
+	Sfx.at("eat", global_position, -8.0)
+	Fx.text(global_position + Vector2(0, -44), "로토스를 먹었다", Color(0.95, 0.75, 0.95))
+	drag_point = Interactable.new()
+	drag_point.label = "%s 끌고 가기" % display_name
+	drag_point.hold_time = 1.5
+	drag_point.on_use = func(_by): bind()
+	add_child(drag_point)
+	if Game.level and Game.level.has_method("on_crew_dazed"):
+		Game.level.on_crew_dazed(self)
+
+
+## 오디세우스가 붙잡아 끌고 간다: 묶인 채 무조건 따라온다(로토스에 다시 끌리지 않음)
+func bind() -> void:
+	if lotus != Lotus.DAZED:
+		return
+	lotus = Lotus.BOUND
+	if drag_point:
+		drag_point.queue_free()
+		drag_point = null
+	Sfx.play("cry", -10.0)
+	_mutter_t = 0.0
+	_mutter(0.0, "lotus_bound")
+	if Game.level and Game.level.has_method("on_crew_bound"):
+		Game.level.on_crew_bound(self)
+
+
+## 배에 묶어 태웠다 — 다시 보통 부하
+func clear_lotus() -> void:
+	lotus = Lotus.NONE
+	if drag_point:
+		drag_point.queue_free()
+		drag_point = null
+
+
+## 고향을 잊은 부하가 이따금 중얼거린다(글은 지금 챕터 글의 mutter.<이름> 목록에서 고름)
+func _mutter(delta: float, key: String) -> void:
+	_mutter_t -= delta
+	if _mutter_t > 0.0:
+		return
+	_mutter_t = randf_range(4.0, 7.0)
+	var lines: Array = Lines.list("mutter." + key)
+	if not lines.is_empty():
+		Fx.text(global_position + Vector2(0, -50), String(lines.pick_random()), Color(0.95, 0.8, 0.95))

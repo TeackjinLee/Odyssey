@@ -4,6 +4,10 @@ shader_type canvas_item;
 // - 가로로 긴 물결 줄이 천천히 흐르고, 달빛 반짝임이 드문드문 깜박인다
 // - 물이 아닌 칸(해안·부두·성벽)과 닿는 가장자리에 흰 거품, 그 안쪽은 얕은 물빛
 // - 부두(planks) 칸의 앞쪽(화면 아래) 물에는 부두 옆면(나무)과 그림자를 그려 두께를 준다
+// - storm(0~1, 챕터 2 폭풍): 물이 어둡고 빨라지며 물결 줄이 많아지고 흰 파도머리가 인다
+// - 바다 무늬 그림(sea_calm·sea_storm, tools/gen_storm.py)이 있으면 use_tex: 줄무늬 대신 그림을 월드 좌표로 깐다.
+//   잔잔한 무늬는 off_a, 거친 무늬는 off_b만큼 밀어 깐다(레벨이 바람 쪽으로 흘린다).
+//   storm만큼 잔잔한 무늬 → 거친 무늬로 점무늬 섞기(픽셀아트라 반투명 섞기 대신)
 // iso_level.gd가 water_map(물 칸 = 흰색, 부두 = 회색 0.5, 나머지 = 검정)·map_size·origin·ex·ey를 넣는다.
 
 uniform sampler2D water_map : filter_nearest;
@@ -18,6 +22,12 @@ uniform vec4 crest : source_color = vec4(0.38, 0.52, 0.72, 1.0);
 uniform vec4 foam : source_color = vec4(0.78, 0.84, 0.90, 1.0);
 uniform vec4 pier_side : source_color = vec4(0.22, 0.14, 0.09, 1.0);
 uniform vec4 pier_shadow : source_color = vec4(0.04, 0.07, 0.15, 1.0);
+uniform float storm = 0.0;
+uniform bool use_tex = false;
+uniform sampler2D sea_calm_tex : filter_nearest, repeat_enable;
+uniform sampler2D sea_storm_tex : filter_nearest, repeat_enable;
+uniform vec2 off_a = vec2(0.0);
+uniform vec2 off_b = vec2(0.0);
 
 varying vec2 wpos;
 
@@ -44,6 +54,20 @@ float kind(vec2 cell) {
 	return texture(water_map, (cell + 0.5) / map_size).r;
 }
 
+// 4×4 바이어 점무늬 문턱(0~1)
+float bayer(vec2 p) {
+	int x = int(mod(p.x, 4.0));
+	int y = int(mod(p.y, 4.0));
+	int i = x + y * 4;
+	int m[16] = int[](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
+	return (float(m[i]) + 0.5) / 16.0;
+}
+
+vec3 sea_tex(sampler2D tex, vec2 p, vec2 off) {
+	vec2 sz = vec2(textureSize(tex, 0));
+	return texture(tex, fract((p - off) / sz)).rgb;
+}
+
 bool is_water(vec2 cell) {
 	return kind(cell) > 0.75;
 }
@@ -56,7 +80,7 @@ bool is_pier(vec2 cell) {
 void fragment() {
 	float a = texture(TEXTURE, UV).a;
 	vec2 p = floor(wpos);                      // 픽셀 단위로 끊어 픽셀아트처럼
-	float t = TIME;
+	float t = TIME * (1.0 + storm * 1.6);
 
 	// 격자 좌표(칸 안 위치 f: 0~1)
 	vec2 q = p + 0.5 - origin;
@@ -65,26 +89,49 @@ void fragment() {
 	vec2 cell = floor(g);
 	vec2 f = g - cell;
 
-	// 바탕: 느리게 움직이는 큰 얼룩으로 깊은 물·중간 물
-	float n = noise(p * vec2(0.012, 0.024) + vec2(t * 0.03, t * 0.01));
-	vec3 col = mix(deep.rgb, mid.rgb, smoothstep(0.35, 0.75, n));
+	vec3 col;
+	if (use_tex) {
+		// 잔잔한 무늬는 off_a, 거친 무늬는 off_b로 흘린다(서로 다른 빠르기). 폭풍 세기만큼 점무늬로 바꿔 낀다
+		col = sea_tex(sea_calm_tex, p, off_a);
+		if (storm > 0.01) {
+			vec3 sc = sea_tex(sea_storm_tex, p, off_b);
+			// 문턱은 큰 얼룩 + 점무늬: 폭풍이 오를 때 바다가 덩어리째 거칠어지고 경계만 점무늬
+			float th = mix(bayer(p), noise(p * vec2(0.012, 0.024) + vec2(t * 0.05, 0.0)), 0.7) * 0.94 + 0.03;
+			col = storm > th ? sc : col;
+		}
+	} else {
+		// 바탕: 느리게 움직이는 큰 얼룩으로 깊은 물·중간 물
+		float n = noise(p * vec2(0.012, 0.024) + vec2(t * 0.03, t * 0.01));
+		col = mix(deep.rgb, mid.rgb, smoothstep(0.35, 0.75, n));
 
-	// 물결: 화면 가로로 긴 짧은 줄. 줄 위치는 얼룩 소음으로 휘고, 시간에 따라 위아래로 출렁인다
-	float bend = noise(p * vec2(0.025, 0.07)) * 7.0;
-	float w = sin(p.y * 0.5 + bend + t * 1.2);
-	float dash = noise(vec2(p.x * 0.07 + t * 0.25, floor(p.y / 2.0) * 0.9));
-	if (w > 0.93 && dash > 0.62) {
-		col = crest.rgb;
-	} else if (w > 0.78 && dash > 0.55) {
-		col = mix(col, crest.rgb, 0.35);
-	}
+		// 물결: 화면 가로로 긴 짧은 줄. 줄 위치는 얼룩 소음으로 휘고, 시간에 따라 위아래로 출렁인다
+		float bend = noise(p * vec2(0.025, 0.07)) * 7.0;
+		float w = sin(p.y * 0.5 + bend + t * 1.2);
+		float dash = noise(vec2(p.x * 0.07 + t * 0.25, floor(p.y / 2.0) * 0.9));
+		col = mix(col, col * 0.6 + vec3(0.015, 0.02, 0.035), storm * 0.7);
+		if (w > 0.93 - storm * 0.16 && dash > 0.62 - storm * 0.18) {
+			col = crest.rgb;
+		} else if (w > 0.78 - storm * 0.2 && dash > 0.55 - storm * 0.15) {
+			col = mix(col, crest.rgb, 0.35);
+		}
+		// 폭풍의 흰 파도머리: 큰 얼룩이 지나가는 자리에 부서지는 거품 줄
+		if (storm > 0.01) {
+			float wc = noise(p * vec2(0.04, 0.08) + vec2(t * 0.35, -t * 0.18));
+			float roll = sin(p.y * 0.8 - p.x * 0.15 + t * 2.6 + wc * 8.0);
+			if (wc > 0.9 - storm * 0.14 && roll > 0.55) {
+				col = foam.rgb;
+			} else if (wc > 0.86 - storm * 0.14 && roll > 0.75) {
+				col = mix(col, foam.rgb, 0.5);
+			}
+		}
 
-	// 달빛 반짝임: 8×4 칸마다 드물게 가로 2px 점 하나가 제각각 깜박인다
-	vec2 cellp = floor(p / vec2(8.0, 4.0));
-	float h = hash(cellp);
-	vec2 spot = cellp * vec2(8.0, 4.0) + floor(vec2(hash(cellp + 7.1) * 6.0, hash(cellp + 3.3) * 3.0));
-	if (h > 0.985 && p.y == spot.y && (p.x == spot.x || p.x == spot.x + 1.0) && sin(t * 2.5 + h * 60.0) > 0.5) {
-		col = foam.rgb;
+		// 달빛 반짝임: 8×4 칸마다 드물게 가로 2px 점 하나가 제각각 깜박인다
+		vec2 cellp = floor(p / vec2(8.0, 4.0));
+		float h = hash(cellp);
+		vec2 spot = cellp * vec2(8.0, 4.0) + floor(vec2(hash(cellp + 7.1) * 6.0, hash(cellp + 3.3) * 3.0));
+		if (h > 0.985 && p.y == spot.y && (p.x == spot.x || p.x == spot.x + 1.0) && sin(t * 2.5 + h * 60.0) > 0.5) {
+			col = foam.rgb;
+		}
 	}
 
 	// 해안 거품: 물이 아닌 이웃 쪽 가장자리까지의 거리

@@ -1,0 +1,29 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Attached images:
+1) style_fx.png = the STYLE reference for effects (our pixel art fire sheet: outline, palette, pixel density).
+2) guide.png = a LAYOUT GUIDE (1536x1024) with rough placeholder drawings: it shows WHERE each effect frame goes and HOW BIG it is.
+Make the image 1536x1024 (landscape), the same size as guide.png.
+
+Pixel art storm-at-sea effects sprite sheet for a 2:1 isometric game. REDRAW every placeholder of guide.png as finished
+effect art in the SAME place and within the SAME cell size, so each frame can be cut out with the same boxes.
+The placeholders are crude: copy only their POSITION, SIZE and the frame-by-frame progression, not their look.
+Solid flat dark background #282B35 everywhere else (also inside the cells around the effect). Every frame separated by
+empty space, nothing crosses from one cell into the next. Frames of one effect go left to right.
+
+Effects, top to bottom (as in guide.png):
+- wave_crash: 6 cell(s) of 224x224 px. WAVE CRASH against a ship's side, 6 frames: a dark blue-green wave rises from the lower LEFT of the cell, curls over with a white foam lip, smashes upward into a tall burst of white and pale-blue spray and droplets that leans to the right, then the spray falls and scatters into small drops. The ship is NOT drawn, only the water.
+- whitecap_a: 4 cell(s) of 160x80 px. WHITECAP, 4 looping frames: a short breaking wave crest seen from above at the game angle: a dark wave hump with a white foam lip that curls, breaks into foam and fades back. Wide and flat (2:1).
+- whitecap_b: 4 cell(s) of 160x80 px. WHITECAP variant B, 4 looping frames: a longer crest that breaks from left to right, leaving a trail of foam.
+- bow_spray: 4 cell(s) of 192x112 px. BOW SPRAY, 4 frames: a fan of white spray and droplets thrown up and to the right, as a ship's bow cuts through a wave (the ship is not drawn).
+- rain_splash: 6 cell(s) of 64x32 px. RAIN SPLASH on water, 6 frames, tiny: a droplet hits, a small crown splash, then a flat 2:1 ring that widens and fades.
+- lightning: 3 cell(s) of 160x416 px. LIGHTNING BOLT, 3 different bolts (not an animation): tall jagged white bolts with a thin violet-blue edge and a few short forks, from the top of the cell down to the bottom, no glow halo baked in.
+- foam_streak: 2 cell(s) of 384x96 px. FOAM STREAK, 2 variants: long ragged streaks and patches of white foam floating on the sea surface, stretched horizontally, broken into lace-like pieces with small holes.
+- spray_drift: 4 cell(s) of 192x96 px. WIND SPRAY, 4 frames: a thin sheet of wind-blown sea spray blowing from left to right, wispy dotted mist that appears, streams across and thins out.
+- rain_streak: 6 cell(s) of 32x128 px. RAIN STREAKS, 6 variants: single slanted rain streaks (leaning a little to the left at the bottom), pale blue-white, some longer, some broken into two.
+
+Water colors: deep blue-green and steel blue for wave bodies, white and pale cold blue for foam and spray, crisp dark outline
+only on the wave bodies (spray and droplets have no outline). Lightning: white core, violet-blue edge.
+Style: 2D pixel art, crisp hard-edged pixels, no anti-aliasing blur, no soft airbrush glow, no photo texture,
+limited palette, matching the outline, palette and pixel density of the attached style reference.
+No text, no labels, no grid lines, no cell borders, no ship, no characters.
