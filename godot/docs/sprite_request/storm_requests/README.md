@@ -23,6 +23,8 @@
 | `spray_drift` | 4 | 192×96 | 바람에 날리는 물안개 |
 | `rain_streak` | 6종 | 32×128 | 지금의 선 빗줄기를 바꾼다 |
 
+> ✅ 넷 다 받아 넣음 — 원본 `assets/source/sea_storm`·`sea_calm`·`storm_fx.webp`, 목표 장면 `docs/references/mood/ch2_storm__target.webp`, 변환 `python3 tools/gen_storm.py .`
+
 ## 받는 법
 
 - **Codex로 한꺼번에**: `./run.sh` (하나만: `./run.sh sea_storm`) → 끝나면 요청마다 생성된 그림 경로가 찍힌다.

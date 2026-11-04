@@ -42,6 +42,7 @@ python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && p
 python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
 python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (다른 캐릭터·옷: SPRITE_CHAR=<이름>)
 python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
+python3 tools/gen_storm.py .                            # 받은 바다 무늬·폭풍 이펙트 → assets/env/sea_*·assets/fx/storm_* (요청 묶음 storm_requests/)
 python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
 python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)
 ```

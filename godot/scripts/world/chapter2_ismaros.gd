@@ -112,6 +112,7 @@ var _canvas_base := Color(0.86, 0.82, 0.86)
 ## 폭풍
 var storm_on := false
 var storm_fx: StormFx
+var sea_fx: SeaFx
 var _storm_t := 0.0
 var _storm_k := 0.0
 var _surge_t := 0.0
@@ -147,6 +148,7 @@ func build() -> void:
 	chapter_title = Lines.t("meta.chapter_title")
 	area_name = Lines.t("meta.area")
 	minimap_land = true
+	open_sea = true
 	W = 64
 	H = 104
 	canvas_mod.color = _canvas_base
@@ -353,6 +355,9 @@ func start() -> void:
 	_place_lotus()
 	storm_fx = StormFx.new()
 	add_child(storm_fx)
+	sea_fx = SeaFx.new()
+	sea_fx.ship = ship
+	add_child(sea_fx)
 	Bgm.play("ending", 2.0)
 	Bgm.amb("sea", 1.0, 2.0)
 	Bgm.amb("wind", 0.5, 2.0)
@@ -657,7 +662,7 @@ func _start_storm(teleport := false) -> void:
 			Game.hud.clear_story()
 	ship.max_speed = STORM_SPEED
 	wind_strength = STORM_WIND
-	_canvas_base = Color(0.5, 0.53, 0.66)
+	_canvas_base = Color(0.66, 0.7, 0.84)
 	canvas_mod.color = _canvas_base
 	area_name = Lines.t("meta.area_storm")
 	_save_checkpoint("storm")
@@ -723,6 +728,7 @@ func _surge() -> void:
 		ship.heading = wrapf(ship.heading + turn, -PI, PI)
 	ship._sync()
 	Sfx.play("wave", -3.0 + 4.0 * broad)
+	sea_fx.crash(broad > 0.5)
 	Game.shake(2.5 + 5.0 * broad)
 	Fx.text(ship.global_position + Vector2(0, -56), "파도! -%d" % roundi(dmg), Color(0.75, 0.88, 1.0) if broad < 0.5 else Color(1, 0.6, 0.5))
 	if broad > 0.5:
@@ -1076,6 +1082,7 @@ func _process(delta: float) -> void:
 	_storm_k = move_toward(_storm_k, 1.0 if storm_on else 0.0, delta * 0.5)
 	if storm_fx:
 		storm_fx.strength = _storm_k
+		sea_fx.strength = _storm_k
 	if water_material:
 		water_material.set_shader_parameter("storm", _storm_k)
 	if storm_fx and storm_fx.flash > 0.0:

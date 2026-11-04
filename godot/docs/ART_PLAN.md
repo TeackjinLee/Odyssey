@@ -229,15 +229,15 @@
 
 ### 4.5b 챕터 2 폭풍 `F-STORM` `E-SEA`
 
-지금 폭풍은 코드 그림(바다 = `water.gdshader` 소음 줄무늬, 비 = `storm_fx.gd` 선)이라 밋밋하다. 요청 묶음 [sprite_request/storm_requests/](sprite_request/storm_requests/README.md)
+✅ 받아 넣음(`tools/gen_storm.py`). 목표 장면은 `references/mood/ch2_storm__target.webp`, 원본은 `assets/source/`. 요청 묶음 [sprite_request/storm_requests/](sprite_request/storm_requests/README.md)
 (`python3 tools/storm_request.py .`로 다시 만든다).
 
 | ID | 그림 | 받을 이름 | 상태 |
 |---|---|---|---|
-| `F-STORM-mood` | 목표 장면 — 같은 카메라로 본 폭풍 바다(색·밝기 기준) | `storm_mood.png` | 🟡 요청 준비됨 |
-| `E-SEA-storm` | 거친 바다 이음매 없는 무늬 1024² | `sea_storm.png` | 🟡 요청 준비됨 |
-| `E-SEA-calm` | 잔잔한 밤바다 무늬 1024²(챕터 1·2 평소 바다도 바뀐다) | `sea_calm.png` | 🟡 요청 준비됨 |
-| `F-STORM-fx` | 뱃전 파도 6·파도머리 4+4·뱃머리 물보라 4·빗방울 6·번개 3·거품 띠 2·물안개 4·빗줄기 6 | `storm_fx.png` | 🟡 요청 준비됨 |
+| `F-STORM-mood` | 목표 장면 — 같은 카메라로 본 폭풍 바다(색·밝기 기준) | `storm_mood.png` | ✅ |
+| `E-SEA-storm` | 거친 바다 이음매 없는 무늬 1024² | `sea_storm.png` | ✅ |
+| `E-SEA-calm` | 잔잔한 밤바다 무늬 1024²(챕터 1·2 평소 바다도 바뀐다) | `sea_calm.png` | ✅ |
+| `F-STORM-fx` | 뱃전 파도 6·파도머리 4+4·뱃머리 물보라 4·빗방울 6·번개 3·거품 띠 2·물안개 4·빗줄기 6 | `storm_fx.png` | ✅ |
 
 ### 4.6 UI `U`
 
@@ -273,7 +273,7 @@
 
 챕터 2 기반 코드가 먼저 들어가 지금은 임시: 갤리선·키코네스 배는 `ship.gd`의 `_draw`(코드 그림), 키코네스 병사는 트로이 병사 시트에
 색만 바꿈(`enemy.gd` `KINDS["cicones_*"]["tint"]`), 이스마로스 집·소품은 챕터 1 그림 그대로, 바다는 챕터 1 물 셰이더.
-로토스나무는 올리브 그림을 분홍빛으로(`chapter2_ismaros.gd` `_build_lotus_island`), 로토파고스는 그리스 궁병 시트 색 바꿈, 폭풍은 코드 그림(비·번개·셰이더 물결 — 그림 요청은 §4.5b).
+로토스나무는 올리브 그림을 분홍빛으로(`chapter2_ismaros.gd` `_build_lotus_island`), 로토파고스는 그리스 궁병 시트 색 바꿈, 폭풍은 받은 그림(바다 무늬·폭풍 이펙트, §4.5b).
 
 웹 시제품(`docs/legacy-web/SPEC.md`)에서 가져올 연출 아이디어: 폴리페모스의 금빛 외눈 약점과 활 조준선,
 세이렌의 청자색 음파 vs 청동 종의 금빛 공명파.

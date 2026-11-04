@@ -145,7 +145,8 @@ scripts/
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
     chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
     chapter2_ismaros.gd 챕터 2 바다 맵·상륙/약탈/반격/승선/탈출·폭풍·로토스 섬·바다 길찾기(sea_path)·바람
-    storm_fx.gd       폭풍 화면 효과(비·번개)
+    storm_fx.gd       폭풍 화면 효과(빗줄기·번개, 화면 좌표)
+    sea_fx.gd         폭풍 바다 이펙트(파도머리·빗방울·거품 띠·물안개·뱃머리 물보라·뱃전 파도, 월드 좌표)
     ship.gd            배(Ship): 관성 이동·노 단계·돛·바람·키·암초 충돌·들이받기·갑판 사격·적 배 AI·봇, 임시 그림
     rations.gd         배의 식량 창고와 부하 배부름(항해 하루마다 먹음) — docs/NUTRITION.md §7
     food_source.gd     먹을 것이 있는 지점(채집·고기·낚시터) — 음식 값은 data/food.json
@@ -181,6 +182,9 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 `%d`·`%s`는 코드가 넣는 수·글이니 지우지 않는다.
 
 ### 소리
+
+바다 무늬·폭풍 이펙트: 받은 `assets/source/sea_storm`·`sea_calm`·`storm_fx.webp` → `python3 tools/gen_storm.py .` → `assets/env/sea_*.png`·`assets/fx/storm_*`
+(요청 묶음 `docs/sprite_request/storm_requests/`, 칸 좌표는 그 안 `storm_fx/boxes.json`). 바다 무늬가 없으면 셰이더 줄무늬로 그린다.
 
 모든 소리는 `tools/gen_audio.py`가 합성한다(녹음·외부 소리 없음): `python3 tools/gen_audio.py .` (`sfx`·`amb`·`music` 중 골라서도 됨, 음악은 1분쯤).
 느낌은 영화 《오디세이》(2026, 루드비히 고란손 음악)처럼 — 오케스트라 없이 고대 악기(리라·아울로스·청동 징·두드린 쇠붙이),
