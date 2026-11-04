@@ -169,21 +169,21 @@
 |---|---|---|
 | `E-TROY-floor` | 바닥 6종(cobble plaza dirt grass road ash) × 변형 4 | ✅ |
 | `E-TROY-wall` `-tower` `-gate` | 성벽·성탑·성문(열린 문은 닫힌 문을 어둡게 가공) | ✅ |
-| `E-TROY-house` | 집 4채 + 불탄 변형(가공) | ✅ |
+| `E-TROY-house` | 집 4채 + 불탄 변형(가공) | ✅ (불탄 변형 다시 그려 받기 요청 `extra_redraw`) |
 | `E-TROY-horse` | 트로이 목마 | ✅ |
 | `E-TROY-props` | 상자·통·횃불대·항아리·기둥·트로이 깃발·돌무더기·창 걸이·수레 | ✅ |
-| `E-TROY-torch_off` | 꺼진 횃불대 (횃불대를 가공) | ✅ |
+| `E-TROY-torch_off` | 꺼진 횃불대 (횃불대를 가공) | ✅ (다시 그려 받기 요청 `extra_redraw`) |
 | `E-TROY-fire` `-smoke` | 불꽃 8프레임·연기 6프레임 (`troy_fire.webp`) | ✅ |
-| `E-TROY-alarm_bell` | 경보 종 | 🟡 |
-| `E-TROY-winch` | 성문 권양기 | 🟡 |
-| `E-TROY-brazier` | 화로 | 🟡 |
-| `E-TROY-banner_greek` | 그리스 깃발 | 🟡 |
+| `E-TROY-alarm_bell` | 경보 종 | 🟡 요청 준비됨 `env_requests/extra_redraw` (안내 그림) |
+| `E-TROY-winch` | 성문 권양기 | 🟡 요청 준비됨 `extra_redraw` |
+| `E-TROY-brazier` | 화로 | 🟡 요청 준비됨 `extra_redraw` |
+| `E-TROY-banner_greek` | 그리스 깃발 | 🟡 요청 준비됨 `extra_redraw` |
 | `E-TROY-arrow` | 날아가는 화살 | 🟡 |
-| `E-TROY-armory` | 무기고 (지금은 통·창 걸이·상자 묶음) + 불탄 모습 | ⬜ (있으면 좋음) |
-| `E-TROY-market` | 시장 좌판·짐더미(궁수가 올라서는 곳) | ⬜ (지금은 상자·통으로 대신) |
+| `E-TROY-armory` | 무기고 (지금은 통·창 걸이·상자 묶음) + 불탄 모습 | 🟡 요청 준비됨 `extra_redraw` (받으면 배치 고침) |
+| `E-TROY-market` | 시장 좌판 ✅(`troy_city`)·짐더미(궁수가 올라서는 곳) | 🟡 짐더미 요청 준비됨 `extra_redraw` |
 | `E-TROY-post` | 정찰병을 묶었던 기둥 | ⬜ (있으면 좋음) |
 | `E-TROY-shadow` | 발밑 그림자 | ➖ (코드 그림으로 충분) |
-| `E-TROY-gate_anim` | 성문 열림 3단계 | ⬜ (있으면 좋음) |
+| `E-TROY-gate_anim` | 성문 열림 3단계 | ⬜ (있으면 좋음 — 열린 성문 한 장은 `extra_redraw`) |
 | `E-TROY-stairs` | 성벽 계단·성벽 위 통로 | ⬜ (M2 높낮이 때) |
 | `E-TROY-decal` | 바닥 그을음·부서진 방패·떨어진 창 | ⬜ (있으면 좋음) |
 | `E-TROY-temple` | 아테나 신전(3×3칸)·사자상·신전 계단 — 맵 개편 [maps/CH1_TROY.md](maps/CH1_TROY.md) (`troy_city`) | ✅ `troy_city` (안내 그림판으로 다시 그려 받음) |

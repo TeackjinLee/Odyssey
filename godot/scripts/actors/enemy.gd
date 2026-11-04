@@ -133,6 +133,7 @@ func alert(t: Actor) -> void:
 	_drop_errand()
 	takedown.enabled = false
 	Fx.text(global_position + Vector2(0, -head_height - 4), "!", Color(1, 0.35, 0.25))
+	Sfx.at("alert", global_position, -10.0)
 	if phase == "idle":
 		phase = "chase"
 	if cfg.get("boss", false):
@@ -492,7 +493,8 @@ func silent_kill(count_kill: bool) -> void:
 		Game.stats["kills"] += 1
 	Game.stats["silent"] += 1
 	Fx.text(global_position + Vector2(0, -head_height), "조용히", Color(0.7, 0.85, 1.0))
-	Sfx.play("hit", -10.0)
+	Sfx.play("takedown", -6.0)
+	Fx.anim("takedown", global_position + Vector2(0, -16))
 	_die()
 
 
@@ -575,7 +577,7 @@ func _windup(_delta: float) -> void:
 			body.frame = 2
 		else:
 			play_timed("heavy" if slam else ["attack1", "attack2", "attack3"][strikes % 4 if poise else randi() % 2], cfg["dur"] * (1.4 if slam else 1.0))
-			Sfx.play("swing", -14.0)
+			Sfx.at("swing", global_position, -12.0)
 
 
 func _strike() -> void:
@@ -595,9 +597,9 @@ func _strike() -> void:
 			if p and p.is_alive() and p.state == St.BLOCK and p.block_time < 0.3 and Combat.ground_dist(c, p.global_position) <= 46.0 \
 					and p.facing.dot((global_position - p.global_position).normalized()) > 0.15:
 				p.invuln = 0.05
-				Fx.spark(p.global_position + Vector2(0, -20), Color(1, 0.85, 0.3), 16)
+				Fx.impact("parry", p.global_position + Vector2(0, -20), Color(1, 0.85, 0.3), 16)
 				Fx.text(p.global_position + Vector2(0, -p.head_height), "패링!", Color(1, 0.85, 0.3))
-				Sfx.play("parry")
+				Sfx.play("parry", -4.0)
 				Combat.area(self, c, 46.0, cfg["dmg"] * 1.3, 200.0)
 				_open_up()
 				return
@@ -630,7 +632,7 @@ func _open_up() -> void:
 func _shove() -> void:
 	Fx.text(global_position + Vector2(0, -head_height - 6), "밀쳐내기!", Color(1, 0.7, 0.35))
 	Fx.ring(global_position, SHOVE_RADIUS, Color(1, 0.8, 0.5), 0.4)
-	Sfx.play("hit_heavy", -4.0)
+	Sfx.at("hit_heavy", global_position, -4.0)
 	Game.shake(4.0)
 	for a in Game.level.greeks():
 		var to: Vector2 = a.global_position - global_position
@@ -648,7 +650,7 @@ func _horn() -> void:
 		_horn_blown = true
 		Fx.text(global_position + Vector2(0, -head_height - 6), "뿔나팔!", Color(1, 0.55, 0.3))
 		Fx.ring(global_position, 60.0, Color(1, 0.55, 0.3), 0.6)
-		Sfx.play("bell", -6.0)
+		Sfx.at("horn", global_position, -2.0)
 		Game.shake(3.0)
 		if Game.level.has_method("on_boss_horn"):
 			Game.level.on_boss_horn(self)
@@ -677,7 +679,7 @@ func _charge_windup() -> void:
 		_charge_hit = []
 		_set_phase("charge")
 		set_state(St.ATTACK)
-		Sfx.play("swing", -6.0)
+		Sfx.at("swing_heavy", global_position, -4.0)
 
 
 func _charge() -> void:
@@ -690,7 +692,7 @@ func _charge() -> void:
 		knock = -charge_dir * 60.0
 		charge_cd = CHARGE_CD
 		Fx.spark(global_position + charge_dir * 10.0 + Vector2(0, -20), Color(1, 0.9, 0.6), 14)
-		Sfx.play("hit_heavy")
+		Sfx.at("hit_heavy", global_position, -4.0)
 		_open_up()
 		return
 	for a in Game.level.greeks():
@@ -717,7 +719,7 @@ func _die() -> void:
 	_drop_bell()
 	takedown.enabled = false
 	if not _quiet:
-		Sfx.play("death", -10.0)
+		Sfx.at("death", global_position, -9.0)
 	remove_from_group("enemies")
 	await get_tree().create_timer(5.0).timeout
 	var tw := create_tween()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""다시 그려 받은 환경 그림(troy_city·troy_coast) → 임시 그림 덮어쓰기. gen_env_extra.py가 마지막에 부른다.
+"""다시 그려 받은 환경 그림(troy_city·troy_coast·troy_extra) → 임시 그림 덮어쓰기. gen_env_extra.py가 마지막에 부른다.
 
 받은 그림은 안내 그림판(docs/sprite_request/env_requests/<city|coast>_redraw/guide.png)과 같은 자리에 그려져 있다.
 - 자르기: 배경이 아닌 덩어리를 찾고, 덩어리 중심이 그 그림 상자(boxes.json, 여유 MARGIN)에 든 것을 모은다
@@ -8,7 +8,7 @@
 - 기준점: 안내 그림판의 임시 그림에서 '가장 아래 점 → 기준점' 높이와 '폭 가운데 → 기준점' 가로 거리를 재서 새 그림에 똑같이 붙인다
   (나무는 줄기 밑, 건물은 발자국 중심 — 임시 그림 기준점을 그대로 물려받는다)
 - 바닥: 마름모 하나씩 잘라 64×32로 줄이고 floor_atlas.png의 water·sand·planks 줄을 바꾼다
-- 안내 그림판에 없던 새 그림(올리브·덤불)은 env.json에 새 항목으로 더한다(기준점: 줄기 밑)
+- 안내 그림판에 없던 새 그림(올리브·덤불·무기고·짐더미)은 env.json에 새 항목으로 더한다(기준점: 가장 아래 점 조금 위)
 
     python3 tools/gen_env_extra.py .      (끝에서 이 스크립트의 apply를 부른다)
 """
@@ -24,9 +24,11 @@ from gen_env_from_sheet import BG, shrink  # noqa: E402
 
 K = 0.68
 MARGIN = 36
-SHEETS = {"city_redraw": "troy_city.webp", "coast_redraw": "troy_coast.webp"}
+SHEETS = {"city_redraw": "troy_city.webp", "coast_redraw": "troy_coast.webp", "extra_redraw": "troy_extra.webp"}
 # 안내 그림판에 단색 윤곽만 있던 새 그림: 기준점은 가장 아래 점에서 이만큼 위
-NEW_ITEMS = {"olive": 3, "bush": 6}
+NEW_ITEMS = {"olive": 3, "bush": 6, "armory": 10, "armory_burnt": 10, "sacks": 8}
+# 새 그림의 발자국(없으면 1×1). 무기고는 2×1 — 게임에 넣을 때 chapter1_troy.gd의 ARMORY_CELLS 자리에 놓는다
+NEW_FOOTPRINT = {"armory": [2, 1], "armory_burnt": [2, 1]}
 # 게임에서 쓰는 이름이 다른 것
 RENAME = {}
 # 크기: 안내 그림판 상자보다 FIT_TOL배 넘게 크게 그려진 것은 상자에 맞게 더 줄인다(작은 소품이 1.5배쯤 커져 온다).
@@ -170,7 +172,7 @@ def apply(root):
             game = RENAME.get(name, name)
             if name in NEW_ITEMS:
                 anchor = [round(lx), round(ly - NEW_ITEMS[name])]
-                fp = [1, 1]
+                fp = NEW_FOOTPRINT.get(name, [1, 1])
             else:
                 old = meta["props"][game]
                 # 임시 그림 기준점(시트 좌표) = 상자 왼쪽 위 여백(8, 12) + 기준점 × 1/0.68

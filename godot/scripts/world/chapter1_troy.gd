@@ -81,6 +81,10 @@ var capture := 0.0
 var waves_sent := 0
 var zone_pos := Vector2.ZERO
 var _done := false
+## 소리: 권양기 딸깍 간격, 음악·환경음 다시 고를 때까지, 싸움이 끝나고 조용한 시간
+var _winch_tick := 0.0
+var _audio_t := 0.0
+var _calm_t := 99.0
 var scout: Npc
 var scout_freed := false
 var armory_point: Interactable
@@ -409,6 +413,7 @@ func _save_checkpoint(id: String) -> void:
 		"guards": guard_group.size()}
 	Game.save_progress()
 	if id != "stealth":
+		Sfx.play("checkpoint", -8.0)
 		Fx.text(player.global_position + Vector2(0, -64), Lines.t("fx.checkpoint"), Color(0.55, 0.85, 1.0))
 
 
@@ -668,6 +673,31 @@ func _watch_firsts() -> void:
 		_tut_once("heavy", Lines.t("tut.heavy"), func(): return player.heavy_cd > 0.0, 2, 12.0, true)
 
 
+# ── 소리: 상황에 맞춰 음악·환경음 ─────────────────────
+## 잠입(조용한 곡) ↔ 들켜 싸우면 전투 곡(싸움이 끝나고 6초 뒤 돌아감) · 권양기 = 전투 · 성문 사수 = 사수 곡.
+## 환경음: 밤바람은 늘, 불길은 성문이 열려 도시가 타면 크게, 파도는 동쪽 해안에 가까울수록, 먼 전투 소리는 사수 동안.
+func _update_audio(delta: float) -> void:
+	_audio_t -= delta
+	if _audio_t > 0.0 or _ending or not is_instance_valid(player) or not player.is_alive():
+		return
+	_audio_t = 0.5
+	var fight := enemies().any(func(e): return e.alerted and is_instance_valid(e.target))
+	_calm_t = 0.0 if fight else _calm_t + 0.5
+	var g := Iso.world_to_grid(player.global_position)
+	Bgm.amb("wind", 0.6)
+	Bgm.amb("fire", 0.85 if step >= 4 else 0.4)
+	Bgm.amb("sea", clampf((g.x - 30.0) / 7.0, 0.0, 1.0))
+	Bgm.amb("battle", 0.75 if step == 4 and not _done else 0.0)
+	if _done:
+		return
+	var song := "battle" if _calm_t < 6.0 else "stealth"
+	if step == 3:
+		song = "battle"
+	elif step == 4:
+		song = "siege"
+	Bgm.play(song, 1.2 if song != "stealth" else 3.0)
+
+
 func _send_signal(torch: Sprite2D) -> void:
 	if step != 1:
 		return
@@ -675,7 +705,8 @@ func _send_signal(torch: Sprite2D) -> void:
 		it.enabled = false
 	torch.texture = AssetLibrary.prop_texture("torch_post")
 	add_light(torch.global_position + Vector2(1, -20), Color(1.0, 0.55, 0.25), 0.6, 0.85)
-	Sfx.play("cry", -10.0)
+	Sfx.play("torch_on", -4.0)
+	Sfx.play("shout", -8.0)
 	_spawn_crew(player.global_position + Vector2(0, 30))
 	Game.say(Lines.say("crew_arrive"), func(): _set_step(2))
 
@@ -693,7 +724,7 @@ func _free_scout(_by) -> void:
 	scout.queue_free()
 	Game.side_markers.erase(at)
 	_add_scout(at)
-	Sfx.play("ui")
+	Sfx.play("ui_ok", -6.0)
 	Game.say(Lines.say("scout_freed"))
 	_refresh_side()
 
@@ -726,7 +757,7 @@ func _burn_armory(quiet := false) -> void:
 	add_smoke(armory_sprites[1], Vector2(0, -40), 1.0)
 	if quiet:
 		return
-	Sfx.play("cry", -14.0)
+	Sfx.play("fire_burst", -4.0)
 	noise(armory_point.global_position, 130.0, 0.6)
 	Fx.text(armory_point.global_position + Vector2(0, -40), Lines.t("fx.armory"), Color(1, 0.7, 0.3))
 	Game.show_hint(Lines.t("hint.armory"))
@@ -757,6 +788,10 @@ func _update_winch(delta: float) -> void:
 	var need := REOPEN_TIME if opened_once else WINCH_TIME
 	if player.state == Actor.St.INTERACT and player.interact_target == winch_point:
 		winch_progress = minf(1.0, winch_progress + delta / need)
+		_winch_tick -= delta
+		if _winch_tick <= 0.0:   # 톱니 딸깍 소리
+			_winch_tick = 0.32
+			Sfx.play("winch", -8.0)
 	else:
 		winch_progress = maxf(0.0, winch_progress - delta * WINCH_DROP)
 	winch_point.progress = winch_progress
@@ -834,6 +869,7 @@ func _on_alarm(_bell: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	_update_audio(delta)
 	if _done:
 		return
 	_update_tutorial(delta)
@@ -1074,6 +1110,8 @@ func _finish() -> void:
 	Game.set_objective(chapter_title, Lines.t("objective.done"))
 	if Game.hud:
 		Game.hud.show_title(Lines.list("title.clear"))
+	Bgm.sting("victory")
+	Bgm.amb("battle", 0.0, 4.0)
 	Game.say(Lines.say("victory"), _play_ending)
 
 
@@ -1107,6 +1145,8 @@ func _play_ending() -> void:
 	_late_houses.clear()
 	if hud:
 		hud.fade_to(0.0, 1.2)
+	Bgm.play("ending", 3.0)
+	Bgm.amb("sea", 1.0, 2.0)
 	await _wait(1.6)
 	await _say_wait(Lines.say("ending_dock"))
 	# 부두를 따라 배까지 걷는다(부하는 따라온다)

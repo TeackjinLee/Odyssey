@@ -29,6 +29,8 @@ const KEY_AIM_FAR := [320.0, 40.0]
 ## 판정이 난 뒤 범위가 남아 사라지는 시간
 const REACH_FLASH := 0.16
 
+## 발소리 간격 남은 시간
+var _step_t := 0.0
 var weapon := "sword"
 var combo_step := 0
 var combo_window := 0.0
@@ -250,6 +252,11 @@ func _free_move(delta: float) -> void:
 		face(mv)
 		state = St.MOVE
 		play("run" if running else "walk")
+		# 발소리: 달리면 크게(적도 듣는다), 걸으면 아주 작게
+		_step_t -= delta
+		if _step_t <= 0.0:
+			_step_t = 0.27 if running else 0.42
+			Sfx.play("step", -13.0 if running else -26.0)
 	else:
 		state = St.IDLE
 		play("idle")
@@ -265,7 +272,7 @@ func _start_attack(spec: Dictionary) -> void:
 	if spec["anim"] != "":
 		play_timed(spec["anim"], spec["dur"])
 		if not spec.get("quiet", false):
-			Sfx.play("swing", -12.0)
+			Sfx.play("swing_heavy" if spec.get("heavy", false) or spec == SWORD_COMBO[2] else "swing", -10.0)
 			Game.level.noise(global_position, SWING_NOISE, SWING_SUSPICION)
 	var idx := SWORD_COMBO.find(spec)
 	if idx >= 0:
@@ -320,6 +327,9 @@ func _start_dodge() -> bool:
 	set_state(St.DODGE)
 	invuln = 0.28
 	play_timed("dodge", 0.36)
+	Fx.anim("dust", global_position, dodge_dir.x < 0.0, 4)
+	Sfx.play("swing", -18.0)
+	Sfx.play("step", -12.0)
 	return true
 
 
@@ -374,12 +384,13 @@ func _switch_weapon() -> void:
 	if weapons == null:
 		set_sheet("odysseus_bow" if weapon == "bow" else "odysseus_sword")
 	Fx.text(global_position + Vector2(0, -head_height), "활" if weapon == "bow" else "검", Color(1, 0.9, 0.6))
-	Sfx.play("ui")
+	Sfx.play("switch", -8.0)
 
 
 func _war_cry() -> void:
 	skill_cd = SKILL_CD
-	Fx.ring(global_position, 170.0, Color(1, 0.8, 0.3), 0.6)
+	if not Fx.anim("shout", global_position, false, 5):
+		Fx.ring(global_position, 170.0, Color(1, 0.8, 0.3), 0.6)
 	Fx.text(global_position + Vector2(0, -head_height - 6), "전투의 함성!", Color(1, 0.85, 0.35))
 	Sfx.play("cry", -4.0)
 	Game.shake(3.0)
@@ -509,6 +520,7 @@ func on_interrupted() -> void:
 func _die() -> void:
 	super._die()
 	Sfx.play("death")
+	Bgm.sting("defeat")
 	await get_tree().create_timer(1.6).timeout
 	Game.player_died.emit()
 

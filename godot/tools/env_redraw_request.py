@@ -2,9 +2,10 @@
 """임시 그림 다시 그려 받기 요청 묶음: 맵 개편 때 생성기로 만든 임시 그림(gen_env_extra.py)을
 자리·크기 안내 그림(guide.png)으로 놓고, Codex에게 troy_env 화풍으로 같은 자리에 다시 그려 달라고 한다.
 
-    python3 tools/env_redraw_request.py .
+    python3 tools/env_redraw_request.py .                  # 아직 받지 않은 시트만(지금은 extra_redraw)
+    python3 tools/env_redraw_request.py . extra_redraw     # 고른 시트만
 
-출력: docs/sprite_request/env_requests/<city_redraw|coast_redraw>/
+출력: docs/sprite_request/env_requests/<city_redraw|extra_redraw|coast_redraw>/
   - prompt.txt          붙여 넣을 프롬프트
   - guide.png           두 번째로 붙일 그림(이름 없음, 1536×1024)
   - guide_labeled.png   사람이 보는 이름표 판(붙이지 않는다)
@@ -33,6 +34,15 @@ SHEETS = {
         ],
         "floors": [],
     },
+    "extra_redraw": {
+        "out": "troy_extra.webp",
+        "rows": [
+            (300, ["alarm_bell", "winch", "brazier", "banner_greek", "torch_post_off", "gate_open"]),
+            (590, ["house_a_burnt", "house_b_burnt", "house_c_burnt", "house_d_burnt"]),
+            (900, ["armory", "armory_burnt", "sacks"]),
+        ],
+        "floors": [],
+    },
     "coast_redraw": {
         "out": "troy_coast.webp",
         "rows": [
@@ -43,7 +53,9 @@ SHEETS = {
     },
 }
 # 안내 그림에 쓸 임시 그림이 없는 것: 비슷한 그림의 윤곽만 단색으로 칠해 자리·크기만 잡는다(새로 그릴 칸)
-STAND_IN = {"olive": "pine", "bush": "rock"}
+STAND_IN = {"olive": "pine", "bush": "rock", "armory": "cart", "armory_burnt": "cart", "sacks": "crate"}
+# 대신 쓴 윤곽을 이만큼 키워 새 그림의 크기를 잡는다
+STAND_IN_SCALE = {"armory": 1.35, "armory_burnt": 1.35, "sacks": 1.3}
 STAND_IN_COLOR = (92, 104, 88)
 
 DESC = {
@@ -69,7 +81,29 @@ DESC = {
     "olive": "OLIVE tree with a twisted grey trunk and silver-green leaves (its placeholder is a flat grey-green silhouette: "
              "draw a new tree in that space)",
     "bush": "low round green BUSH (its placeholder is a flat grey-green silhouette: draw a new bush in that space)",
+    "alarm_bell": "ALARM BELL stand: two wooden posts with a crossbar, a bronze bell hanging in the middle with a rope, "
+                  "on a small stone base (one tile)",
+    "winch": "wooden city-gate WINCH: a heavy horizontal wooden drum on two thick posts, a big four-spoke crank wheel on its side, "
+             "thick rope wound on the drum (one tile)",
+    "brazier": "bronze BRAZIER on three legs, a shallow bowl of glowing red-orange coals (no tall flames: the game adds them)",
+    "banner_greek": "tall cloth BANNER on a wooden pole, TEAL-BLUE cloth with a white owl emblem (the Greek side), "
+                    "same shape as the red Trojan banner in the first image",
+    "torch_post_off": "the same wooden TORCH POST as in the first image but UNLIT: a black burnt-out torch head, a thin wisp of smoke",
+    "gate_open": "the same CITY GATE as in the first image but OPEN: the wooden doors swung inward, a dark passage visible "
+                 "through the arch",
+    "house_a_burnt": "the matching house from the first image after a FIRE: charred black beams, half-collapsed red tile roof, "
+                     "soot-blackened walls, a few glowing embers (no tall flames: the game adds them)",
+    "house_b_burnt": "another matching house from the first image, BURNT the same way (charred, roof partly fallen in, embers)",
+    "house_c_burnt": "another matching house from the first image, BURNT the same way",
+    "house_d_burnt": "another matching house from the first image, BURNT the same way",
+    "armory": "small ARMORY STORE against a city wall: a lean-to wooden shed roof over stacked spears, round shields and amphorae "
+              "(footprint 2x1 tiles; its placeholder is a flat silhouette: draw a new item in that space)",
+    "armory_burnt": "the same armory store BURNT: charred black planks, collapsed roof, broken spears, glowing embers "
+                    "(no tall flames; flat-silhouette placeholder)",
+    "sacks": "a tall PILE OF GRAIN SACKS AND CRATES that an archer can stand on top of (one tile; flat-silhouette placeholder)",
 }
+# 새 그림의 발자국(대신 쓴 그림과 다를 때)
+NEW_FOOTPRINT = {"armory": [2, 1], "armory_burnt": [2, 1]}
 FLOOR_DESC = {
     "water": "deep night SEA water with small wave highlights",
     "sand": "ROCKY SHORE: grey stones and wet sand",
@@ -112,7 +146,8 @@ def load(env, name):
     if name in STAND_IN:
         flat = Image.new("RGBA", im.size, STAND_IN_COLOR + (255,))
         im = Image.composite(flat, Image.new("RGBA", im.size, (0, 0, 0, 0)), im.getchannel("A"))
-    return im.resize((round(im.width * SCALE), round(im.height * SCALE)), Image.NEAREST)
+    k = SCALE * STAND_IN_SCALE.get(name, 1.0)
+    return im.resize((round(im.width * k), round(im.height * k)), Image.NEAREST)
 
 
 def floor_block(env, kinds):
@@ -159,7 +194,7 @@ def build(root, sheet, spec):
             src = meta[STAND_IN.get(n, n)]
             x0, y0 = round(x), base - im.height
             guide.alpha_composite(im, (x0, y0))
-            fp = src.get("footprint", [1, 1])
+            fp = NEW_FOOTPRINT.get(n, src.get("footprint", [1, 1]))
             boxes[n] = {"box": [x0 - 8, y0 - 12, x0 + im.width + 8, base + 8], "footprint": fp,
                         "k": round(1 / SCALE, 4), "size_game": src["size"]}
             lines.append(f"- {DESC[n]}, about {im.width}x{im.height} px.")
@@ -189,9 +224,16 @@ def main():
     style = os.path.join(out, "troy_env.png")
     if not os.path.exists(style):
         Image.open(os.path.join(root, "assets/source/troy_env.webp")).convert("RGB").save(style)
-    run = ["#!/bin/zsh", "# 임시 그림 다시 그려 받기(city_redraw·coast_redraw)를 동시에 돌린다.", 'cd "$(dirname "$0")"']
+    run = ["#!/bin/zsh", "# 임시 그림 다시 그려 받기(city_redraw·extra_redraw·coast_redraw)를 동시에 돌린다. 하나만: ./run_redraw.sh extra_redraw",
+           'cd "$(dirname "$0")"', 'want=("$@")']
+    # 고른 시트만(인자로 이름), 없으면 아직 받지 않은 시트만 — 받은 시트의 안내 그림·boxes.json은 자르기 기준이라 다시 만들지 않는다
+    pick = sys.argv[2:] or [s for s, sp in SHEETS.items() if not os.path.exists(os.path.join(root, "assets/source", sp["out"]))]
     for sheet, spec in SHEETS.items():
         d = os.path.join(out, sheet)
+        run.append(f"[[ ${{#want}} -eq 0 || ${{want[(Ie)]{sheet}}} -gt 0 ]] && (cd {sheet} && codex exec -m {MODEL} --skip-git-repo-check"
+                   f" -s read-only -i ../troy_env.png -i guide.png - < prompt.txt > ../{sheet}.log 2>&1) &")
+        if sheet not in pick:
+            continue
         os.makedirs(d, exist_ok=True)
         guide, lab, boxes, prompt = build(root, sheet, spec)
         guide.save(os.path.join(d, "guide.png"))
@@ -200,10 +242,8 @@ def main():
             json.dump({"save_as": spec["out"], "items": boxes}, fp, ensure_ascii=False, indent=1)
         with open(os.path.join(d, "prompt.txt"), "w", encoding="utf-8") as fp:
             fp.write(prompt)
-        run.append(f"(cd {sheet} && codex exec -m {MODEL} --skip-git-repo-check -s read-only -i ../troy_env.png -i guide.png"
-                   f" - < prompt.txt > ../{sheet}.log 2>&1) &")
         print(d)
-    run += ["wait", 'for f in city_redraw.log coast_redraw.log; do echo "${f%.log} $(grep -o "/Users[^ ]*generated_images[^ ]*\\.png" $f | tail -1)"; done']
+    run += ["wait", 'for f in *_redraw.log; do echo "${f%.log} $(grep -o "/Users[^ ]*generated_images[^ ]*\\.png" $f | tail -1)"; done']
     rs = os.path.join(out, "run_redraw.sh")
     with open(rs, "w") as fp:
         fp.write("\n".join(run) + "\n")

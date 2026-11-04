@@ -136,6 +136,8 @@ func _clear() -> void:
 
 func _show_menu() -> void:
 	_clear()
+	Bgm.play("theme", 2.0)
+	Bgm.amb_stop_all()
 	menu = Control.new()
 	menu.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(menu)
@@ -234,4 +236,12 @@ func _report_and_quit() -> void:
 		info["player_cell"] = Iso.world_to_grid(Game.player.global_position).snapped(Vector2(0.1, 0.1))
 		info["squad_hp"] = Game.squad.members.map(func(m): return int(m.hp))
 	print("REPORT ", JSON.stringify(info))
+	# 소리를 멈추고 오디오 스레드가 놓을 때까지 두 프레임 기다린 뒤 끝낸다(끝낼 때 남는 재생 경고 줄이기)
+	Sfx.clear()
+	Bgm.clear()
+	for p in Game.get_children():
+		if p is AudioStreamPlayer:
+			p.free()
+	await get_tree().process_frame
+	await get_tree().process_frame
 	get_tree().quit()

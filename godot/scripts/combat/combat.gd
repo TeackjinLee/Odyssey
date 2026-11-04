@@ -49,4 +49,4 @@ static func shoot(shooter: Actor, target_pos: Vector2, dmg: float, speed := 300.
 	p.velocity = dir * speed
 	p.position = shooter.global_position + dir * 8.0
 	Game.level.fx_layer.add_child(p)
-	Sfx.play("bow")
+	Sfx.at("bow", shooter.global_position, -7.0)

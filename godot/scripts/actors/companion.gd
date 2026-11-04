@@ -228,7 +228,7 @@ func _attack_update() -> void:
 		else:
 			Combat.melee(self, cfg["reach"], cfg["arc"], cfg["dmg"], 55.0)
 			Fx.slash(self, cfg["reach"], cfg["arc"], Color(0.75, 0.85, 1.0), anim_i == 1, 4.0)
-			Sfx.play("swing", -16.0)
+			Sfx.at("swing", global_position, -16.0)
 	if t >= cfg["dur"]:
 		attack_cd = cfg["cd"] * randf_range(0.8, 1.25)
 		set_state(St.IDLE)

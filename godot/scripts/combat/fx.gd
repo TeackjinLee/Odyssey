@@ -1,9 +1,70 @@
 class_name Fx
 ## 전투 이펙트: 피해 숫자, 불똥, 검 궤적, 퍼지는 고리. 모두 레벨의 fx_layer(맨 위)에 그린다.
+## 그림 이펙트: assets/fx/<이름>.png(프레임을 가로로 늘어놓은 한 장) + <이름>.json이 있으면 그 그림을 한 번 재생하고,
+## 없으면 지금처럼 코드로 그린다. 이름은 ART_PLAN의 F-<이름> (hit · block · parry · dust · shout · takedown · decoy_dust).
+## json: {"frame": [폭, 높이], "frames": 수, "fps": 초당, "anchor": [x, y](생략하면 가운데), "scale": 1}
+
+const FX_DIR := "res://assets/fx/"
+static var _anims := {}
 
 
 static func _layer() -> Node:
 	return Game.level.fx_layer if Game.level else null
+
+
+## 그림 이펙트를 pos에 한 번 재생. 그림이 없으면 false(부른 쪽이 코드 이펙트를 그린다).
+static func anim(name: String, pos: Vector2, flip := false, z := 90) -> bool:
+	var layer := _layer()
+	if layer == null:
+		return false
+	var info: Variant = _anim_info(name)
+	if info == null:
+		return false
+	var s := AnimatedSprite2D.new()
+	s.sprite_frames = info["frames"]
+	s.centered = false
+	s.offset = -info["anchor"]
+	s.flip_h = flip
+	s.scale = Vector2.ONE * info["scale"]
+	s.position = pos
+	s.z_index = z
+	s.animation_finished.connect(s.queue_free)
+	layer.add_child(s)
+	s.play("default")
+	return true
+
+
+## 맞음·막음·패링 불꽃: 그림(F-hit·F-block·F-parry)이 있으면 그림, 없으면 선 불똥
+static func impact(kind: String, pos: Vector2, color: Color, count := 6) -> void:
+	if not anim(kind, pos):
+		spark(pos, color, count)
+
+
+static func _anim_info(name: String) -> Variant:
+	if _anims.has(name):
+		return _anims[name]
+	var png := FX_DIR + name + ".png"
+	var js := FX_DIR + name + ".json"
+	var info: Variant = null
+	if ResourceLoader.exists(png) and FileAccess.file_exists(js):
+		var meta: Variant = JSON.parse_string(FileAccess.get_file_as_string(js))
+		var tex: Texture2D = load(png)
+		if meta is Dictionary and tex:
+			var fw := int(meta["frame"][0])
+			var fh := int(meta["frame"][1])
+			var n := int(meta.get("frames", tex.get_width() / fw))
+			var sf := SpriteFrames.new()
+			sf.set_animation_loop("default", false)
+			sf.set_animation_speed("default", float(meta.get("fps", 16)))
+			for i in n:
+				var at := AtlasTexture.new()
+				at.atlas = tex
+				at.region = Rect2(i * fw, 0, fw, fh)
+				sf.add_frame("default", at)
+			var anc: Array = meta.get("anchor", [fw / 2.0, fh / 2.0])
+			info = {"frames": sf, "anchor": Vector2(anc[0], anc[1]), "scale": float(meta.get("scale", 1.0))}
+	_anims[name] = info
+	return info
 
 
 static func damage_number(pos: Vector2, amount: float, friendly: bool) -> void:

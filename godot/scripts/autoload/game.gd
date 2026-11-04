@@ -92,6 +92,11 @@ func _ready() -> void:
 
 
 # ── 설정·저장 ─────────────────────────────────────────
+func _exit_tree() -> void:
+	Sfx.clear()
+	Bgm.clear()
+
+
 func _read_json(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null

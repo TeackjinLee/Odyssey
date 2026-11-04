@@ -12,7 +12,8 @@
 발이 뜬 만큼을 살린다. 프레임 수가 격자 칸 수보다 적으면(5장을 3×2 칸에 받을 때) 앞에서 그 수만큼만 쓴다.
 
 출력: assets/source/odysseus_<동작>_8dir.webp (줄 = 남→남동→동→북동→북→북서→서→남서, 칸 CELL×CELL)
-사용: python3 tools/pack_strip.py <godot 프로젝트 폴더> <동작> [격자 열 수] [격자 줄 수] [프레임 수]
+사용: python3 tools/pack_strip.py <godot 프로젝트 폴더> <동작> [격자 열 수] [격자 줄 수] [프레임 수] [--sheet=<시트 이름>]
+  --sheet: 병사·NPC 그림(기본 odysseus). 예: --sheet=trojan_sword → trojan_sword_<동작>_<방향> → trojan_sword_<동작>_8dir.webp
 """
 import sys
 from pathlib import Path
@@ -33,14 +34,15 @@ HEAD_SCALE = {"attack1", "attack2", "attack3", "heavy"}
 ROWS = [("S", False), ("SE", False), ("E", False), ("NE", False), ("N", False),
         ("NE", True), ("E", True), ("SE", True)]
 MAGENTA = (255, 0, 255)
+SHEET = "odysseus"
 
 
 def load(root, anim, d):
     for ext in ("webp", "png"):
-        p = root / f"assets/source/odysseus_{anim}_{d}.{ext}"
+        p = root / f"assets/source/{SHEET}_{anim}_{d}.{ext}"
         if p.exists():
             return Image.open(p).convert("RGB")
-    sys.exit(f"없음: assets/source/odysseus_{anim}_{d}.webp")
+    sys.exit(f"없음: assets/source/{SHEET}_{anim}_{d}.webp")
 
 
 def frames(src, cols, rows):
@@ -109,9 +111,9 @@ def head_w(f):
 
 def walk_head_widths(root):
     """같은 방향의 걷기 첫 장 머리 폭(공격 크기를 걷기에 맞추는 기준)."""
-    path = root / "assets/source/odysseus_walk_8dir.webp"
+    path = root / f"assets/source/{SHEET}_walk_8dir.webp"
     if not path.exists():
-        sys.exit("공격은 걷기 8방향 시트(odysseus_walk_8dir.webp)를 먼저 묶어 둬야 한다")
+        sys.exit(f"공격은 걷기 8방향 시트({SHEET}_walk_8dir.webp)를 먼저 묶어 둬야 한다")
     src = Image.open(path).convert("RGB")
     out = {}
     for row, (d, flip) in enumerate(ROWS):
@@ -149,11 +151,12 @@ def main(root, anim, cols=4, rows=3, n=None):
             if flip:
                 f = f.transpose(Image.FLIP_LEFT_RIGHT)
             sheet.paste(f, (i * CELL + CELL // 2 - round(head_cx(f)), row * CELL + BASE_Y - lift[d][i] - f.height), f)
-    out = root / f"assets/source/odysseus_{anim}_8dir.webp"
+    out = root / f"assets/source/{SHEET}_{anim}_8dir.webp"
     sheet.save(out, lossless=True)
     print(out.relative_to(root), sheet.size)
 
 
 if __name__ == "__main__":
-    a = sys.argv[1:]
+    SHEET = next((v.split("=", 1)[1] for v in sys.argv if v.startswith("--sheet=")), "odysseus")
+    a = [v for v in sys.argv[1:] if not v.startswith("--sheet=")]
     main(Path(a[0]), a[1], *(int(v) for v in a[2:5]))

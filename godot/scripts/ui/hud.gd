@@ -68,7 +68,7 @@ func _on_tutorial(text: String, done: bool, slot: int) -> void:
 	if done:
 		if tut_text != "":
 			tut_done = 1.1
-			Sfx.play("ui", -6.0)
+			Sfx.play("ui_ok", -8.0)
 		tut_slot = -1
 		return
 	tut_text = text

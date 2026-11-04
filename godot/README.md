@@ -114,7 +114,8 @@ scripts/
     iso.gd             격자↔화면 좌표, 8방향
     asset_library.gd   스프라이트 시트·환경 그림 읽기(.json 규칙)
     iso_level.gd       챕터 공통 틀: 타일, 막힌 칸(충돌+A*), 소품, 깊이 정렬, 가림 투명화, 조명, 카메라
-    chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계
+    chapter1_troy.gd   챕터 1 맵·인물 배치·퀘스트 단계·상황별 음악/환경음(_update_audio)
+    lines.gd           챕터 글 읽기(Lines): data/dialogue/<챕터>.json의 대사·튜토리얼 카드·목표·알림·이름
     squad.gd           부대 명령과 진형(넓으면 V자, 좁으면 한 줄)
     interactable.gd    E로 쓰는 지점
   actors/
@@ -123,12 +124,36 @@ scripts/
     companion.gd       부하 AI (검병·창병·궁병, 쓰러짐·부활)
     enemy.gd           트로이 병사 AI (검병·창병·궁수·수비대장)
     npc.gd             대화 인물
-  combat/              판정(combat.gd), 화살, 이펙트(fx.gd), 기술 효과(skills.gd: 미끼·일제 사격), 합성 효과음(sfx.gd)
+  combat/              판정(combat.gd), 화살, 이펙트(fx.gd — 그림 이펙트가 있으면 그림), 기술 효과(skills.gd: 미끼·일제 사격)
+  audio/sfx.gd         효과음: assets/audio/sfx 파일이 있으면 파일(변형 무작위), 없으면 코드 합성. at()은 거리로 줄임
+  audio/bgm.gd         배경 음악 교차 페이드·짧은 곡(승리·패배)·환경음 층
   ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드)
   ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
-assets/                생성된 임시 그림 (sprites/, env/, ui/)
-tools/                 임시 그림 생성기 (Python + Pillow)
+data/dialogue/ch1.json 챕터 1 글 — 대사·튜토리얼 카드·목표·알림. 글 속 {동작}(예: {interact})은 지금 묶인 키로 보인다
+assets/                생성된 임시 그림 (sprites/, env/, ui/) · 소리 (audio/sfx·amb·music)
+tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 소리는 ffmpeg)
 ```
+
+### 글 고치기
+
+대사·튜토리얼 카드·목표·알림은 `data/dialogue/ch1.json`에 있다(코드는 `Lines.t("tut.move")`·`Lines.say("sinon_intro")`로 읽음).
+키 이름은 글에 직접 쓰지 말고 `{동작}`으로 적는다 — `{interact}` `{attack}` `{block}` `{dodge}` `{heavy}` `{switch_weapon}` `{skill}`
+`{decoy}` `{run}` `{cmd_follow}`…`{cmd_special}` `{move_up}` 등(`game.gd`의 `KEYS`·`REBIND`). 키를 바꾸면 화면에 바로 바뀐 키로 보인다.
+`%d`·`%s`는 코드가 넣는 수·글이니 지우지 않는다.
+
+### 소리
+
+모든 소리는 `tools/gen_audio.py`가 합성한다(녹음·외부 소리 없음): `python3 tools/gen_audio.py .` (`sfx`·`amb`·`music` 중 골라서도 됨, 음악은 1분쯤).
+느낌은 영화 《오디세이》(2026, 루드비히 고란손 음악)처럼 — 오케스트라 없이 고대 악기(리라·아울로스·청동 징·두드린 쇠붙이),
+그 소리를 일그러뜨린 신시, 말 없는 목소리·합창. 선율·화성은 이 게임용으로 새로 만든 것이다.
+
+- 효과음 `assets/audio/sfx/<이름>.wav`(변형은 `_1`…`_n`): swing·swing_heavy·hit·hit_heavy·block·parry·bow·arrow_hit·cry·shout·death·step·
+  bell·horn·gate·winch·ui·ui_ok·checkpoint·alert·takedown·torch_out·torch_on·fire_burst·stone·switch
+- 환경음 `assets/audio/amb/`: wind(늘) · fire(성문이 열리면 크게) · sea(동쪽 해안에 가까울수록) · battle(성문 사수 동안)
+- 음악 `assets/audio/music/`: theme(타이틀) · stealth(잠입) · battle(들켜 싸울 때, 권양기) · siege(성문 사수) · ending(출항) · victory · defeat
+  — 들키면 전투 곡으로 바뀌고 싸움이 끝나고 6초 뒤 잠입 곡으로 돌아간다(`chapter1_troy.gd`의 `_update_audio`)
+- 녹음·작곡한 소리로 바꾸려면 **같은 이름**의 `.wav`/`.ogg`를 덮어쓰면 된다(코드 수정 없음). 파일이 없으면 효과음은 코드 합성음, 음악은 조용히 넘어간다
+- 크기: 효과음은 부르는 곳의 dB, 음악은 `bgm.gd`의 `MUSIC_DB`, 환경음은 `_update_audio`의 0~1 값
 
 ### 핵심 규칙
 
@@ -149,6 +174,13 @@ tools/                 임시 그림 생성기 (Python + Pillow)
   - 열 = 동작 프레임을 이어 붙임. `.json`에 동작별 `start`(시작 열)·`frames`·`fps`·`loop`
   - 동작: idle walk run attack1 attack2 attack3 heavy block bow hit dodge death interact downed
   - `frame`(한 칸 크기)과 `anchor`(발 위치)를 `.json`에 적는다. 크기는 64×64가 아니어도 된다
+- **이펙트**(있으면) `assets/fx/<이름>.png` + `<이름>.json` — 프레임을 가로로 늘어놓은 한 장.
+  json `{"frame": [폭, 높이], "frames": 수, "fps": 초당, "anchor": [x, y](생략하면 가운데), "scale": 1}`.
+  이름 = ART_PLAN의 `F-<이름>`: hit · block · parry(맞음·막음·패링 불꽃) · dust(구르기) · shout(함성 고리) · takedown · decoy_dust.
+  없으면 지금처럼 코드로 그린다(`fx.gd`의 `anim`·`impact`)
+- **병사·NPC** 그려 받은 그림: `assets/source/<시트>_8dir.webp`(기본 8방향) + 동작 줄 `<시트>_<동작>_8dir.webp`
+  (`split_rows.py … --sheet=<시트>` → `pack_strip.py . <동작> … --sheet=<시트>`) → `python3 tools/gen_soldier.py . [시트]`.
+  기본 8방향이 없으면 지금 임시 인물을 그대로 두고, 동작 줄이 없으면 기본 포즈를 기울이고 눌러 만든다
 - **환경** `assets/env/env.json`의 `props`: 소품마다 `file`·`anchor`(발자국 중심 지점)·`footprint`(칸 수)
 - **바닥** `assets/env/floor_atlas.png`: 64×32 마름모, 줄 = `env.json`의 `floor_atlas.rows` 순서
   (cobble plaza dirt grass road ash + water sand planks), 열 = 변형 4개. `water`·`sand` 칸은 챕터가 막힌 칸으로 둔다
@@ -156,9 +188,11 @@ tools/                 임시 그림 생성기 (Python + Pillow)
 다시 생성: `python3 tools/gen_characters.py .` / `python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .`
 
 - 맵 개편용 소품·바닥은 `tools/gen_env_extra.py`가 임시 그림을 만든 뒤, 끝에서 `gen_env_redraw.py`가 다시 그려 받은 그림
-  (`assets/source/troy_city.webp`·`troy_coast.webp`)을 잘라 같은 이름으로 덮어쓴다: temple · steps · lion · fountain · stall_red/white ·
+  (`assets/source/troy_city.webp`·`troy_coast.webp`, 받으면 `troy_extra.webp`도)을 잘라 같은 이름으로 덮어쓴다: temple · steps · lion · fountain · stall_red/white ·
   bell_tower · ladder · column_broken · cypress · pine · olive · bush · pot · rock · galley · boat · pier_post, 바닥 water · sand · planks.
-  받은 그림은 안내 그림판(`docs/sprite_request/env_requests/<city|coast>_redraw/guide.png`)과 같은 자리라 `boxes.json` 상자로 자르고,
+  `troy_extra`(요청 준비됨): alarm_bell · winch · brazier · banner_greek · torch_post_off · gate_open · house_a~d_burnt + 새 그림 armory · armory_burnt · sacks
+  (새 그림은 env.json에 더해지기만 하므로 받으면 챕터 배치를 고친다).
+  받은 그림은 안내 그림판(`docs/sprite_request/env_requests/<city|extra|coast>_redraw/guide.png`)과 같은 자리라 `boxes.json` 상자로 자르고,
   기준점은 임시 그림의 것을 물려받는다(그래서 늘 `gen_env_extra.py`부터 돌린다)
 - **바다**는 칸 그림 대신 셰이더(`scripts/world/water.gdshader`)로 그린다: 월드 좌표라 이음매가 없고, 물결이 흐르고 반짝임이 깜박이며,
   뭍·성벽과 닿는 곳에 거품, 부두(planks) 앞쪽 물에 부두 옆면·그림자. 물 칸 지도는 `iso_level.gd`의 `_apply_floor`가 넣는다

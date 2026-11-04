@@ -37,8 +37,11 @@ godot --path . -- --play --god --at=37,38                # 오디세우스를 �
 python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
 python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로, 끝에서 gen_env_redraw가 받은 troy_city·troy_coast로 덮어씀)
 python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
-python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일
-python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장
+python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (병사는 --sheet=<시트>)
+python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (병사는 --sheet=<시트>)
+python3 tools/gen_soldier.py . [시트]                   # 병사·NPC 원본(<시트>_8dir.webp + 동작 줄) → assets/sprites/<시트>.*
+python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
+python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)
 ```
 
 테스트 프레임워크는 없다. 변경 확인은 `--auto` 봇 클리어(일반·잠입)와 직접 플레이·`--shot` 화면 저장으로 한다.
@@ -53,7 +56,8 @@ python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방
 - 캐릭터 시트: 한 줄 = 한 방향(0 동 1 남동 2 남 3 남서 4 서 5 북서 6 북 7 북동), 열 = 동작 프레임. `.json`에 `frame`·`anchor`·동작별 `start`/`frames`/`fps`/`loop`.
 - 그려 받은 원본은 `assets/source/`에 두고 `tools/`의 변환 스크립트로 `assets/sprites/`·`assets/env/`를 만든다. 생성물을 손으로 고치지 않는다.
 - 오디세우스는 치비 새 차림(맨머리·망토 없음 몸 + 투구·망토 레이어 예정, `docs/sprite_request/OUTFIT.md`). 방향은 S SE E NE N만 받고 서쪽 셋은 뒤집는다.
-- 새 챕터는 `IsoLevel`을 상속해 `build()`/`start()`를 만든다.
+- 새 챕터는 `IsoLevel`을 상속해 `build()`/`start()`를 만든다. 글(대사·카드·목표·알림)은 `data/dialogue/<챕터>.json` + `Lines`로, 키 이름은 글에 `{동작}`으로 쓴다.
+- 소리: `Sfx.play/at`(효과음), `Bgm.play/sting/amb`(음악·환경음). 파일이 있으면 파일, 없으면 효과음은 합성음. 느낌은 영화 《오디세이》(2026)처럼 — 오케스트라 없이 고대 악기·징·쇠붙이·일그러진 신시·목소리(README "소리").
 
 ## 그림 작업 흐름
 

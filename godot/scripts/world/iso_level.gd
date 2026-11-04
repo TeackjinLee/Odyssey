@@ -353,7 +353,7 @@ func set_torch(t: Dictionary, lit: bool) -> void:
 	t["light"].enabled = lit
 	t["point"].enabled = lit
 	t["sprite"].texture = AssetLibrary.prop_texture("torch_post" if lit else "torch_post_off")
-	Sfx.play("ui", -8.0)
+	Sfx.at("torch_on" if lit else "torch_out", t["sprite"].global_position, -6.0)
 
 
 ## 경보 종: 알아챈 적 하나가 경보병이 되어 달려와 치면, 주변 적이 모두 알아채고 alarm_rung이 나간다.
@@ -382,7 +382,7 @@ func ring_bell(b: Dictionary) -> void:
 	b["runner"] = null
 	Game.stats["alarms"] += 1
 	var s: Sprite2D = b["sprite"]
-	Sfx.play("bell", -2.0)
+	Sfx.at("bell", s.global_position, 0.0)
 	Game.shake(3.0)
 	Fx.ring(s.global_position, 140.0, Color(1, 0.75, 0.3), 0.8)
 	Fx.text(s.global_position + Vector2(0, -62), "경보!", Color(1, 0.4, 0.25))
