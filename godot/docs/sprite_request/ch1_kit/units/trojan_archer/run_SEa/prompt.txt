@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) pose.png = the character standing, facing SOUTH-EAST (front-right) - three-quarter front view running toward the lower-right.
+2) guide.png = a 12-frame MOTION guide drawn as stick figures: RED = right leg, BLUE = left leg, DARK RED = right arm with fist, DARK BLUE = left arm with fist, black dot = hip, circle = head.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 12-frame RUN CYCLE (fast sprint) of the SAME character as the attached "pose.png":
+A TROJAN ARCHER enemy, cute stocky chibi about 3 heads tall exactly like pose.png, clean-shaven face, soft magenta-purple Phrygian cap, purple quilted tunic armor, brown leg wraps, dark sandals; a dark wooden recurve bow in the LEFT fist and a quiver on his back. NO shield, NO sword.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+Facing in every frame: SOUTH-EAST (front-right) - three-quarter front view running toward the lower-right.
+
+MOTION (most important): in each frame put his legs, feet, arms and fists where "guide.png" shows them for that frame number.
+- RUNNING, not walking: the upper body leans a little forward, the hair bounces.
+- LEGS: only ONE foot touches the ground in frames 1-3 and 7-9 and it slides BACKWARD fast like on a treadmill.
+  In frames 4-6 and 10-12 BOTH feet are OFF the ground (flight): the back foot kicks up behind toward the backside,
+  the other knee drives up high in front.
+- ARMS: elbows bent about 90 degrees, fists pumping hard forward and back OPPOSITE to the legs
+  (right knee up in front = right fist back by the hip, left fist forward at chin height). Never stiff, never both fists in front.
+- Frames 7-12 are frames 1-6 with left and right swapped. Frame 12 flows back into frame 1.
+- Keep the SAME three-quarter body turn in all 12 frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+Do not draw the stick lines, circles, numbers or ground dots of the guide.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps.
+- Frames in reading order: top row 1-4, middle row 5-8, bottom row 9-12 (same order as guide.png).
+- EXACTLY the same character size and head size in every cell of all three rows (head as big as in pose.png).
+- The ground line is at the same height near the bottom of every cell: the standing foot touches it,
+  in flight frames the whole body is a few pixels higher. Hip at the same x in every cell (in-place animation).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no dust, no speed lines, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- WEAPONS EXACTLY LIKE pose.png in EVERY frame: his bow (exactly as in pose.png) held in the LEFT fist, the quiver on his back. NO shield, NO sword.

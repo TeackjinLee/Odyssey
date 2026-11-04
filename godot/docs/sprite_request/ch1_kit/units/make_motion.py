@@ -2,7 +2,8 @@
 """적·동료 병사 동작 요청 폴더를 한 번에 만든다(트로이 검병과 같은 흐름).
 기본 8방향 요청 글(<이름>.txt)의 인물 설명으로 <이름>_motion.txt를 만들고, motion_request.py로 폴더를 만든 뒤
 armed_patch.py로 무기 든 병사 문구로 바꾼다. 창병은 찌르기, 궁수는 활, 대장 강공격은 방향마다 한 장(3×2칸)으로 받는다.
-사용: python3 make_motion.py <이름> [<이름> ...]   (godot/ 안에서)
+사용: python3 make_motion.py [--anims=run,block,portrait] <이름> [<이름> ...]   (godot/ 안에서)
+  --anims: 처음 받은 동작 대신 그 동작만 더 만든다(portrait = HUD 초상화 요청 units/portrait/<이름>)
 """
 import re
 import subprocess
@@ -55,7 +56,29 @@ def tweak(job: Path, kind: str):
     p.write_text(t)
 
 
-def main(names):
+PORTRAIT = """Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the character to portray, seen from the front (copy his face, headgear and armor colors EXACTLY).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+A square 1024x1024 pixel-art CHARACTER PORTRAIT for a game HUD: head and shoulders of the character in pose.png:
+__CHARACTER__
+Three-quarter view facing slightly to the right, __MOOD__ expression, the headgear exactly as in pose.png (face fully visible; a tall crest may be cut by the top edge), armor and shoulders visible at the bottom.
+The face fills most of the image (it will be shrunk to 22x22 pixels, so the face must be BIG and readable).
+Background: flat dark charcoal blue #252C34. Crisp pixel art, chunky readable pixel clusters, 1px dark outline, no text, no frame, no border.
+"""
+
+
+def portrait(name):
+    """HUD 초상화 요청 폴더(units/portrait/<이름>): 기본 시트의 남쪽 칸을 pose.png로."""
+    from PIL import Image
+    job = HERE / "portrait" / name
+    job.mkdir(parents=True, exist_ok=True)
+    Image.open(ROOT / f"assets/source/{name}_8dir.webp").convert("RGB").crop((0, 512, 384, 1024)).save(job / "pose.png")
+    mood = "loyal determined" if name.startswith("greek") else "stern hostile"
+    (job / "prompt.txt").write_text(PORTRAIT.replace("__CHARACTER__", motion_text(name)).replace("__MOOD__", mood))
+
+
+def main(names, only=None):
     import importlib.util
     spec = importlib.util.spec_from_file_location("mr", ROOT / "tools/motion_request.py")
     mr = importlib.util.module_from_spec(spec)
@@ -63,12 +86,20 @@ def main(names):
     mr.GROUPS["heavy"] = [["E"], ["SE"], ["S"], ["NE"], ["N"]]
     for name in names:
         kind = name.split("_")[1]
-        (HERE / f"{name}_motion.txt").write_text(motion_text(name) + "\n")
+        if not (HERE / f"{name}_motion.txt").exists():
+            (HERE / f"{name}_motion.txt").write_text(motion_text(name) + "\n")
         out = HERE / name
         anims = ANIMS[kind].split(",") + (["heavy"] if kind == "captain" else [])
+        if only:   # 나중에 더 받는 동작(달리기·막기·초상화). 막기는 방패 든 병사만
+            anims = [a for a in only if a != "block" or kind != "archer"]
+            if "portrait" in anims:
+                portrait(name)
+                anims.remove("portrait")
+            if not anims:
+                continue
         mr.main(ROOT / f"assets/source/{name}_8dir.webp", HERE / f"{name}_motion.txt", out, anims, 1)
         for job in sorted(out.iterdir()):
-            if (job / "prompt.txt").exists():
+            if (job / "prompt.txt").exists() and (not only or job.name.split("_")[0] in anims):
                 armed_patch.patch(job)
                 if kind == "archer":
                     tweak(job, kind)
@@ -78,4 +109,6 @@ def main(names):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    a = sys.argv[1:]
+    only = a.pop(0)[len("--anims="):].split(",") if a and a[0].startswith("--anims=") else None
+    main(a, only)

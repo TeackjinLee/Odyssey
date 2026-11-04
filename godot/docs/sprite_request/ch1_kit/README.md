@@ -47,6 +47,9 @@
 `units/run_all.sh`가 10개씩 동시에 돌린다(`one.sh` = 한 요청). 받은 그림은 `results/<이름>/`.
 다시 받은 것: 궁수 둘 활쏘기(모든 줄이 오른쪽을 겨눔), 그리스 창병 공격2 북쪽(얼굴이 보임), 대장 강공격 SE(칸 선이 그려짐).
 묶기는 `SPRITE_SRC_H=320`, 대장은 기본 시트처럼 조금 더 크게 305(강공격은 크게 그려 와 420).
+**달리기·막기·초상화:** `make_motion.py --anims=run,block,portrait <이름>…`(막기는 방패 든 병사만, 초상화는 `units/portrait/<이름>`).
+검병·창병 4종은 넣었고, 대장·궁수 달리기·막기와 초상화는 Codex 한도로 `rerun_later.sh`가 다시 보낸다.
+초상화는 `assets/source/<이름>_portrait.webp`로 두면 `gen_hero.py`가 부대 칸 초상화로 만든다.
 
 **HUD 초상화:** `extra/portrait`로 받은 그림을 `assets/source/odysseus_ch1_portrait.webp`로 두면 `gen_hero.py`가
 `portrait_odysseus_ch1.png`(80×80)를 만들고, HUD는 입은 옷의 초상화를 쓴다.
