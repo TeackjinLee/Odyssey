@@ -507,6 +507,12 @@ func _draw_boss() -> void:
 	var r := Rect2(190, 14, 260, 7)
 	_text(Vector2(190, 11), boss.display_name, 8, Color(1, 0.75, 0.6), HORIZONTAL_ALIGNMENT_CENTER, 260)
 	_bar(r, boss.hp / boss.max_hp, Color(0.75, 0.15, 0.2))
+	var tex := _portrait("res://assets/ui/portrait_%s.png" % boss.sheet)   # 보스 시트의 초상화가 있으면 바 왼쪽에
+	if tex:
+		var pr := Rect2(166, 2, 21, 21)
+		canvas.draw_rect(pr, Color(0.2, 0.15, 0.12))
+		canvas.draw_texture_rect(tex, pr, false)
+		canvas.draw_rect(pr, EDGE, false, 1.0)
 
 
 func _draw_interact(p: Player) -> void:
