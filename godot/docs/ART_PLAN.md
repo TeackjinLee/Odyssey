@@ -4,6 +4,8 @@
 요청 방법은 [sprite_request/](sprite_request/README.md), 오디세우스 차림 결정은 [sprite_request/OUTFIT.md](sprite_request/OUTFIT.md),
 직접 모은 참고 이미지는 [references/](references/README.md), 시트 `.json` 형식은 [../README.md](../README.md) §그림 바꾸기.
 
+> **2026-11-05 수령 현황 보정:** 아래 오디세우스 맨손 표는 옛 `odysseus` 작업 기록이다. 현재 1·2장은 무기·투구·망토를 함께 그린 `odysseus_ch1`을 사용하며 기본·이동·공격·나머지 동작은 이미 받았다(`ch1_kit/README.md`). 전투·기술 이펙트도 `0b3cf14`에서 적용했다. `troy_extra`·UI 아이콘·HUD 틀은 요청 결과를 받았지만 게임 연결 전이다. 다음 요청은 [현재 차림 기준 요청 묶음](sprite_request/next_batch_2026-11-05/README.md)을 우선한다. 이미 받은 그림과 검수 후보, 적용 완료를 구분한다.
+
 ---
 
 ## 1. 화풍 규칙 (모든 그림 공통)

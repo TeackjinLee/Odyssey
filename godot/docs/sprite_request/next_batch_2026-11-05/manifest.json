@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-05",
+  "jobs": [
+    {
+      "id": "lotus_props",
+      "prompt": "lotus_props/prompt.txt",
+      "references": [
+        "lotus_props/layout.png",
+        "lotus_props/style_ref.png"
+      ],
+      "result": "results/lotus_props.png",
+      "status": "candidate"
+    },
+    {
+      "id": "harbor_props",
+      "prompt": "harbor_props/prompt.txt",
+      "references": [
+        "harbor_props/layout.png",
+        "harbor_props/style_ref.png"
+      ],
+      "result": "results/harbor_props.png",
+      "status": "candidate"
+    },
+    {
+      "id": "throw_E-SE-Sa",
+      "prompt": "armed_throw/throw_E-SE-Sa/prompt.txt",
+      "references": [
+        "armed_throw/throw_E-SE-Sa/pose.png"
+      ],
+      "result": "results/throw_E-SE-Sa.png",
+      "status": "candidate"
+    },
+    {
+      "id": "throw_NE-Na",
+      "prompt": "armed_throw/throw_NE-Na/prompt.txt",
+      "references": [
+        "armed_throw/throw_NE-Na/pose.png"
+      ],
+      "result": "results/throw_NE-Na.png",
+      "status": "candidate"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+Create a production environment PROP SPRITE SHEET for ODYSSEY, a 2D pixel-art isometric ancient Greek action RPG.
+Exactly 1536x1024 pixels, FOUR columns by TWO rows, invisible cells384x512. Exactly eight separate props, one centered in each cell. All props fully inside their cells with at least32px empty margins. Each prop uses only as much cell space as its relative size needs: trees about300px high, medium props150-220px, small objects60-110px; do not enlarge a fruit to tree size. Consistent30degree top-down orthographic2:1 isometric camera and illumination from upper left. Match style_ref.png pixel clusters, dark1px contour and warm restrained palette. Environment proportions realistic, not chibi. Crisp2D pixel art, no antialiasing or blur. Background EVERYWHERE outside sprites exactly flat#282B35, no gradient, no cast shadows, no ground or scenery, no text, labels, numbers, borders or grid. Layout.png is a positioning guide only; replace placeholders with finished sprites and remove all guide marks. Do not copy props from style_ref.png; draw the requested new assets.
+Read order top row left to right then bottom row left to right:
+Cell1: A low spreading Mediterranean LOTUS TREE, twisted brown trunk, dense green leaves, clearly visible pink-gold lotus fruits and a few ivory-pink flowers. Full tree, no roots cut off.
+Cell2: A second low spreading lotus tree, same species and scale, flowering crown, fewer fruits, different branching silhouette.
+Cell3: Same species lotus tree with mostly picked fruits, sparse few fruits remain, same healthy green leaves.
+Cell4: Small dense leafy lotus fruit shrub with visible pink-gold fruits.
+Cell5: Woven reed basket filled with the same pink-gold lotus fruits, sitting upright.
+Cell6: Small group of three freshly picked pink-gold lotus fruits and one green leaf. Readable at small game size.
+Cell7: Low isolated patch of tiny ivory-pink flowers and green leaves, organically shaped, no soil tile underneath.
+Cell8: Small low cluster of coastal reeds and soft green grasses, no ground tile underneath.

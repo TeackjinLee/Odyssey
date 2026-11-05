@@ -1,0 +1,81 @@
+{
+  "canvas": [
+    1536,
+    1024
+  ],
+  "background": "#282B35",
+  "cells": [
+    {
+      "name": "harbor_net",
+      "cell": [
+        0,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_rope",
+      "cell": [
+        384,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_bollard",
+      "cell": [
+        768,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_fish_basket",
+      "cell": [
+        1152,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_amphorae",
+      "cell": [
+        0,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_cargo",
+      "cell": [
+        384,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_ramp",
+      "cell": [
+        768,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "harbor_oars",
+      "cell": [
+        1152,
+        512,
+        384,
+        512
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "canvas": [
+    1536,
+    1024
+  ],
+  "background": "#282B35",
+  "cells": [
+    {
+      "name": "lotus_tree_fruit",
+      "cell": [
+        0,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_tree_flower",
+      "cell": [
+        384,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_tree_picked",
+      "cell": [
+        768,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_bush",
+      "cell": [
+        1152,
+        0,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_basket",
+      "cell": [
+        0,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_fruit_cluster",
+      "cell": [
+        384,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_flower_patch",
+      "cell": [
+        768,
+        512,
+        384,
+        512
+      ]
+    },
+    {
+      "name": "lotus_reeds",
+      "cell": [
+        1152,
+        512,
+        384,
+        512
+      ]
+    }
+  ]
+}

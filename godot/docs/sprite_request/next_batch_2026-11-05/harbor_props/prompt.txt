@@ -1,0 +1,11 @@
+Create a production environment PROP SPRITE SHEET for ODYSSEY, a 2D pixel-art isometric ancient Greek action RPG.
+Exactly 1536x1024 pixels, FOUR columns by TWO rows, invisible cells384x512. Exactly eight separate props, one centered in each cell. All props fully inside their cells with at least32px empty margins. Each prop uses only as much cell space as its relative size needs: trees about300px high, medium props150-220px, small objects60-110px; do not enlarge a fruit to tree size. Consistent30degree top-down orthographic2:1 isometric camera and illumination from upper left. Match style_ref.png pixel clusters, dark1px contour and warm restrained palette. Environment proportions realistic, not chibi. Crisp2D pixel art, no antialiasing or blur. Background EVERYWHERE outside sprites exactly flat#282B35, no gradient, no cast shadows, no ground or scenery, no text, labels, numbers, borders or grid. Layout.png is a positioning guide only; replace placeholders with finished sprites and remove all guide marks. Do not copy props from style_ref.png; draw the requested new assets.
+Read order top row left to right then bottom row left to right:
+Cell1: Fishing net hanging on two short wooden drying poles, net visibly woven and slack, small compact free standing prop.
+Cell2: A coiled thick brown mooring rope, one short loose end, compact isolated prop.
+Cell3: Weathered low wooden mooring bollard with thick rope wound around its top, no dock floor included.
+Cell4: Low woven basket holding several silver fish, entirely visible.
+Cell5: Compact group of three ancient Greek terracotta transport amphorae in a short wooden rack.
+Cell6: Compact cargo stack of two wood crates and a tied cream linen grain sack, readable separated silhouette.
+Cell7: Short low wooden boarding gangplank with simple rope rail, facing diagonally down-right in isometric view. Isolated, no boat or pier.
+Cell8: Three long wooden galley oars resting against a low wooden rack, blades visible, isolated prop.
