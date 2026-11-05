@@ -147,6 +147,7 @@ func build() -> void:
 	Lines.use("res://data/dialogue/ch2.json")
 	chapter_title = Lines.t("meta.chapter_title")
 	area_name = Lines.t("meta.area")
+	next_chapter = 3
 	minimap_land = true
 	open_sea = true
 	W = 64
@@ -1071,7 +1072,7 @@ func result_info(st: Dictionary) -> Dictionary:
 			"먹은 횟수 %d   ·   창고에 넣은 몫 %d   ·   남은 선체 %d%%" % [st.get("meals", 0), st.get("stored", 0), roundi(100.0 * ship.hull / ship.max_hull)],
 			"옆으로 맞은 파도 %d   ·   끌고 온 부하 %d   ·   %s" % [Game.stats.get("broadside", 0), bound, "로토스를 먹지 않았다" if st.get("lotus", 0) == 0 else "로토스를 %d번 먹었다" % st.get("lotus", 0)],
 		],
-		"next": "다음: CHAPTER 3 — 외눈박이 거인 (준비 중). 영양·부하·식량 창고는 이어진다"}
+		"next": "다음: CHAPTER 3 — 외눈박이 거인. 영양·부하는 이어진다"}
 
 
 # ── 매 프레임 ─────────────────────────────────────────

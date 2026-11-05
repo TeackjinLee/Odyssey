@@ -727,7 +727,7 @@ func _draw_help() -> void:
 		_text(Vector2(r.position.x + 90, y), rows[i][1], 8)
 
 
-const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞", "landing": "상륙", "retreat": "반격 시작", "escape": "출항", "storm": "폭풍", "lotus": "로토스 섬"}
+const CHECKPOINT_NAMES := {"stealth": "잠입 시작", "merge": "부하 합류", "winch": "권양기 앞", "landing": "상륙", "retreat": "반격 시작", "escape": "출항", "storm": "폭풍", "lotus": "로토스 섬", "cave": "동굴에 갇힘", "sleep": "거인이 잠듦", "blind": "외눈을 찌름"}
 
 
 ## 클리어 결과: 챕터가 result_info로 준 글(제목·칭호·기록 줄·다음 안내)

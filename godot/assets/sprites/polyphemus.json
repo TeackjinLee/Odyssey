@@ -1,0 +1,26 @@
+{
+  "frame": [
+    320,
+    320
+  ],
+  "anchor": [
+    159.5,
+    292
+  ],
+  "dirs": 8,
+  "scale": 1,
+  "anims": {
+    "idle": {
+      "start": 0,
+      "frames": 4,
+      "fps": 4,
+      "loop": true
+    },
+    "walk": {
+      "start": 4,
+      "frames": 6,
+      "fps": 6,
+      "loop": true
+    }
+  }
+}

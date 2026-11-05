@@ -10,11 +10,11 @@
 | [docs/ART_PLAN.md](docs/ART_PLAN.md) | 화풍 규칙·크기 규격·전체 그림 목록과 상태 |
 | [docs/sprite_request/](docs/sprite_request/README.md) | 이미지 요청 — 오디세우스 차림·요청 키트·요청 묶음·병사/환경/UI 프롬프트 |
 | [docs/references/](docs/references/README.md) | 직접 모은 참고 이미지 |
-| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`), 챕터 2 맵·항해 모드([CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md)) |
+| [docs/maps/](docs/maps/CH1_TROY.md) | 맵 설계: 챕터 1 맵(개편 반영)과 배치도(`tools/gen_map_plan.py`), 챕터 2 맵·항해 모드([CH2_ISMAROS.md](docs/maps/CH2_ISMAROS.md)), 챕터 3 동굴([CH3_CYCLOPS.md](docs/maps/CH3_CYCLOPS.md)) |
 | [docs/NUTRITION.md](docs/NUTRITION.md) | 영양(탄수화물·단백질·지방)·채집·사냥·낚시·배의 식량 창고 — 모든 챕터 공통 |
 
-현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지, **CHAPTER 2 — 귀환의 시작**(항해 모드 기반: 이스마로스 약탈과 탈출)을
-끝까지 플레이할 수 있다. 챕터 1을 깨면 결과 화면의 "다음 챕터"로 넘어가고 영양·살아남은 부하를 이어받는다.
+현재 **CHAPTER 1 — 트로이의 목마**를 처음부터 엔딩까지, **CHAPTER 2 — 귀환의 시작**(항해 모드 기반: 이스마로스 약탈과 탈출),
+**CHAPTER 3 — 외눈박이 거인**(폴리페모스의 동굴: 시야 피하기·포도주·말뚝·양 밑 탈출)을 끝까지 플레이할 수 있다. 챕터 1을 깨면 결과 화면의 "다음 챕터"로 넘어가고 영양·살아남은 부하를 이어받는다.
 진행은 체크포인트마다 저장되어 타이틀의 "이어 하기"로 이어서 한다.
 
 ## 실행
@@ -25,6 +25,7 @@ Godot 4.7 이상(`brew install --cask godot`). 이 폴더에서:
 godot --path .                # 타이틀 화면부터
 godot --path . -- --play      # 바로 챕터 1
 godot --path . -- --chapter=2 # 바로 챕터 2 (챕터 1을 깬 적이 없으면 기본 영양·부하 셋)
+godot --path . -- --chapter=3 # 바로 챕터 3 (--start=cave|sleep|blind|ending)
 godot -e --path .             # 에디터로 열기
 ```
 

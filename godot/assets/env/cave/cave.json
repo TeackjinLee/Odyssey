@@ -1,0 +1,281 @@
+{
+ "floor_atlas": {
+  "file": "floor_atlas.png",
+  "tile": [
+   64,
+   32
+  ],
+  "rows": [
+   "cave_stone",
+   "cave_dust",
+   "cave_straw"
+  ],
+  "variants": 4
+ },
+ "props": {
+  "wall_ne": {
+   "file": "wall_ne.png",
+   "anchor": [
+    32,
+    58
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "wall_nw": {
+   "file": "wall_nw.png",
+   "anchor": [
+    32,
+    58
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "wall_ne_cracked": {
+   "file": "wall_ne_cracked.png",
+   "anchor": [
+    32,
+    58
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "wall_nw_cracked": {
+   "file": "wall_nw_cracked.png",
+   "anchor": [
+    32,
+    58
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "corner_inner": {
+   "file": "corner_inner.png",
+   "anchor": [
+    48,
+    81
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "corner_outer": {
+   "file": "corner_outer.png",
+   "anchor": [
+    48,
+    81
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "cover_rock": {
+   "file": "cover_rock.png",
+   "anchor": [
+    28,
+    27
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "stalagmites": {
+   "file": "stalagmites.png",
+   "anchor": [
+    21,
+    47
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "fence_ne": {
+   "file": "fence_ne.png",
+   "anchor": [
+    32,
+    56
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "fence_nw": {
+   "file": "fence_nw.png",
+   "anchor": [
+    32,
+    56
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "cheese_rack": {
+   "file": "cheese_rack.png",
+   "anchor": [
+    26,
+    47
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "milk_amphorae": {
+   "file": "milk_amphorae.png",
+   "anchor": [
+    15,
+    22
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "wine_closed": {
+   "file": "wine_closed.png",
+   "anchor": [
+    13,
+    33
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "wine_open": {
+   "file": "wine_open.png",
+   "anchor": [
+    13,
+    33
+   ],
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "stake_cold": {
+   "file": "stake_cold.png",
+   "anchor": [
+    51,
+    70
+   ],
+   "footprint": [
+    2,
+    1
+   ]
+  },
+  "stake_hot": {
+   "file": "stake_hot.png",
+   "anchor": [
+    51,
+    70
+   ],
+   "footprint": [
+    2,
+    1
+   ]
+  },
+  "hearth_cold": {
+   "file": "hearth_cold.png",
+   "anchor": [
+    43,
+    55
+   ],
+   "footprint": [
+    2,
+    2
+   ]
+  },
+  "hearth_lit": {
+   "file": "hearth_lit.png",
+   "anchor": [
+    43,
+    55
+   ],
+   "footprint": [
+    2,
+    2
+   ]
+  },
+  "boulder_closed": {
+   "file": "boulder_closed.png",
+   "anchor": [
+    58,
+    105
+   ],
+   "footprint": [
+    3,
+    2
+   ]
+  },
+  "boulder_rolled": {
+   "file": "boulder_rolled.png",
+   "anchor": [
+    58,
+    105
+   ],
+   "footprint": [
+    3,
+    2
+   ]
+  },
+  "pen_gate_closed": {
+   "file": "pen_gate_closed.png",
+   "anchor": [
+    55,
+    91
+   ],
+   "footprint": [
+    1,
+    2
+   ]
+  },
+  "pen_gate_open": {
+   "file": "pen_gate_open.png",
+   "anchor": [
+    55,
+    91
+   ],
+   "footprint": [
+    1,
+    2
+   ]
+  },
+  "giant_bed": {
+   "file": "giant_bed.png",
+   "anchor": [
+    86,
+    96
+   ],
+   "footprint": [
+    3,
+    3
+   ]
+  },
+  "giant_club": {
+   "file": "giant_club.png",
+   "anchor": [
+    45,
+    56
+   ],
+   "footprint": [
+    2,
+    1
+   ]
+  }
+ }
+}

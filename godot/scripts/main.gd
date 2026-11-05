@@ -18,7 +18,7 @@ extends Node
 const CHAPTERS := [
 	["CHAPTER 1", "트로이의 목마", "트로이 성에 잠입하라", true],
 	["CHAPTER 2", "귀환의 시작", "이스마로스 약탈과 로토스 섬", true],
-	["CHAPTER 3", "외눈박이 거인", "폴리페모스의 동굴에서 탈출하라", false],
+	["CHAPTER 3", "외눈박이 거인", "폴리페모스의 동굴에서 탈출하라", true],
 	["CHAPTER 4", "키르케의 섬", "돼지가 된 부하들을 구하라", false],
 	["CHAPTER 5", "세이렌의 유혹", "노래를 견디고 해역을 빠져나가라", false],
 	["CHAPTER 6", "이타카의 귀환", "왕좌와 가족을 되찾아라", false],
@@ -63,6 +63,8 @@ static func make_level(n: int) -> IsoLevel:
 	match n:
 		2:
 			return Chapter2Ismaros.new()
+		3:
+			return Chapter3Cyclops.new()
 	return Chapter1Troy.new()
 
 
@@ -106,13 +108,13 @@ func start_chapter(from_checkpoint := false, n := -1) -> void:
 		level.set("god", true)
 	if args.has("showcase") and n == 1:
 		_showcase()
-	if args.has("at"):
+	if args.has("start"):
+		level.skip_to(String(args["start"]))
+	if args.has("at"):   # --start 뒤에 옮긴다(그 단계의 그 자리 확인)
 		var xy := String(args["at"]).split(",")
 		level.player.position = Iso.grid_to_world(Vector2(float(xy[0]), float(xy[1])))
 		if n == 1:
 			level.sinon.talk.enabled = false
-	if args.has("start"):
-		level.skip_to(String(args["start"]))
 
 
 func _showcase() -> void:
