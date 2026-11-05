@@ -1,0 +1,3 @@
+Both idle and walk atlases used built-in imagegen edits, with the corresponding previous result as reference.
+1. Edge cleanup: remove bright red/green fringe contamination around body toes pelt club and gaps; alpha0 outside silhouettes, clean dark pixel outline; preserve all poses and frame order, five row directions and four/six columns.
+2. Cell spacing: uniformly shrink every figure to75% of its existing width/height within its own cell, centered horizontally with ground contact baseline preserved. Restore full club tips, fingers and feet inside cell with12px transparent margins. Preserve image proportions, grid, frame order and poses. No full-sheet resize, no redesign, no background/labels.

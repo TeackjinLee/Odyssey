@@ -7,6 +7,7 @@
 
 | 위치 | 내용 |
 |---|---|
+| [ch3_kit/polyphemus/motion/](ch3_kit/polyphemus/motion/README.md) | 거인 대기4·걷기6프레임, 반전 포함8방향 시트·GIF2개·ZIP. 이동/판정 연결은 미적용 |
 | [ch3_kit/polyphemus/](ch3_kit/polyphemus/README.md) | 폴리페모스 기본5방향·반전 포함8방향 정지 포즈, 약156px 후보·메타데이터·ZIP |
 | [ch3_kit/environment/](ch3_kit/environment/README.md) | 동굴 바닥12종·벽/울타리/생활 소품12종, 개별PNG·바닥 아틀라스·ZIP. 이음매·접점은 검수 대기 |
 | [ch3_kit/props/](ch3_kit/props/README.md) | 폴리페모스 동굴 퍼즐 소품 12종: 투명 시트·개별 PNG·기준점·ZIP·검수 기록 |
