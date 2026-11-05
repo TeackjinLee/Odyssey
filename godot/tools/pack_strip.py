@@ -34,8 +34,8 @@ BASE_Y = 296
 FIT_TOL = 0.01
 DRAWN = ["S", "SE", "E", "NE", "N"]
 # 웅크리거나 구르거나 쓰러지는 동작도 키가 크게 달라지므로 머리 폭으로 맞추고 뜬 높이를 살린다
-FLIGHT = {"run", "attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle"}
-HEAD_SCALE = {"attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle"}
+FLIGHT = {"run", "attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle", "interact"}
+HEAD_SCALE = {"attack1", "attack2", "attack3", "heavy", "dodge", "hit", "block", "bow", "death", "idle", "interact"}
 # 8방향 한 장의 줄 순서 → (받은 방향, 좌우 뒤집기)
 ROWS = [("S", False), ("SE", False), ("E", False), ("NE", False), ("N", False),
         ("NE", True), ("E", True), ("SE", True)]
@@ -120,11 +120,12 @@ def walk_head_widths(root):
     if not path.exists():
         sys.exit("공격은 걷기 8방향 시트(odysseus_walk_8dir.webp)를 먼저 묶어 둬야 한다")
     src = Image.open(path).convert("RGB")
+    wc = src.height // len(ROWS)   # 걷기 시트 칸 크기(새 차림은 256으로 묶었다 — CELL과 다를 수 있다)
     out = {}
     for row, (d, flip) in enumerate(ROWS):
         if flip:
             continue
-        cell = src.crop((0, row * CELL, CELL, (row + 1) * CELL)).convert("RGBA")
+        cell = src.crop((0, row * wc, wc, (row + 1) * wc)).convert("RGBA")
         px = cell.load()
         for y in range(cell.height):
             for x in range(cell.width):

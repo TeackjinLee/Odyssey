@@ -185,13 +185,31 @@ STRIP_HANDS = {
              6: (174, 138, 81, 157)},
     "run": {2: (77, 135, 155, 118), 1: (87, 140, 168, 105), 0: (107, 155, 168, 110), 7: (172, 83, 83, 130),
             6: (170, 83, 70, 137)},
+    # 나머지 동작(칸 320, pack_strip.py로 묶은 시트에 격자를 얹어 찍은 값)
+    "idle": {2: (124, 214, 188, 208), 1: (132, 219, 199, 197), 0: (146, 214, 190, 189), 7: (199, 183, 150, 185),
+             6: (204, 211, 110, 208)},
+    "hit": {2: (109, 233, 196, 186), 1: (127, 239, 204, 189), 0: (135, 219, 228, 150), 7: (221, 153, 107, 219),
+            6: (240, 217, 127, 169)},
+    "block": {2: (109, 225, 199, 169), 1: (107, 219, 207, 167), 0: (107, 228, 210, 169), 7: (213, 153, 93, 225),
+              6: (204, 156, 99, 222)},
+    "bow": {2: (160, 167, 216, 156), 1: (182, 167, 243, 147), 0: (188, 167, 241, 147), 7: (182, 156, 227, 133),
+            6: (150, 160, 204, 142)},
+    "interact": {2: (143, 178, 179, 178), 1: (193, 172, 221, 158), 0: (225, 166, 232, 162), 7: (221, 135, 205, 140),
+                 6: (204, 147, 116, 147)},
+    "dodge": {2: (152, 228, 188, 228), 1: (118, 233, 171, 228), 0: (130, 245, 145, 240), 7: (174, 244, 120, 230),
+              6: (204, 222, 93, 211)},
+    "death": {2: (116, 197, 246, 189), 1: (138, 203, 249, 183), 0: (149, 206, 232, 203), 7: (243, 194, 110, 197),
+              6: (221, 200, 99, 206)},
 }
 # 좌우를 뒤집어 만든 줄(pack_strip.py): 방향 → 뒤집은 원래 방향. 손은 원래 줄의 손을 뒤집고 오른손·왼손을 바꾼다
 _MIRROR = {5: 7, 4: 0, 3: 1}
-STRIP_MIRROR = {a: _MIRROR for a in ("walk", "run", "attack1", "attack2", "attack3", "heavy")}
+# 공격 말고 그려 받은 나머지 동작(action_requests). 손 위치는 STRIP_HANDS 첫 장에서 따라간다. 반복 동작은 track_loop
+ACTION_STRIPS = ("idle", "hit", "death", "block", "dodge", "bow", "interact")
+LOOP_STRIPS = ("walk", "run", "idle", "block", "interact")
+STRIP_MIRROR = {a: _MIRROR for a in ("walk", "run", "attack1", "attack2", "attack3", "heavy") + ACTION_STRIPS}
 STRIP_SWING = {"walk": 3.0, "run": 3.5}   # 팔 흔들림(원본 픽셀): 손 위치를 한 주기 동안 앞뒤로
 # 보이는 주먹은 첫 프레임에서부터 프레임마다 그림 조각을 맞춰 따라간다: 방향 → (오른손, 왼손)
-STRIP_TRACK = {"walk": {d: (True, True) for d in range(8)}, "run": {d: (True, True) for d in range(8)}}
+STRIP_TRACK = {a: {d: (True, True) for d in range(8)} for a in ("walk", "run") + ACTION_STRIPS}
 TRACK_R, TRACK_SEARCH = 5, 7   # 맞출 조각 반지름, 다음 프레임에서 찾는 범위(원본 픽셀)
 
 
@@ -332,7 +350,8 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
             row = [cells[d, c] for c in range(cols)]
             for j, on in enumerate(STRIP_TRACK[anim][d]):
                 if on:
-                    tracked[j] = track_loop(row, (h0[2 * j], h0[2 * j + 1]))
+                    track = track_loop if anim in LOOP_STRIPS else track_hand
+                    tracked[j] = track(row, (h0[2 * j], h0[2 * j + 1]))
         for col in range(cols):
             cell = cells[d, col]
             bb = cell.getbbox()
@@ -354,7 +373,7 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
                 l = (l[0] + (hx - hx0), l[1] + (bb[1] - top0))
             else:
                 h0 = strip_hand0(anim, d, cw)
-                sw = STRIP_SWING[anim] * (math.cos(2 * math.pi * col / cols) - 1)
+                sw = STRIP_SWING.get(anim, 0.0) * (math.cos(2 * math.pi * col / cols) - 1)
                 r = tracked[0][col] if tracked[0] else (h0[0] + (hx - hx0) + fx * sw, h0[1] + fy * sw)
                 l = tracked[1][col] if tracked[1] else (h0[2] + (hx - hx0) - fx * sw, h0[3] - fy * sw)
             hands = [round(r[0] * k + ox, 1), round(r[1] * k + oy, 1), round(l[0] * k + ox, 1), round(l[1] * k + oy, 1)]
@@ -600,6 +619,12 @@ def build(root, name="odysseus"):
     for anim in ATTACK_HANDS:
         if strips["walk"]:
             strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=body, gear=gear)
+    if body not in ARMED_BODIES and strips["walk"]:
+        # 나머지 동작: pack_strip.py가 머리 폭으로 걷기에 맞춰 묶었으므로 걷기 배율을 그대로 쓰고, 방향마다 몸 넓이로 다시 맞춘다
+        acts = {a: strip_frames(root, a, k=k, cols=n_frames[a], name=body, gear=gear)[0] for a in ACTION_STRIPS}
+        acts = {a: v for a, v in acts.items() if v}
+        match_walk_size({"walk": strips["walk"], **acts})
+        strips.update(acts)
     if body in ARMED_BODIES and strips["walk"]:
         # pack_strip.py가 모든 동작을 같은 배율로 묶어 두었으므로 걷기 배율 k를 그대로 쓴다(머리 폭 맞춤은 볏 때문에 어긋난다)
         for anim, n, _, _ in anims:
