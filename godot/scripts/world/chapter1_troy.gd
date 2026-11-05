@@ -89,6 +89,7 @@ var scout: Npc
 var scout_freed := false
 var armory_point: Interactable
 var armory_sprites: Array = []
+var armory_art: Sprite2D
 var armory_burned := false
 var gate_open := false
 var opened_once := false
@@ -276,6 +277,11 @@ func build() -> void:
 	# 무기고: 통·창걸이·상자 (화로 불빛 안)
 	for i in ARMORY_CELLS.size():
 		armory_sprites.append(add_prop(["barrel", "spear_rack", "crate"][i], ARMORY_CELLS[i], true, false))
+	# 원래 세 소품의 충돌·불붙는 자리는 유지하고, 받은 무기고 그림만 겹친다.
+	if AssetLibrary.env()["props"].has("armory"):
+		armory_art = add_prop("armory", ARMORY_CELLS[1], false, false)
+		for sp in armory_sprites:
+			sp.self_modulate.a = 0.0
 	# 높은 곳 궁수 발판(지나갈 수 있음 — 화살이 막히지 않게): 북쪽 가로 서쪽 짐더미, 신전 계단 가운데
 	add_prop("crate", PERCH_CELLS[0], false, false)
 	add_prop("steps", PERCH_CELLS[1], false, false)
@@ -837,6 +843,10 @@ func _burn_armory(quiet := false) -> void:
 	for i in armory_sprites.size():
 		var sp: Sprite2D = armory_sprites[i]
 		add_fire(sp, Vector2(randf_range(-3, 3), -10), 0.7 + 0.15 * i, i == 1)
+	if is_instance_valid(armory_art):
+		armory_art.texture = AssetLibrary.prop_texture("armory_burnt")
+		var anchor: Array = AssetLibrary.prop("armory_burnt")["anchor"]
+		armory_art.offset = -Vector2(anchor[0], anchor[1])
 	add_smoke(armory_sprites[1], Vector2(0, -40), 1.0)
 	if quiet:
 		return
