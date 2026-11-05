@@ -29,7 +29,7 @@
 1. **갤리선 직접 몰아 보기** — `godot --path . -- --chapter=2`, W·A·D로 한 바퀴. 경계에서 겹치는 잔상이 거슬리면 `ship.gd`의 `BLEND`를 줄이거나
    선체를 32방향으로 늘린다(`ship/make_hull_guide.py`에 각도를 더해 같은 방식으로 8장 더 받기) (M4)
 2. **챕터 2 손맛 점검** — 노 단계·키 감도·바람·적 배 수·반격 물결 (M4)
-3. **받은 트로이 추가 환경·UI·HUD 틀 검수·연결** — `env_requests/results/troy_extra.png`, `skill_requests/results/ui_icons.png`·`frames.png`. 맨손 오디세우스 공격 9장·나머지 14장은 현재 차림에서 재요청하지 않는다 (M1)
+3. **남은 HUD 틀·아이콘 연결** — 트로이 추가 환경·무기고와 전투/항해 슬롯 아이콘은 적용·봇 검증했다([기록](sprite_request/APPLIED_2026-11-05.md)). `frames.png`·커서·칭호·상태 아이콘 연결은 남았다. 맨손 오디세우스 동작은 재요청하지 않는다 (M1)
 4. **로토스·항구 소품과 현재 무장 차림 돌 던지기 준비** — [next_batch_2026-11-05](sprite_request/next_batch_2026-11-05/README.md). 현재 갑옷은 투구·망토·무기를 포함하므로 별도 레이어 추가는 당장 필요하지 않다 (M1·M4)
 5. **챕터 2 나머지** — 해도 화면, 적 배 올라타기 (M4). 항해복(`odysseus_sea`) 동작 37장은 5장 때 받으면 된다
 

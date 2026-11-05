@@ -246,11 +246,13 @@ func _draw_hud() -> void:
 		_draw_squad()
 		_draw_quest()
 		_draw_minimap(p)
-		_draw_slots(p)
 		_draw_boss()
-		_draw_interact(p)
-		_draw_tutorial()
-		_draw_hint()
+		# 대화창이 하단 안내·슬롯을 덮어 글자가 겹치지 않도록 한다.
+		if dialogue.is_empty():
+			_draw_slots(p)
+			_draw_interact(p)
+			_draw_tutorial()
+			_draw_hint()
 	if fade_a > 0.0:
 		canvas.draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, fade_a))
 	_draw_title()
@@ -472,6 +474,23 @@ func _draw_ship(p: Player) -> void:
 			_text(Vector2(x + 73, y + 17), "하루 %d" % (rations.day + 1), 6, Color(0.7, 0.7, 0.75))
 
 
+## 그림이 없으면 기존 글자 슬롯으로 돌아간다. 기술 아이콘은 공통 6칸 시트를 쓴다.
+func _draw_slot_icon(key: String, r: Rect2, active: bool) -> bool:
+	var tint := Color.WHITE if active else Color(0.48, 0.48, 0.48)
+	var dst := Rect2(r.position + Vector2((r.size.x - 22) * 0.5, 2), Vector2(22, 22))
+	var skill_index := {"decoy": 0, "shout": 4, "special": 5}
+	if skill_index.has(key):
+		var strip := _portrait("res://assets/fx/skill_icons.png")
+		if strip:
+			canvas.draw_texture_rect_region(strip, dst, Rect2(int(skill_index[key]) * 48, 0, 48, 48), tint)
+			return true
+	var tex := _portrait("res://assets/ui/icon_%s.png" % key)
+	if tex == null:
+		return false
+	canvas.draw_texture_rect(tex, dst, false, tint)
+	return true
+
+
 func _draw_slots(p: Player) -> void:
 	if p.riding != null:
 		_draw_ship_slots(p)
@@ -486,21 +505,23 @@ func _draw_slots(p: Player) -> void:
 		["미끼", Game.key_label("decoy"), p.decoy_cd / Player.DECOY_CD, true],
 		["부대기술", Game.key_label("cmd_special"), Game.squad.special_cd / Squad.SPECIAL_CD, not Game.squad.members.is_empty()],
 	]
-	var w := 34.0
+	var icon_keys := [p.weapon, "sword" if p.weapon == "sword" else "aim", "heavy", "block", "dodge", "shout", "decoy", "special"]
+	var w := 40.0
 	var x0 := 320.0 - slots.size() * (w + 4) * 0.5
-	var y := 318.0
+	var y := 312.0
 	for i in slots.size():
 		var s: Array = slots[i]
 		var r := Rect2(x0 + i * (w + 4), y, w, w)
 		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
 		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
+		var has_icon := _draw_slot_icon(icon_keys[i], r, bool(s[3]))
 		if i == tut_slot and tut_done <= 0.0:
 			var pulse := 0.5 + 0.5 * sin(tut_t * 8.0)
 			canvas.draw_rect(r.grow(2.0 + pulse * 2.0), Color(1.0, 0.9, 0.4, 0.5 + 0.5 * pulse), false, 1.5)
 		var cd: float = s[2]
 		if cd > 0.0:
 			canvas.draw_rect(Rect2(r.position.x, r.position.y + w * (1.0 - cd), w, w * cd), Color(0, 0, 0, 0.65))
-		_text(r.position + Vector2(0, 17), s[0], 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
+		_text(r.position + Vector2(0, 29 if has_icon else 17), s[0], 6 if has_icon else 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
 		_text(r.position + Vector2(0, w - 4), s[1], 6, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
 
 
@@ -513,14 +534,16 @@ func _draw_ship_slots(p: Player) -> void:
 		["돛", Game.key_label("run"), 0.0, ship.sail],
 		["상륙", Game.key_label("interact"), 0.0, Game.level.find_interactable(p.global_position) != null],
 	]
-	var w := 34.0
+	var icon_keys := ["oar", "oar", "rudder", "sail", "land"]
+	var w := 40.0
 	var x0 := 320.0 - slots.size() * (w + 4) * 0.5
 	for i in slots.size():
 		var s: Array = slots[i]
-		var r := Rect2(x0 + i * (w + 4), 318.0, w, w)
+		var r := Rect2(x0 + i * (w + 4), 312.0, w, w)
 		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
 		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
-		_text(r.position + Vector2(0, 17), s[0], 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
+		var has_icon := _draw_slot_icon(icon_keys[i], r, bool(s[3]))
+		_text(r.position + Vector2(0, 29 if has_icon else 17), s[0], 6 if has_icon else 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
 		_text(r.position + Vector2(0, w - 4), s[1], 6, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
 
 
