@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-05",
+  "jobs": [
+    {
+      "id": "deiphobus_base",
+      "prompt": "deiphobus_base/prompt.txt",
+      "references": [
+        "deiphobus_base/style_ref.webp"
+      ],
+      "result": "results/deiphobus_base.png",
+      "actual_size": [
+        1536,
+        1024
+      ],
+      "status": "candidate",
+      "generator": "built-in imagegen"
+    },
+    {
+      "id": "deiphobus_portrait",
+      "prompt": "deiphobus_portrait/prompt.txt",
+      "references": [
+        "results/deiphobus_base.png"
+      ],
+      "result": "results/deiphobus_portrait.png",
+      "actual_size": [
+        1254,
+        1254
+      ],
+      "status": "candidate",
+      "generator": "built-in imagegen"
+    },
+    {
+      "id": "greek_row",
+      "prompt": "greek_row/prompt.txt",
+      "references": [
+        "greek_row/style_ref.webp"
+      ],
+      "result": "results/greek_row.png",
+      "actual_size": [
+        1536,
+        1024
+      ],
+      "status": "candidate",
+      "generator": "built-in imagegen"
+    }
+  ]
+}

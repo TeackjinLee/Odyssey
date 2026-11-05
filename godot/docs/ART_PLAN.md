@@ -127,6 +127,8 @@
 
 ### 4.2 챕터 1 인물 `C-GRK` `C-TRO` `C-NPC`
 
+추가 미보유 역할: 왕자 데이포보스(`trojan_prince`)는 현재 `trojan_captain`을 재사용한다. 전용 기본 8방향·초상화 **후보**를 [추가 요청 묶음](sprite_request/supplement_2026-11-05/README.md)에 생성했다. 후속 동작을 받기 전 기존 보스 시트를 교체하지 않는다. 같은 묶음의 전용 노꾼 동작도 기존 식사 앉기 동작의 대체 후보이며 검수·노 위상 연결 전이다.
+
 병사 7종은 1장 오디세우스와 같은 화풍으로 그려 받았다(요청 기록 [sprite_request/ch1_kit/README.md](sprite_request/ch1_kit/README.md) "적·동료 7종").
 상태 칸의 "그려 받음"은 Codex로 받은 동작, 나머지 동작은 기본 8방향을 변형해 쓴다. 시논도 같은 화풍으로 받았다.
 
