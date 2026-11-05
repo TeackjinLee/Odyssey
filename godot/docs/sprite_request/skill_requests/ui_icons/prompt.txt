@@ -1,0 +1,30 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) layout.png = the EXACT LAYOUT to fill: a 1536x1024 sheet split into cells. Each gray shape is only a PLACEHOLDER that shows
+   where each item goes and how big it is. Replace every gray placeholder with the finished pixel-art item in the same
+   place and at the same size. Do NOT draw the thin cell borders and do NOT keep any gray placeholder lines.
+2) style_fire.png and 3) style_hero.png = STYLE references (outline, pixel density; palette bronze, gold, teal, crimson).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art HUD ICON sheet for an ancient Greek action game. ONE image exactly 1536x1024, cells of 256x256.
+Solid flat dark background #282B35 everywhere outside the badges. No text, no letters, no numbers (except the ? and ! symbols),
+no grid lines, no cell borders. Each icon is a chunky readable symbol centered on a dark rounded square badge with a thin
+bronze rim, exactly like a skill-bar icon; it will be shrunk to 24x24, so use BOLD simple shapes, very few details, strong contrast.
+
+Row 1 (y 0-256): 1 bronze leaf-blade sword (diagonal), 2 recurve bow with an arrow, 3 heavy attack: a sword striking down with a
+  burst of impact lines, 4 shield block: a round bronze hoplite shield seen from the front, 5 dodge roll: a curled white motion
+  swoosh circle with speed lines, 6 aim: a bow-aiming crosshair ring.
+Row 2 (y 256-512): 7 "follow me": a bronze gauntlet pointing forward, 8 "hold position": a round shield planted with a spear behind it,
+  9 "focus attack": a red target ring with a spear tip, 10 "retreat": a curved arrow pointing back over a shield,
+  11 interact: an open hand, 12 sneak: a hooded eye half closed.
+Row 3 (y 512-768): 13 suspicion: a big yellow question mark, 14 alerted: a big red exclamation mark,
+  15 checkpoint: a small lit bronze brazier, 16 rowing: a wooden ship oar, 17 sail: a square crimson-striped sail on a mast,
+  18 steering: a ship's wooden steering oar (tiller).
+Row 4 (y 768-1024):
+  - x 0-256: AIM CURSOR without a badge: a thin bronze-gold ring with four short ticks (crosshair), transparent middle, bold enough
+    to read at 16x16.
+  - x 256-512: landing icon on a badge: a small boat touching a beach with a step arrow.
+  - x 512-1024: TITLE BADGE "shadow of the night": a wide bronze laurel-wreath medallion with a crescent moon in the middle,
+    no text.
+  - x 1024-1536: TITLE BADGE "the unseen": the same wide laurel medallion style with a closed eye in the middle, no text.
+
+2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no soft glow halo baked in.

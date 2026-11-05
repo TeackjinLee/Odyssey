@@ -143,7 +143,8 @@ func special(aim_pos: Vector2) -> void:
 			if wall_dir == Vector2.ZERO:
 				wall_dir = facing
 			add_to_group("shield_wall")
-			Fx.ring(global_position, 18.0, Color(0.6, 0.8, 1.0), 0.4)
+			if not Fx.anim("shield_glint", global_position + wall_dir * 6.0 + Vector2(0, -14)):
+				Fx.ring(global_position, 18.0, Color(0.6, 0.8, 1.0), 0.4)
 		"spear":
 			var best: Actor = null
 			var best_d := JAVELIN_RANGE
@@ -156,7 +157,7 @@ func special(aim_pos: Vector2) -> void:
 			if best:
 				face(best.global_position - global_position)
 				play_timed("attack1", 0.4)
-				Combat.shoot(self, best.global_position + best.velocity * 0.2, JAVELIN_DMG, 340.0)
+				Combat.shoot(self, best.global_position + best.velocity * 0.2, JAVELIN_DMG, 340.0, true)
 		"archer":
 			face(aim_pos - global_position)
 			play_timed("bow", 0.6)

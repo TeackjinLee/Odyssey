@@ -6,6 +6,8 @@ var shooter: Actor
 var team := 0
 var damage := 8.0
 var velocity := Vector2.ZERO
+## 창병 창 던지기: 창 그림(assets/fx/javelin.png 첫 칸)
+var javelin := false
 ## 화살이 날아가는 시간(사거리 = 속도 × LIFE)
 const LIFE := 1.4
 
@@ -15,7 +17,8 @@ var _sprite: Sprite2D
 
 func _ready() -> void:
 	_sprite = Sprite2D.new()
-	_sprite.texture = AssetLibrary.texture("res://assets/env/arrow.png")
+	var jt: Texture2D = Skills.strip_frame("javelin", 0) if javelin else null
+	_sprite.texture = jt if jt else AssetLibrary.texture("res://assets/env/arrow.png")
 	_sprite.position = Vector2(0, -16)
 	_sprite.rotation = velocity.angle()
 	add_child(_sprite)

@@ -48,8 +48,9 @@ static func area(attacker: Actor, center: Vector2, radius: float, dmg: float, kb
 	return hits
 
 
-static func shoot(shooter: Actor, target_pos: Vector2, dmg: float, speed := 300.0) -> void:
+static func shoot(shooter: Actor, target_pos: Vector2, dmg: float, speed := 300.0, javelin := false) -> void:
 	var p := Projectile.new()
+	p.javelin = javelin
 	p.shooter = shooter
 	p.team = shooter.team
 	p.damage = dmg * shooter.damage_mult

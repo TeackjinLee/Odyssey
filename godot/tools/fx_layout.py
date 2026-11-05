@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """기술 이펙트 한 장(fx_skills) 요청용 배치 그림과 받은 그림 자르기.
 
-    python3 tools/fx_layout.py draw <출력 폴더>          → layout.png(생성기에 첨부) + layout_labeled.png(사람용 설명)
-    python3 tools/fx_layout.py cut <받은 그림> <출력 폴더>  → 항목마다 가로 띠 png(게임 크기, 배경 투명)
+    python3 tools/fx_layout.py draw <출력 폴더> [묶음]          → layout.png(생성기에 첨부) + layout_labeled.png(사람용 설명)
+    python3 tools/fx_layout.py cut <받은 그림> <출력 폴더> [묶음]  → 항목마다 가로 띠 png(게임 크기, 배경 투명)
+
+묶음: skills(기본, 기술 이펙트·아이콘) · combat(전투 이펙트 F-hit·parry·block·dust·shout·takedown → fx.gd가 쓰는 .json도 쓴다)
 
 한 장은 1536×1024, 배경 #282B35. 칸 배치는 아래 ITEMS 하나로 정한다(그림·자르기·프롬프트가 같은 값을 쓴다).
 배치 그림의 회색 도형은 "이 칸에 이런 모양·크기로"를 알려 주는 자리표시일 뿐이다 — 생성기가 그대로 따라 그리지 않게
 프롬프트에서 "회색 자리표시를 완성된 그림으로 바꿔라, 칸 테두리는 그리지 마라"라고 말한다.
 """
+import json
 import math
 import os
 import sys
@@ -25,16 +28,48 @@ ITEMS = [
     ("volley", (0, 0), (256, 192), 6, (128, 96), "일제 사격 화살비"),
     ("volley_fire", (0, 192), (256, 192), 6, (128, 96), "불화살 화살비"),
     ("decoy_stone", (0, 384), (128, 128), 4, (32, 32), "미끼 돌멩이 회전"),
-    ("decoy_dust", (512, 384), (128, 128), 4, (32, 32), "돌멩이 떨어질 때 흙먼지"),
+    ("decoy_dust", (512, 384), (128, 128), 4, (32, 32), "돌멩이 떨어질 때 흙먼지", 12),
     ("javelin", (1024, 384), (256, 128), 2, (64, 32), "날아가는 창 · 땅에 꽂힌 창"),
-    ("shield_glint", (0, 512), (256, 256), 4, (64, 64), "방패벽 번쩍임"),
+    ("shield_glint", (0, 512), (256, 256), 4, (64, 64), "방패벽 번쩍임", 10),
     ("arrows_stuck", (1024, 512), (256, 256), 2, (64, 64), "땅에 꽂힌 화살 · 불붙은 화살"),
-    ("icons", (0, 768), (256, 256), 6, (48, 48), "아이콘: 미끼·방패벽·창·일제 사격·함성·부대 명령"),
+    ("skill_icons", (0, 768), (256, 256), 6, (48, 48), "아이콘: 미끼·방패벽·창·일제 사격·함성·부대 명령"),
 ]
 
 
+# 전투 이펙트(ui_fx.md §1). 마지막 값은 fps — cut이 fx.gd용 <이름>.json도 쓴다
+COMBAT = [
+    ("hit", (0, 0), (192, 192), 4, (48, 48), "타격 불꽃", 18),
+    ("block", (768, 0), (192, 192), 3, (48, 48), "방패에 막힘 불꽃(오른쪽으로 튐)", 16),
+    ("parry", (0, 192), (256, 256), 4, (64, 64), "패링 섬광", 16),
+    ("takedown", (0, 448), (192, 192), 4, (48, 48), "조용한 처치", 14),
+    ("dust", (0, 640), (256, 128), 5, (64, 32), "구르기·착지 먼지", 14),
+    ("shout", (0, 768), (256, 128), 6, (192, 96), "전투의 함성 고리(바닥 타원)", 14),
+]
+# UI(ui_fx.md §2·§3·§5). 아이콘은 한 칸씩 이름을 따로 둔다(ui_<이름>.png 한 장씩)
+UI_ICONS = [["sword", "bow", "heavy", "block", "dodge", "aim"],
+            ["follow", "hold", "focus", "retreat", "interact", "sneak"],
+            ["suspect", "alert", "checkpoint", "oar", "sail", "rudder"]]
+UI = [("icon_" + n, (c * 256, r * 256), (256, 256), 1, (24, 24), n) for r, row in enumerate(UI_ICONS) for c, n in enumerate(row)] + [
+    ("cursor", (0, 768), (256, 256), 1, (16, 16), "조준 커서"),
+    ("icon_land", (256, 768), (256, 256), 1, (24, 24), "상륙"),
+    ("badge_shadow", (512, 768), (512, 256), 1, (128, 64), "칭호 배지 1"),
+    ("badge_unseen", (1024, 768), (512, 256), 1, (128, 64), "칭호 배지 2"),
+]
+FRAMES = [
+    ("logo", (0, 0), (1536, 384), 1, (384, 96), "타이틀 로고"),
+    ("bar_hp", (0, 400), (800, 96), 1, (200, 24), "체력 바 틀"),
+    ("bar_stamina", (0, 512), (800, 64), 1, (200, 16), "스태미나 바 틀"),
+    ("slot", (880, 400), (136, 136), 1, (34, 34), "기술 슬롯 틀"),
+    ("nameplate", (1056, 400), (480, 90), 1, (128, 24), "이름표"),
+    ("dialogue", (18, 800), (1500, 186), 1, (500, 62), "대화창"),
+]
+# fx.gd 기준점(발 밑 등). 없으면 칸 가운데
+ANCHOR = {"dust": (32, 23), "decoy_dust": (16, 23), "shield_glint": (32, 40)}
+SETS = {"skills": ITEMS, "combat": COMBAT, "ui": UI, "frames": FRAMES}
+
+
 def cells(item):
-    name, (x0, y0), (cw, ch), n, _, _ = item
+    name, (x0, y0), (cw, ch), n = item[:4]
     return [(x0 + i * cw, y0, cw, ch) for i in range(n)]
 
 
@@ -51,7 +86,54 @@ def arrow(d, x, y, length=26, slant=(0.35, 1.0), col=GRAY, w=3):
 
 def placeholder(d, name, i, x, y, cw, ch):
     cx, cy = x + cw // 2, y + ch // 2
-    if name.startswith("volley"):
+    if name == "hit":
+        r = [18, 34, 44, 50][i]
+        for k in range(8):
+            a = k * math.pi / 4
+            r0 = 0 if i < 2 else r * 0.55
+            d.line([cx + r0 * math.cos(a), cy + r0 * math.sin(a), cx + r * math.cos(a), cy + r * math.sin(a)], fill=LIGHT if i < 2 else GRAY, width=6 - i)
+        if i < 2:
+            ell(d, cx, cy, 14 + i * 8, 14 + i * 8, fill=LIGHT)
+    elif name == "block":
+        for k in range(6):
+            a = -0.7 + k * 0.28
+            l = 30 + i * 20
+            d.line([cx - 30, cy, cx - 30 + l * math.cos(a), cy + l * math.sin(a)], fill=LIGHT if i == 0 else GRAY, width=4 - i)
+    elif name == "parry":
+        r = [30, 55, 80, 95][i]
+        ell(d, cx, cy, r, r, outline=LIGHT if i < 2 else GRAY, width=8 - i * 2)
+        for k in range(4):
+            a = k * math.pi / 2 + math.pi / 4
+            d.line([cx + r * math.cos(a), cy + r * math.sin(a), cx + (r + 25) * math.cos(a), cy + (r + 25) * math.sin(a)], fill=LIGHT, width=4)
+    elif name == "takedown":
+        d.arc([cx - 60, cy - 60, cx + 60, cy + 60], 200 + i * 20, 320 + i * 20, fill=GRAY, width=12 - i * 2)
+        for k in range(i + 1):
+            ell(d, cx + 40 - k * 25, cy - 40 + k * 10, 4, 4, fill=LIGHT)
+    elif name == "dust":
+        w = 40 + i * 20
+        for k in (-1, 0, 1):
+            ell(d, cx + k * w * 0.6, cy + 30, w * 0.5, 18 - i * 2, outline=GRAY, width=3 if i < 3 else 1)
+    elif name == "shout":
+        rx = 30 + i * 18
+        ell(d, cx, cy, rx, rx / 2, outline=LIGHT if i < 3 else GRAY, width=max(1, 8 - i))
+    elif name.startswith("icon_") or name == "cursor":
+        if name != "cursor":
+            d.rounded_rectangle([x + 28, y + 28, x + cw - 28, y + ch - 28], 24, outline=GRAY, width=4)
+            ell(d, cx, cy, 55, 55, fill=GRAY)
+        else:
+            ell(d, cx, cy, 70, 70, outline=GRAY, width=8)
+            for a in range(4):
+                t = a * math.pi / 2
+                d.line([cx + 50 * math.cos(t), cy + 50 * math.sin(t), cx + 100 * math.cos(t), cy + 100 * math.sin(t)], fill=GRAY, width=8)
+    elif name.startswith("badge"):
+        d.rounded_rectangle([x + 40, y + 50, x + cw - 40, y + ch - 50], 40, fill=GRAY)
+        ell(d, cx, cy, 70, 70, fill=LIGHT)
+    elif name == "logo":
+        d.rounded_rectangle([x + 200, y + 80, x + cw - 200, y + ch - 80], 30, fill=GRAY)
+    elif name.startswith("bar_") or name in ("nameplate", "dialogue", "slot"):
+        t = 8 if name != "dialogue" else 12
+        d.rectangle([x + 6, y + 6, x + cw - 7, y + ch - 7], outline=GRAY, width=t)
+    elif name.startswith("volley"):
         gy = y + ch - 40
         ell(d, cx, gy, 100, 40, outline=GRAY, width=2)
         spots = [(-60, -10), (-25, 15), (10, -20), (45, 5), (70, -12), (-10, 0), (30, 22), (-45, 20)]
@@ -97,7 +179,7 @@ def placeholder(d, name, i, x, y, cw, ch):
             d.line([cx + sx, cy + 50, cx + sx - 14, cy - 10], fill=GRAY, width=4)
             if i == 1:
                 ell(d, cx + sx - 14, cy - 18, 8, 12, fill=LIGHT)
-    elif name == "icons":
+    elif name == "skill_icons":
         d.rounded_rectangle([x + 28, y + 28, x + cw - 28, y + ch - 28], 24, outline=GRAY, width=4)
         if i == 0:    # 미끼: 손에 든 돌
             ell(d, cx, cy, 30, 24, fill=GRAY)
@@ -118,11 +200,11 @@ def placeholder(d, name, i, x, y, cw, ch):
             d.polygon([(cx - 40, cy - 70), (cx + 60, cy - 45), (cx - 40, cy - 20)], fill=GRAY)
 
 
-def draw(out_dir):
+def draw(out_dir, items=ITEMS):
     os.makedirs(out_dir, exist_ok=True)
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
-    for it in ITEMS:
+    for it in items:
         for i, (x, y, cw, ch) in enumerate(cells(it)):
             d.rectangle([x, y, x + cw - 1, y + ch - 1], outline=EDGE)
             placeholder(d, it[0], i, x, y, cw, ch)
@@ -131,8 +213,8 @@ def draw(out_dir):
     d = ImageDraw.Draw(lab)
     fp = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
     font = ImageFont.truetype(fp, 15) if os.path.exists(fp) else ImageFont.load_default()
-    for it in ITEMS:
-        name, (x0, y0), (cw, ch), n, game, desc = it
+    for it in items:
+        name, (x0, y0), (cw, ch), n, game, desc = it[:6]
         d.rectangle([x0, y0, x0 + cw * n - 1, y0 + ch - 1], outline=(255, 200, 80), width=3)
         d.text((x0 + 6, y0 + 4), f"{name} {n}칸 {cw}×{ch}→{game[0]}×{game[1]}", fill=(255, 220, 120), font=font)
         d.text((x0 + 6, y0 + 22), desc, fill=(255, 220, 120), font=font)
@@ -140,11 +222,11 @@ def draw(out_dir):
     print(out_dir, "layout.png, layout_labeled.png")
 
 
-def cut(src, out_dir, tol=26):
+def cut(src, out_dir, items=ITEMS, tol=26):
     os.makedirs(out_dir, exist_ok=True)
-    im = Image.open(src).convert("RGB").resize((W, H), Image.NEAREST)
-    for it in ITEMS:
-        name, _, _, n, (gw, gh), _ = it
+    im = Image.open(src).convert("RGB").resize((W, H), Image.LANCZOS)
+    for it in items:
+        name, _, _, n, (gw, gh) = it[:5]
         strip = Image.new("RGBA", (gw * n, gh), (0, 0, 0, 0))
         for i, (x, y, cw, ch) in enumerate(cells(it)):
             c = im.crop((x, y, x + cw, y + ch)).convert("RGBA")
@@ -154,16 +236,25 @@ def cut(src, out_dir, tol=26):
                     r, g, b, _ = px[xx, yy]
                     if abs(r - BG[0]) + abs(g - BG[1]) + abs(b - BG[2]) < tol:
                         px[xx, yy] = (0, 0, 0, 0)
-            strip.paste(c.resize((gw, gh), Image.NEAREST), (i * gw, 0))
+            small = c.convert("RGBa").resize((gw, gh), Image.LANCZOS).convert("RGBA")
+            sp = small.load()
+            for yy in range(gh):
+                for xx in range(gw):
+                    r, g, b, a = sp[xx, yy]
+                    sp[xx, yy] = (r, g, b, 255) if a >= 128 else (0, 0, 0, 0)
+            strip.paste(small, (i * gw, 0))
         p = os.path.join(out_dir, name + ".png")
         strip.save(p)
+        if len(it) > 6:   # fx.gd용 json
+            with open(os.path.join(out_dir, name + ".json"), "w") as f:
+                json.dump({"frame": [gw, gh], "frames": n, "fps": it[6], "anchor": list(ANCHOR.get(name, (gw / 2, gh / 2)))}, f)
         print(p, strip.size)
 
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3 and sys.argv[1] == "draw":
-        draw(sys.argv[2])
+        draw(sys.argv[2], SETS[sys.argv[3] if len(sys.argv) > 3 else "skills"])
     elif len(sys.argv) >= 4 and sys.argv[1] == "cut":
-        cut(sys.argv[2], sys.argv[3])
+        cut(sys.argv[2], sys.argv[3], SETS[sys.argv[4] if len(sys.argv) > 4 else "skills"])
     else:
         print(__doc__)

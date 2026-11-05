@@ -1,6 +1,6 @@
 class_name Skills
 ## 기술 효과: 오디세우스의 미끼 던지기(C), 부대 특수 명령의 궁병 일제 사격(5).
-## 그림은 아직 없어 도형으로 그린다(돌멩이 포물선, 떨어지는 화살 줄기). 그림을 받으면 여기만 바꾼다.
+## 그림(assets/fx/decoy_stone·volley·volley_fire, tools/fx_layout.py skills)이 있으면 그림, 없으면 도형으로 그린다.
 
 ## 미끼: 떨어진 자리에서 이 땅 거리 안의 알아채지 못한 적이 소리를 듣고 살피러 간다
 const DECOY_HEAR := 130.0
@@ -10,6 +10,21 @@ const VOLLEY_RADIUS := 52.0
 const VOLLEY_TIME := 0.7
 const VOLLEY_DMG := 16.0
 const FIRE_MULT := 1.5
+
+
+## assets/fx/<이름>.png 띠 그림의 i번째 칸(칸 폭은 FRAME_W, 없으면 높이와 같음). 그림이 없으면 null
+const FRAME_W := {"volley": 128, "volley_fire": 128, "javelin": 64}
+static func strip_frame(name: String, i: int) -> AtlasTexture:
+	var path := "res://assets/fx/%s.png" % name
+	if not ResourceLoader.exists(path):
+		return null
+	var tex: Texture2D = AssetLibrary.texture(path)
+	var fw: int = FRAME_W.get(name, tex.get_height())
+	var n := maxi(1, tex.get_width() / fw)
+	var at := AtlasTexture.new()
+	at.atlas = tex
+	at.region = Rect2(fw * clampi(i, 0, n - 1), 0, fw, tex.get_height())
+	return at
 
 
 ## from에서 to로 돌멩이를 던진다. 떨어지면 소리가 나 주변 보초가 그쪽을 살피러 간다(Enemy.lure).
@@ -65,6 +80,10 @@ class Stone:
 	func _draw() -> void:
 		var h := -sin(t * PI) * 40.0 - 14.0 * (1.0 - t)
 		draw_circle(Vector2(0, 1), 2.0, Color(0, 0, 0, 0.35))
+		var fr := Skills.strip_frame("decoy_stone", int(t * 8.0) % 4)
+		if fr:   # 32칸에 돌멩이가 7px쯤 — 가운데를 그 높이에
+			draw_texture(fr, Vector2(-16, h - 16))
+			return
 		draw_circle(Vector2(0, h), 2.2, Color(0.75, 0.72, 0.66))
 		draw_circle(Vector2(0, h), 2.2, Color(0.2, 0.18, 0.16), false, 1.0)
 
@@ -109,6 +128,12 @@ class Volley:
 
 	func _draw() -> void:
 		var k: float = clamp(t / Skills.VOLLEY_TIME, 0.0, 1.0)
+		# 그림: 0~3칸 떨어지는 중 · 4칸 꽂히는 순간 · 5칸 꽂힘. 칸 128×96, 바닥 타원 가운데가 (64, 76)
+		var fi := mini(int(k * 4.0), 3) if t < Skills.VOLLEY_TIME else (4 if t < Skills.VOLLEY_TIME + 0.15 else 5)
+		var fr := Skills.strip_frame("volley_fire" if burning else "volley", fi)
+		if fr:
+			draw_texture(fr, Vector2(-64, -76))
+			return
 		var col := Color(1.0, 0.45, 0.2) if burning else Color(1.0, 0.85, 0.5)
 		var pts := PackedVector2Array()
 		for i in 33:
