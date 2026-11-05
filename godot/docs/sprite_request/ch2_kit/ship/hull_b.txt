@@ -1,0 +1,15 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) hull_guide_b.png = THE EXACT PLACEMENT GUIDE. Each gray block is the hull of the ship, seen from the game camera: light gray = the top of the deck, dark gray = the visible side of the hull, RED TRIANGLE = the bow tip, dark bar = the stern post. Paint the ship EXACTLY over every gray silhouette: same position in the cell, same size, same angle, bow at the red triangle. Do not move, rotate, enlarge or shrink anything.
+2) galley2_sail.png = THE DESIGN of the hull: weathered brown wooden planks, darker wale lines, low rail, small bronze ram at the bow, tall stern post curling up and forward, long steering oar at the stern. Copy that hull look and pixel style.
+3) hull_a.png = THE SAME HULL already drawn at 6 other angles: match its colors, plank details, size and pixel style exactly.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art SPRITE SHEET of ONLY THE HULL of a Greek war galley (the ship from galley2_sail.png) for an isometric action RPG, 3 views of the same hull at one scale.
+- HULL ONLY: NO mast, NO sail, NO yard, NO ropes, NO oars, NO people, NO water, NO shadow. The deck is an EMPTY open wooden plank floor (no benches, no boxes) so characters can be placed on it later, with a low rail around its edge.
+- Bronze ram and pointed prow at the red triangle; the curled stern ornament and the steering oar at the dark bar.
+- ONE image 1536x1024, 3 columns x 2 rows, every cell 512x512, exactly the layout of hull_guide_b.png (the empty areas stay magenta).
+- Camera: the same top-down 3/4 isometric view as the guide (deck seen from above, one long side visible).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere outside the ship. No grid lines, NO labels, no text, no gray left from the guide.
+- Crisp 2D pixel art matching galley2_sail.png: 1px dark outline, hard pixel clusters, stepped highlights, no anti-aliasing blur.

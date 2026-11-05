@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (blowing a curved bronze WAR HORN raised to his mouth to call reinforcements) of the SAME character as in "pose.png":
+A CICONIAN (Thracian) WAR CHIEF boss, cute stocky chibi exactly like pose.png, about 25% BIGGER and broader in every cell, thick braided reddish-brown beard, ornate bronze Thracian helmet with a forward-curving peak, cheek guards and a tall black horsehair crest, bronze scale armor over a rust-red tunic, a long dark teal cloak with a wide ochre zigzag border and a bear-fur collar, bronze greaves; a heavy curved RHOMPHAIA (long sickle blade on a long hilt) in the RIGHT fist and a crescent-shaped (pelta) bronze shield with an ochre sun pattern strapped on the LEFT forearm.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 lifting the horn: the RIGHT fist brings a curved bronze war horn up toward his mouth, chest swelling.
+- Frame 2 blowing: the horn at his lips, its bell pointing up and forward toward the facing direction, cheeks puffed, back arched.
+- Frame 3 full blast: same pose, head tilted further back, the cape flaring, a few short pale sound-wave arcs in front of the horn bell.
+- Frame 4 lowering: the horn coming down to chest height, stance wide and proud.
+- Legs braced wide and still.
+- No dust, no blood.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: face looks toward the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (as tall as in pose.png (a big captain) when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- In this action his weapon is NOT in his hands (his sword hangs in its scabbard at his hip, NO spear); his shield (exactly as in pose.png) stays strapped on the LEFT forearm. Both fists clearly visible in EVERY frame.

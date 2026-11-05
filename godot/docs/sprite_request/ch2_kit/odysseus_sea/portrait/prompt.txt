@@ -1,0 +1,7 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the hero Odysseus in his sea-voyage clothes, seen from the front (copy his face, hair, brow band and clothes colors EXACTLY).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+A square 1024x1024 pixel-art CHARACTER PORTRAIT for a game HUD: head and shoulders of the hero in pose.png, three-quarter view facing slightly to the right, determined cunning expression, dark eyebrows, brown eyes, short dark beard, wind-blown curly dark-brown hair with a thin bronze brow band (whole head visible, NO helmet), the short weathered blue-green cloak and the bronze breastplate visible at the bottom.
+The face fills most of the image (it will be shrunk to 40x40 pixels, so the face must be BIG and readable).
+Background: flat dark charcoal blue #252C34. Crisp pixel art, chunky readable pixel clusters, 1px dark outline, no text, no frame, no border.

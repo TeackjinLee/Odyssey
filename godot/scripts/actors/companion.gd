@@ -311,7 +311,7 @@ func _lotus_think(delta: float) -> void:
 			_daze()
 		return
 	desired_velocity = Vector2.ZERO
-	play("idle")
+	play("sit" if body.sprite_frames.has_animation("sit_%d" % dir) else "idle")   # 그려 받은 앉은 동작(열매 먹기)이 있으면
 	_mutter(delta, "lotus_dazed")
 
 

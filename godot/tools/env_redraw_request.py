@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 BG = (40, 43, 53, 255)
 SCALE = 1 / 0.68
 W, H = 1536, 1024
-MODEL = "gpt-6.1-sol"
+CODEX = '"$(git rev-parse --show-toplevel)"/godot/tools/codex_image.sh'   # 모델·추론은 tools/codex_image.sh에서
 
 # 줄마다 (바닥 기준선 y, [(이름, 설명)]) — 왼쪽에서 오른쪽 순서
 SHEETS = {
@@ -230,7 +230,7 @@ def main():
     pick = sys.argv[2:] or [s for s, sp in SHEETS.items() if not os.path.exists(os.path.join(root, "assets/source", sp["out"]))]
     for sheet, spec in SHEETS.items():
         d = os.path.join(out, sheet)
-        run.append(f"[[ ${{#want}} -eq 0 || ${{want[(Ie)]{sheet}}} -gt 0 ]] && (cd {sheet} && codex exec -m {MODEL} --skip-git-repo-check"
+        run.append(f"[[ ${{#want}} -eq 0 || ${{want[(Ie)]{sheet}}} -gt 0 ]] && (cd {sheet} && {CODEX} --skip-git-repo-check"
                    f" -s read-only -i ../troy_env.png -i guide.png - < prompt.txt > ../{sheet}.log 2>&1) &")
         if sheet not in pick:
             continue

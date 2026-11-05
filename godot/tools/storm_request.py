@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 BG = (40, 43, 53, 255)
 W, H = 1536, 1024
-MODEL = "gpt-6.1-sol"
+CODEX = '"$(git rev-parse --show-toplevel)"/godot/tools/codex_image.sh'   # 모델·추론은 tools/codex_image.sh에서
 GAP = 16
 
 HEAD = """Use your built-in image generation tool to create exactly ONE image from the prompt below.
@@ -354,7 +354,7 @@ def main(root: str) -> None:
              "# 폭풍 그림 요청 넷을 Codex로 동시에 돌린다. 하나만: ./run.sh sea_storm",
              'cd "$(dirname "$0")"', 'want=("$@")']
     for name, a in attach.items():
-        lines.append(f'[[ ${{#want}} -eq 0 || ${{want[(Ie)]{name}}} -gt 0 ]] && (cd {name} && codex exec -m {MODEL} '
+        lines.append(f'[[ ${{#want}} -eq 0 || ${{want[(Ie)]{name}}} -gt 0 ]] && (cd {name} && {CODEX} '
                      f'--skip-git-repo-check -s read-only {a} - < prompt.txt > ../{name}.log 2>&1) &')
     lines += ["wait",
               'for f in *.log; do echo "${f%.log} $(grep -o "/Users[^ ]*generated_images[^ ]*\\.png" $f | tail -1)"; done']

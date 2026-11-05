@@ -13,7 +13,7 @@ from PIL import Image
 CHAR = os.environ.get("SPRITE_CHAR", "odysseus")   # 다른 캐릭터·옷: SPRITE_CHAR=odysseus_ch1
 
 ROWS = {"attack1": 3, "attack2": 3, "attack3": 3, "heavy": 2,
-        "idle": 3, "hit": 3, "block": 3, "dodge": 3, "bow": 3, "death": 3, "interact": 3, "throw": 3}
+        "idle": 3, "hit": 3, "block": 3, "dodge": 3, "bow": 3, "death": 3, "interact": 3, "throw": 3, "sit": 3}
 
 if __name__ == "__main__":
     src, anim, dirs, root = Image.open(sys.argv[1]).convert("RGB"), sys.argv[2], sys.argv[3].split(","), Path(sys.argv[4])

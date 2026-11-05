@@ -24,7 +24,7 @@ ATTACH = {
     "city_layout.png": ("docs/references/environment/ch1_troy__city-layout.webp",
                         "a reference picture of the whole city, for building SHAPES and MATERIALS only"),
 }
-MODEL = "gpt-6.1-sol"
+CODEX = '"$(git rev-parse --show-toplevel)"/godot/tools/codex_image.sh'   # 모델·추론은 tools/codex_image.sh에서
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
         with open(os.path.join(d, "prompt.txt"), "w", encoding="utf-8") as fp:
             fp.write("\n".join(head) + "\n\n" + m.group(1))
         imgs = " ".join(f"-i ../{f}" for f in files)
-        lines.append(f"(cd {sheet} && codex exec -m {MODEL} --skip-git-repo-check -s read-only {imgs} - < prompt.txt"
+        lines.append(f"(cd {sheet} && {CODEX} --skip-git-repo-check -s read-only {imgs} - < prompt.txt"
                      f" > ../{sheet}.log 2>&1) &")
         print(d)
     lines += ["wait", 'for f in *.log; do echo "${f%.log} $(grep -o "/Users[^ ]*generated_images[^ ]*\\.png" $f | tail -1)"; done']

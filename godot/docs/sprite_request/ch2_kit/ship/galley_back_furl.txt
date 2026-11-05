@@ -1,0 +1,15 @@
+Create exactly ONE image. The attached image galley_furl.png is the SAME ship already drawn in front views: copy its design, colors, size and pixel style EXACTLY (black hull, red band, bronze ram, painted eye on the bow, curled stern ornament, sail FURLED on the yard).
+
+Draw this ship in THREE NEW facings where the BOW points AWAY from the viewer. In galley_furl.png every ship comes toward the viewer — this time it is the opposite.
+
+Layout (very important):
+- ONE image 1536x1024, 3 columns x 1 row, each cell 512x1024, the ship centered in every cell, the same size as in galley_furl.png, nothing cut off.
+- Cell 1 NORTH: the bow (ram and eyes) points straight UP to the top of the screen, far from the viewer. The STERN with its curled ornament and the steering oar is at the BOTTOM of the cell, closest to the viewer. The sail stays FURLED (rolled up on the yard).
+- Cell 2 NORTH-EAST: the bow points to the UPPER-RIGHT corner, the stern is at the lower-left, closest to the viewer. We see the left side of the hull, the sail FURLED on the yard.
+- Cell 3 EAST: pure side view, the bow points straight RIGHT, the stern at the left, the hull perfectly horizontal, the mast straight up.
+- CHECK: in cells 1 and 2 the ram and the painted eye must be in the UPPER part of the ship (far side), NEVER at the bottom. In cell 3 the ram is at the right end.
+- Isometric 3/4 top-down view (camera looks down about 30 degrees): the deck is seen from above, the mast stands straight UP on the screen in every cell.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no grid lines, NO labels, no text, NO people, NO oars, NO water.
+- Crisp 2D pixel art exactly like galley_furl.png: 1px dark outline, hard pixel clusters, no anti-aliasing blur.

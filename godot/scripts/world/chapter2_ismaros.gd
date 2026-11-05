@@ -417,14 +417,16 @@ func _place_lotus() -> void:
 	world.add_child(fish)
 	for i in LOTOPHAGI.size():
 		var n := Npc.new()
-		n.setup("greek_archer", Lines.t("names.lotophagi"), Callable())
+		var own := ResourceLoader.exists("res://assets/sprites/lotophagi.png")   # 그려 받은 섬사람 시트, 없으면 궁병 색 바꿈
+		n.setup("lotophagi" if own else "greek_archer", Lines.t("names.lotophagi"), Callable())
 		var talk := n.talk
 		# 한 번 말하면 잠시 쉰다(붙어 서 있는 동안 대사가 되풀이되지 않게)
 		talk.on_use = func(_by):
 			talk.enabled = false
 			Game.say(Lines.say("lotophagi"))
 			get_tree().create_timer(12.0).timeout.connect(func(): talk.enabled = true)
-		n.tint = Color(1.05, 0.82, 1.0)
+		if not own:
+			n.tint = Color(1.05, 0.82, 1.0)
 		n.position = Iso.grid_to_world(LOTOPHAGI[i])
 		world.add_child(n)
 

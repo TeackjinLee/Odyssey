@@ -1,0 +1,9 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the character to portray, seen from the front (copy his face, headgear and armor colors EXACTLY).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+A square 1024x1024 pixel-art CHARACTER PORTRAIT for a game HUD: head and shoulders of the character in pose.png:
+A CICONIAN (Thracian) WARRIOR enemy, cute stocky chibi about 3 heads tall exactly like pose.png, wild reddish-brown beard, fierce face, tall red-brown FOX-FUR cap with the fox tail hanging at the back, short rust-red tunic under a bronze-studded leather corselet, a dark teal cloak with a zigzag ochre border pinned at one shoulder, leather leg wraps, dark boots; a curved bronze SICKLE-SWORD in the RIGHT fist and a small crescent-shaped (pelta) wicker shield with ochre zigzag pattern strapped on the LEFT forearm.
+Three-quarter view facing slightly to the right, stern hostile expression, the headgear exactly as in pose.png (face fully visible; a tall crest may be cut by the top edge), armor and shoulders visible at the bottom.
+The face fills most of the image (it will be shrunk to 22x22 pixels, so the face must be BIG and readable).
+Background: flat dark charcoal blue #252C34. Crisp pixel art, chunky readable pixel clusters, 1px dark outline, no text, no frame, no border.

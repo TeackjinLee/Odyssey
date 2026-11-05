@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image
 
-MODEL = "gpt-6.1-sol"   # Codex 모델(설정 파일 기본값 대신 고정)
+CODEX = '"$(git rev-parse --show-toplevel)"/godot/tools/codex_image.sh'   # 모델·추론은 tools/codex_image.sh에서
 KIT = Path(__file__).resolve().parent.parent / "docs/sprite_request/motion_kit"
 CELL = {"N": (0, 0), "NE": (0, 1), "E": (0, 2), "SE": (0, 3), "S": (1, 0)}   # (줄, 열)
 VERB = {"walk": "walking", "run": "running"}
@@ -118,6 +118,12 @@ ACTIONS = {
 - Frame 4 follow-through: right arm swinging down across the body, settling back toward a ready stance.
 - In-place: feet stay in the same spot of the cell (one small step forward in frame 3 is fine).""",
               "- NO sword, NO shield, NO bow. Only the small grey stone in the right fist in frames 1-2; both hands clearly visible."),
+    "sit": (4, "SITTING on the ground in a blissful DAZE, slowly eating a lotus fruit, loopable (he has forgotten his home)", """- Frame 1 sitting cross-legged on the ground facing the row direction, back slouched, a round golden-pink lotus fruit held in both hands at his chest, dreamy half-closed eyes, a soft smile.
+- Frame 2 lifting the fruit to his mouth, taking a bite, head tilting slightly to one side.
+- Frame 3 chewing happily, eyes closed, upper body swaying gently to the other side.
+- Frame 4 lowering the fruit back toward his chest, almost back to frame 1 (frame 4 flows back into frame 1).
+- He stays seated: the seat stays on the same spot near the bottom of the cell. Small, slow movements only.""",
+            "- NO weapon in his hands: his weapon (exactly as in pose.png) lies on the ground beside him and his shield, if he has one, leans against his side; his hands hold only the lotus fruit, both clearly visible."),
 }
 
 
@@ -183,7 +189,7 @@ def main(base, character, out, anims, n):
                         subprocess.run([sys.executable, str(Path(__file__).parent / "attack_guide.py"), str(job / "guide.png"), anim, ",".join(group)], check=True)
                     (job / "prompt.txt").write_text(attack_text(tpl, anim, group, character))
                     images = "-i pose.png -i guide.png" if guided else "-i pose.png"
-                    lines.append(f"(cd {job.name} && codex exec -m {MODEL} --skip-git-repo-check -s read-only {images} - "
+                    lines.append(f"(cd {job.name} && {CODEX} --skip-git-repo-check -s read-only {images} - "
                                  f"< prompt.txt > ../{job.name}.log 2>&1) &")
             continue
         for d, (r, c) in CELL.items():
@@ -198,7 +204,7 @@ def main(base, character, out, anims, n):
                     extra = extra.split("\n- BIG CLEAR")[0]
                 (job / "prompt.txt").write_text(tpl.replace("__CHARACTER__", character).replace("__FACING__", facing)
                                                 .replace("__EXTRA__\n", extra + "\n" if extra else ""))
-                lines.append(f"(cd {job.name} && codex exec -m {MODEL} --skip-git-repo-check -s read-only -i pose.png -i guide.png - "
+                lines.append(f"(cd {job.name} && {CODEX} --skip-git-repo-check -s read-only -i pose.png -i guide.png - "
                              f"< prompt.txt > ../{job.name}.log 2>&1) &")
     lines += ["wait", 'for f in *.log; do echo "${f%.log} $(grep -o "/Users[^ ]*generated_images[^ ]*\\.png" $f | tail -1)"; done']
     (out / "run.sh").write_text("\n".join(lines) + "\n")

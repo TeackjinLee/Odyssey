@@ -30,6 +30,7 @@ var overlay := ""
 var overlay_stats: Dictionary = {}
 var _portraits := {}
 var _speaker_sheets := {}
+var _speaker_level: Object = null   # 이름 표는 챕터 글에서 만든다 — 챕터가 바뀌면 다시
 var _buttons: Array = []
 ## 튜토리얼 카드: 글, ✓ 표시 남은 시간, 깜빡일 하단 슬롯
 var tut_text := ""
@@ -275,8 +276,10 @@ func _speaker_portrait(speaker: String) -> Texture2D:
 	var p: Player = Game.level.player if Game.level else null
 	if p and speaker == "오디세우스":
 		return _player_portrait(p)
-	if _speaker_sheets.is_empty():
-		_speaker_sheets = {Lines.t("names.sinon"): "sinon", Lines.t("names.scout"): "greek_sword", Lines.t("names.herald"): "herald"}
+	if _speaker_sheets.is_empty() or _speaker_level != Game.level:
+		_speaker_level = Game.level
+		_speaker_sheets = {Lines.t("names.sinon"): "sinon", Lines.t("names.scout"): "greek_sword", Lines.t("names.herald"): "herald",
+			Lines.t("names.lotophagi"): "lotophagi"}
 		for pair in Lines.list("names.crew"):
 			_speaker_sheets[pair[1]] = "greek_" + pair[0]
 	if not _speaker_sheets.has(speaker):

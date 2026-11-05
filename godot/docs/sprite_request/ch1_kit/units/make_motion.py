@@ -96,7 +96,7 @@ def portrait(name):
     job = HERE / "portrait" / name
     job.mkdir(parents=True, exist_ok=True)
     Image.open(ROOT / f"assets/source/{name}_8dir.webp").convert("RGB").crop((0, 512, 384, 1024)).save(job / "pose.png")
-    mood = "loyal determined" if name.startswith("greek") else "sly but pitiful" if name == "sinon" else "stern hostile"
+    mood = "loyal determined" if name.startswith("greek") else "sly but pitiful" if name == "sinon" else "dreamy blissful smiling" if name == "lotophagi" else "stern hostile"
     (job / "prompt.txt").write_text(PORTRAIT.replace("__CHARACTER__", motion_text(name)).replace("__MOOD__", mood))
 
 
@@ -112,7 +112,7 @@ def main(names, only=None):
         if not (HERE / f"{name}_motion.txt").exists():
             (HERE / f"{name}_motion.txt").write_text(motion_text(name) + "\n")
         out = HERE / name
-        anims = ANIMS[kind].split(",") + (["heavy"] if kind == "captain" else [])
+        anims = ANIMS.get(kind, "walk").split(",") + (["heavy"] if kind == "captain" else [])
         if only:   # 나중에 더 받는 동작(달리기·막기·초상화). 막기는 방패 든 병사만
             anims = [a for a in only if a != "block" or kind != "archer"]
             if "portrait" in anims:

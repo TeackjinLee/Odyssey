@@ -46,5 +46,5 @@ python3 tools/fx_layout.py draw docs/sprite_request/skill_requests/fx_skills
 `motion_request.py`는 `run.sh`를 새로 쓰므로, 다시 만든 뒤 `fx_skills` 줄을 `run.sh`에 다시 넣는다(아래 한 줄):
 
 ```
-(cd fx_skills && codex exec -m gpt-6.1-sol --skip-git-repo-check -s read-only -i layout.png -i style_fire.png -i style_hero.png - < prompt.txt > ../fx_skills.log 2>&1) &
+(cd fx_skills && "$(git rev-parse --show-toplevel)"/godot/tools/codex_image.sh --skip-git-repo-check -s read-only -i layout.png -i style_fire.png -i style_hero.png - < prompt.txt > ../fx_skills.log 2>&1) &
 ```

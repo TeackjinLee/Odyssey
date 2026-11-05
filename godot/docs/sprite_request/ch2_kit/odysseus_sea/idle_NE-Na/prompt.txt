@@ -1,0 +1,33 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached image:
+1) pose.png = the SAME character standing in 2 facings, left to right: NORTH-EAST (back-right), NORTH (back).
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame animation (calm combat-ready BREATHING loop) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall) in his SEA VOYAGE clothes exactly like pose.png: bare head with wind-blown curly dark-brown hair and a thin bronze brow band, face visible (dark eyebrows, brown eyes, short dark beard), a short weathered blue-green cloak over the shoulders, a bronze breastplate over a cream linen tunic, a rope belt with a gold round buckle, a crimson front flap, bronze bracers, laced leather sandals. NO brow band, NO short blue-green cloak.
+Weapons always carried, exactly like pose.png: a short bronze leaf-blade sword with a gold crossguard held in the RIGHT fist, a round bronze shield with a gold eight-pointed star strapped to the LEFT forearm, and a wooden recurve bow with a brown quiver of white-fletched arrows slung diagonally on his BACK.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he keeps facing that row's direction in every frame:
+  Row 1: NORTH-EAST (back-right), we see his back and right side, toward the upper-right
+  Row 2: NORTH (back), we see only his back, away from the viewer
+
+MOTION (the same motion in every row, frames left to right):
+- Frame 1 ready stance: feet apart, knees slightly bent, right fist low in front of the right hip, left forearm in front of the belly.
+- Frame 2 breathing in: chest and shoulders rise 2 pixels.
+- Frame 3 top of the breath, the hair moves very slightly.
+- Frame 4 breathing out, almost back to frame 1 (frame 4 flows back into frame 1).
+- Very subtle: only a few pixels change between frames. The feet never move.
+- No effect lines, no dust, no blood.
+- NE row: Keep the SAME three-quarter back turn in all frames: back and right shoulder always turned the same amount toward the upper-right, only the side of the beard visible, never turning to a full back or side view.
+- N row: BACK VIEW: we see only his back in every frame, never the face.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. The last 1 row(s) stay EMPTY magenta.
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- WEAPONS EXACTLY LIKE pose.png in EVERY frame: the bronze sword GRIPPED INSIDE the RIGHT fist (fingers around the hilt, the blade continues the forearm), the round bronze star shield STRAPPED on the LEFT forearm (moves with that arm, never in front of the face, never floating), the bow and quiver stay slung on his back. The short blue-green cloak and his curly hair follow the motion.

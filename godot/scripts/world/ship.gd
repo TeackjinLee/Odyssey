@@ -58,6 +58,14 @@ var sail_color := Color(0.9, 0.86, 0.75)
 var stripe := Color(0.7, 0.25, 0.18)
 var hull_color := Color(0.36, 0.22, 0.13)
 var deck_color := Color(0.62, 0.45, 0.28)
+## 그려 받은 배 그림(tools/gen_ship.py): {"sail"/"furl": [텍스처, 방향별 칸 정보]}. 없으면 코드로 그린다
+var art := {}
+## 갤리선 선체만 16방향 그림(gen_ship.py --hull) + 돛 천 + 배 위 사람 시트(gen_ship_crew.py). 있으면 돛대·돛·노·사람은 코드로 그린다
+var hull_art: Array = []
+var cloth: Texture2D = null
+var crew_tex: Texture2D = null
+var crew_meta := {}
+const ROWERS := ["greek_sword", "greek_spear", "greek_archer"]
 var target_ship: Ship = null
 ## 폭풍(챕터 2): 파도에 노가 휩쓸려 이보다 빨리 못 간다(칸/초). 돛이 찢어지면 다시 펼 수 없다(레벨이 고침)
 var max_speed := INF
@@ -94,11 +102,39 @@ func as_enemy_boat() -> Ship:
 	hull_color = Color(0.24, 0.16, 0.1)
 	deck_color = Color(0.45, 0.32, 0.2)
 	gear = 1
+	load_art("cicones_boat")
 	return self
+
+
+## assets/sprites/<이름>_sail·_furl 그림을 쓴다(둘 다 있어야)
+func load_art(id: String) -> void:
+	art = {}
+	for k in ["sail", "furl"]:
+		var path := "res://assets/sprites/%s_%s.png" % [id, k]
+		if not ResourceLoader.exists(path):
+			art = {}
+			return
+		art[k] = [load(path), JSON.parse_string(FileAccess.get_file_as_string(path.replace(".png", ".json")))]
+
+
+## 선체 16방향·돛 천·사람 시트가 모두 있어야 쓴다
+func load_hull(id: String) -> void:
+	var p := "res://assets/sprites/%s_hull.png" % id
+	var c := "res://assets/sprites/%s_cloth.png" % id
+	if not (ResourceLoader.exists(p) and ResourceLoader.exists(c) and ResourceLoader.exists("res://assets/sprites/ship_crew.png")):
+		return
+	hull_art = [load(p), JSON.parse_string(FileAccess.get_file_as_string(p.replace(".png", ".json")))]
+	cloth = load(c)
+	crew_tex = load("res://assets/sprites/ship_crew.png")
+	crew_meta = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/ship_crew.json"))
 
 
 func _ready() -> void:
 	add_to_group("ships")
+	if team == Actor.Team.GREEK and art.is_empty():
+		load_hull("odysseus_galley")
+		if hull_art.is_empty():
+			load_art("odysseus_galley")   # 그려 받은 갤리선 그림(없으면 코드 그림)
 	_sync()
 
 
@@ -479,11 +515,14 @@ func _draw() -> void:
 		var a: float = w[1]
 		draw_arc(p, 4.0 + (1.0 - a) * 10.0, 0, TAU, 12, Color(0.85, 0.92, 1.0, 0.35 * a), 1.0)
 	var flash := Color(1, 1, 1).lerp(Color(1.6, 0.6, 0.5), _flash)
+	if not hull_art.is_empty():
+		_draw_hull_ship(flash)
+		return
 	# 그림자·물 닿는 곳
 	draw_colored_polygon(_outline(-1, 1.12), Color(0.02, 0.05, 0.12, 0.45))
-	# 노(물에 닿는 쪽 먼저)
+	# 노(물에 닿는 쪽 먼저) — 그려 받은 배는 노 구멍이 그림에 있고 코드 노는 선체 밖에 떠 보여 그리지 않는다
 	var side_pts: Array = []
-	for s in [-1.0, 1.0]:
+	for s in ([] if not art.is_empty() else [-1.0, 1.0]):
 		for i in oars:
 			var lx := lerpf(-length * 0.3, length * 0.26, float(i) / maxf(1.0, oars - 1))
 			var sw := sin(_oar_t + i * 0.15) * 0.22 if gear != 0 else 0.0
@@ -491,6 +530,168 @@ func _draw() -> void:
 			side_pts.append([_pt(lx, s * width * 0.45, 6), _pt(lx + sw, s * (width * 0.5 + 0.8), lift)])
 	for o in side_pts:
 		draw_line(o[0], o[1], Color(0.55, 0.4, 0.25), 1.0)
+	if not art.is_empty():
+		_draw_art(flash)   # 머리 점도 코드 갑판 높이라 그림 위에선 떠 보여 그리지 않는다(부하는 HUD 목록에 '배 위')
+	else:
+		_draw_code_hull(flash)
+	# 적 배: 상했으면 체력 막대
+	if team != Actor.Team.GREEK and hull < max_hull:
+		var r := Rect2(-14, -62, 28, 3)
+		draw_rect(r, Color(0, 0, 0, 0.7))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * hull / max_hull, r.size.y)), Color(0.85, 0.25, 0.2))
+
+
+## 그려 받은 배: 뱃머리 화면 방향에 가까운 칸을 골라, 선체 폭을 코드 선체 폭에 맞추고 바닥을 물 높이에 둔다
+func _draw_art(flash: Color) -> void:
+	var o := _outline(0)
+	var box := Rect2(o[0], Vector2.ZERO)
+	for q in o:
+		box = box.expand(q)
+	var v := Iso.ex * fwd().x + Iso.ey * fwd().y
+	var sheet: Array = art["sail" if sail else "furl"]
+	var m: Dictionary = sheet[1]["dirs"][posmod(roundi(v.angle() / (PI / 4.0)), 8)]
+	var rc: Array = m["rect"]
+	# 한 배율로 그려 온 시트(len = 동쪽 칸 선체 길이)는 모든 방향에 같은 배율 — 돌 때 크기가 바뀌지 않게
+	var k := box.size.x / float(m["hull_w"])
+	if sheet[1].has("len"):
+		k = length * (Iso.ex - Iso.ey).length() / sqrt(2.0) / float(sheet[1]["len"])
+	var size := Vector2(rc[2], rc[3]) * k
+	var at := Vector2(box.get_center().x - float(m["hull_x"]) * k, box.end.y + 2.0 - size.y)
+	draw_texture_rect_region(sheet[0], Rect2(at, size), Rect2(rc[0], rc[1], rc[2], rc[3]), flash)
+
+
+# ── 선체 16방향 그림 + 코드 돛대·돛·노·사람 ─────────────────────────────
+# 선체 그림은 화면 방향 22.5°마다 한 장이라, 노·사람·돛대도 그 칸의 방향(_hf)으로 놓아 선체에서 어긋나지 않게 한다.
+# 높이는 그림 픽셀(요청 안내 그림 기준)로 재고 _hk배 해서 화면 픽셀로.
+const BLEND := 0.18   # 선체 그림 두 장을 겹치는 폭(한 칸 22.5°의 몇 배, 경계 양쪽)
+var _hf := Vector2.RIGHT
+var _hk := 0.35
+
+
+func _hp(lx: float, ly: float, h: float) -> Vector2:
+	var g := _hf * lx + Vector2(-_hf.y, _hf.x) * ly
+	return Iso.ex * g.x + Iso.ey * g.y + Vector2(0, -h * _hk)
+
+
+func _draw_hull_ship(flash: Color) -> void:
+	var m: Dictionary = hull_art[1]
+	var v := Iso.ex * fwd().x + Iso.ey * fwd().y
+	# 22.5°마다 한 장이라, 경계 앞뒤(BLEND칸)에서는 두 장을 겹쳐 바꾸고 노·사람·돛대도 두 방향 사이로 옮겨 갑자기 바뀌지 않게
+	var f := v.angle() / (PI / 8.0)
+	var i0 := floori(f)
+	var w := smoothstep(0.5 - BLEND, 0.5 + BLEND, f - i0)   # 0 = i0 칸, 1 = 다음 칸
+	var idx := posmod(i0 + (1 if w >= 0.5 else 0), 16)
+	var other := posmod(i0 + (0 if w >= 0.5 else 1), 16)
+	var other_a := 1.0 - absf(w - 0.5) * 2.0   # 겹치는 장의 세기: 경계에서 1(그릴 때 ×0.5), 겹침 폭 끝에서 0
+	var a := lerp_angle(i0 * PI / 8.0, (i0 + 1) * PI / 8.0, w)
+	_hf = Vector2(cos(a) + 2.0 * sin(a), 2.0 * sin(a) - cos(a)).normalized()   # 화면 방향 → 격자 방향(투영의 역)
+	_hk = Iso.ex.x / float(m["px"]) * length / float(m["len"])
+	var dw := length * float(m["wid"]) / float(m["len"])
+	var deck := float(m["deck"]) - 6.0
+	# 그림자
+	var sh := PackedVector2Array()
+	for i in 16:
+		var t := TAU * i / 16.0
+		sh.append(_hp(cos(t) * length * 0.55, sin(t) * dw * 0.75, -2))
+	draw_colored_polygon(sh, Color(0.02, 0.05, 0.12, 0.45))
+	# 노: 먼 쪽 → 선체 → 갑판 위(깊이 순) → 가까운 쪽
+	var near := 1.0 if _hp(0, 1, 0).y > _hp(0, -1, 0).y or (is_equal_approx(_hp(0, 1, 0).y, _hp(0, -1, 0).y) and _hp(0, 1, 0).x > 0) else -1.0
+	var n := 5
+	_draw_oars(-near, n, dw, flash)
+	_draw_hull_cell(m["dirs"][idx], flash)
+	if other_a > 0.0:
+		_draw_hull_cell(m["dirs"][other], Color(flash, other_a * 0.5))
+	var items: Array = []   # [화면 y, 종류, 값…]
+	var back := posmod(roundi((-v).angle() / (PI / 4.0)), 8)
+	var face := posmod(roundi(v.angle() / (PI / 4.0)), 8)
+	for side in [-1.0, 1.0]:
+		for i in n:
+			var lx := lerpf(-length * 0.3, length * 0.2, float(i) / (n - 1)) + sin(_oar_t + i * 0.15) * 0.04 * float(gear != 0)
+			var p := _hp(lx, side * dw * 0.24, deck)
+			items.append([p.y, 0, p, ROWERS[(i + (1 if side > 0 else 0)) % 3], back, 0])
+	if rider:
+		var p := _hp(length * 0.36, 0, deck + 4)
+		var who: String = Game.outfit if crew_meta["rows"].has(Game.outfit) else "odysseus_ch1"
+		items.append([p.y, 0, p, who, face, int(Time.get_ticks_msec() / 250.0)])
+	var mb := _hp(-length * 0.02, 0, deck)
+	items.append([mb.y, 1, mb])
+	items.sort_custom(func(x, y): return x[0] < y[0])
+	for it in items:
+		if it[1] == 0:
+			_draw_crew(it[2], it[3], it[4], it[5], flash)
+		else:
+			_draw_mast(dw, deck, flash)
+	_draw_oars(near, n, dw, flash)
+
+
+func _draw_hull_cell(d: Dictionary, mod: Color) -> void:
+	var rc: Array = d["rect"]
+	draw_texture_rect_region(hull_art[0], Rect2(-Vector2(d["ax"], d["ay"]) * _hk, Vector2(rc[2], rc[3]) * _hk), Rect2(rc[0], rc[1], rc[2], rc[3]), mod)
+
+
+func _draw_oars(side: float, n: int, dw: float, flash: Color) -> void:
+	var wood := Color(0.32, 0.21, 0.12) * flash
+	var lite := Color(0.62, 0.46, 0.3) * flash
+	for i in n:
+		var ph := _oar_t + i * 0.15
+		var lx := lerpf(-length * 0.3, length * 0.2, float(i) / (n - 1)) + 0.06
+		var sw := sin(ph) * 0.2 if gear != 0 else 0.0
+		var lift := maxf(0.0, cos(ph)) * 14.0 if gear != 0 else 8.0
+		var a := _hp(lx, side * dw * 0.5, float(hull_art[1]["deck"]) - 4.0)
+		var b := _hp(lx - 0.14 - sw, side * (dw * 0.5 + 0.6), lift)   # 노깃은 고물 쪽으로 조금 눕힌다
+		draw_line(a, b, wood, 2.0)
+		draw_line(a, a.lerp(b, 0.7), lite, 1.0)
+		draw_line(a.lerp(b, 0.72), b, wood, 3.0)   # 노깃
+
+
+func _draw_crew(p: Vector2, sheet: String, dir: int, tick: int, flash: Color) -> void:
+	var r: Dictionary = crew_meta["rows"][sheet]
+	var fs: float = crew_meta["frame"]
+	var nf: int = r["frames"]
+	var col := dir * nf + tick % nf
+	var an := Vector2(crew_meta["anchor"][0], crew_meta["anchor"][1]) * 0.5
+	draw_texture_rect_region(crew_tex, Rect2(p - an, Vector2(fs, fs) * 0.5), Rect2(col * fs, int(r["row"]) * fs, fs, fs), flash)
+
+
+## 돛대·활대·돛(천 그림을 사각형에 입힘). 활대는 배 폭 방향이지만, 정면에서 옆으로 볼 때 돛이 선이 되지 않게 가로 폭을 남긴다
+func _draw_mast(dw: float, deck: float, flash: Color) -> void:
+	var lx := -length * 0.02
+	var base := _hp(lx, 0, deck)
+	var top := _hp(lx, 0, deck + 250)
+	var yard_h := deck + 225.0 if sail else deck + 200.0
+	var y0 := _hp(lx, 0, yard_h)
+	var half := (_hp(lx, dw * 1.05, yard_h) - y0)
+	var full := dw * 1.05 * Iso.ex.length() * 1.4
+	if absf(half.x) < full * 0.55:
+		half.x = (1.0 if half.x >= 0 else -1.0) * full * 0.55
+	var wood := Color(0.36, 0.24, 0.14) * flash
+	draw_line(base, top, Color(0.22, 0.14, 0.08) * flash, 3.0)
+	draw_line(base, top, wood, 1.5)
+	if sail and not sail_torn:
+		var drop := Vector2(0, 150.0 * _hk)
+		var belly := (_hp(lx + 0.25, 0, 0) - _hp(lx, 0, 0))   # 돛이 뱃머리 쪽으로 부푼다
+		var pts := PackedVector2Array([y0 - half, y0 + half, y0 + half + drop + belly * 0.3, y0 + belly * 0.5 + drop * 1.05, y0 - half + drop + belly * 0.3])
+		# 가운데 아래 꼭짓점이 부풀어 다각형이 오목해지지 않게 두 장으로
+		draw_polygon(PackedVector2Array([pts[0], y0, y0 + belly * 0.5 + drop * 1.05, pts[4]]),
+			PackedColorArray([flash, flash, flash, flash]), PackedVector2Array([Vector2(0, 0), Vector2(0.5, 0), Vector2(0.5, 1), Vector2(0, 1)]), cloth)
+		draw_polygon(PackedVector2Array([y0, pts[1], pts[2], y0 + belly * 0.5 + drop * 1.05]),
+			PackedColorArray([flash, flash, flash, flash]), PackedVector2Array([Vector2(0.5, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0.5, 1)]), cloth)
+		draw_line(base, top, wood, 1.5)
+	else:
+		# 접은 돛: 활대에 감긴 줄무늬 두루마리
+		var k := 8
+		for i in k:
+			var a := y0 - half + half * 2.0 * i / k
+			var b := y0 - half + half * 2.0 * (i + 1) / k
+			draw_line(a + Vector2(0, 2), b + Vector2(0, 2), (Color(0.75, 0.22, 0.16) if i % 2 == 0 else Color(0.92, 0.86, 0.72)) * flash, 4.0)
+	draw_line(y0 - half, y0 + half, Color(0.22, 0.14, 0.08) * flash, 2.0)
+	draw_line(top, y0 - half, Color(0.2, 0.14, 0.1, 0.7), 1.0)   # 밧줄
+	draw_line(top, y0 + half, Color(0.2, 0.14, 0.1, 0.7), 1.0)
+	draw_line(top, _hp(length * 0.48, 0, deck), Color(0.2, 0.14, 0.1, 0.6), 1.0)
+	draw_line(top, _hp(-length * 0.45, 0, deck), Color(0.2, 0.14, 0.1, 0.6), 1.0)
+
+
+func _draw_code_hull(flash: Color) -> void:
 	# 선체: 물에 잠긴 옆면 → 갑판
 	draw_colored_polygon(_outline(0), hull_color.darkened(0.35) * flash)
 	draw_colored_polygon(_outline(7), hull_color * flash)
@@ -505,7 +706,12 @@ func _draw() -> void:
 	draw_line(_pt(-length * 0.5, 0, 10), _pt(-length * 0.55, 0, 19), hull_color.darkened(0.2), 2.0)
 	draw_circle(_pt(length * 0.46, width * 0.22, 9), 1.2, Color(0.95, 0.95, 0.9))   # 뱃머리 눈
 	draw_circle(_pt(length * 0.46, -width * 0.22, 9), 1.2, Color(0.95, 0.95, 0.9))
-	# 사람: 노꾼·부하(머리), 고물의 조타수(오디세우스: 금빛)
+	_draw_heads()
+	_draw_code_sail(flash)
+
+
+## 사람: 노꾼·부하(머리), 고물의 조타수(오디세우스: 금빛)
+func _draw_heads() -> void:
 	var heads := crew.size() if team == Actor.Team.GREEK else archers + 2
 	for i in heads:
 		var lx := lerpf(-length * 0.2, length * 0.25, float(i) / maxf(1.0, heads - 1))
@@ -515,6 +721,9 @@ func _draw() -> void:
 	if rider:
 		draw_circle(_pt(-length * 0.4, 0, 14), 2.6, Color(0.1, 0.07, 0.05))
 		draw_circle(_pt(-length * 0.4, 0, 14), 2.0, Color(0.95, 0.78, 0.38))
+
+
+func _draw_code_sail(flash: Color) -> void:
 	# 돛대·활대·돛
 	var mx := length * 0.06
 	draw_line(_pt(mx, 0, 8), _pt(mx, 0, 50), Color(0.3, 0.2, 0.12), 2.0)
@@ -529,8 +738,3 @@ func _draw() -> void:
 		draw_polyline(quad, Color(0.2, 0.15, 0.1, 0.8), 1.0)
 	else:
 		draw_line(_pt(mx, -span, 45), _pt(mx, span, 45), sail_color.darkened(0.15), 3.0)
-	# 적 배: 상했으면 체력 막대
-	if team != Actor.Team.GREEK and hull < max_hull:
-		var r := Rect2(-14, -62, 28, 3)
-		draw_rect(r, Color(0, 0, 0, 0.7))
-		draw_rect(Rect2(r.position, Vector2(r.size.x * hull / max_hull, r.size.y)), Color(0.85, 0.25, 0.2))

@@ -43,6 +43,7 @@ python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들
 python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (다른 캐릭터·옷: SPRITE_CHAR=<이름>)
 python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
 python3 tools/gen_storm.py .                            # 받은 바다 무늬·폭풍 이펙트 → assets/env/sea_*·assets/fx/storm_* (요청 묶음 storm_requests/)
+python3 tools/gen_ship.py . odysseus_galley --hull && python3 tools/gen_ship_crew.py .   # 갤리선 선체 16방향·돛 천·배 위 사람 시트 (ch2_kit/README.md)
 python3 tools/gen_animal.py . chicken                    # 받은 동물 원본 → assets/sprites/animal_<종류>.* (요청 묶음 animal_kit/)
 python3 tools/gen_food.py .                             # 받은 음식 그림 → assets/sprites/food_icons.* (food_source.gd가 씀)
 python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
@@ -65,7 +66,7 @@ python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려
 - 새 챕터는 `IsoLevel`을 상속해 `build()`/`start()`를 만들고 `main.gd`의 `make_level`·`CHAPTERS`에 넣는다. 결과 글·체크포인트·검증 시작점·REPORT는
   `result_info`·`restore_checkpoint`·`checkpoint_name`·`skip_to`·`report`를 채운다. 앞 챕터에서 이어받는 값은 `Game.carry_for(n)`, 넘길 값은 `Game.set_carry(n+1, …)`.
   글(대사·카드·목표·알림)은 `data/dialogue/<챕터>.json` + `Lines`로, 키 이름은 글에 `{동작}`으로 쓴다.
-- 배(챕터 2·5): `Ship`(격자 공간 관성 이동, 노 단계·돛·바람·들이받기), 레벨은 `wind`·`wind_strength`·`sea_path`를 둔다. 오디세우스는 `Player.set_riding(ship)`으로 탄다.
+- 배(챕터 2·5): `Ship`(격자 공간 관성 이동, 노 단계·돛·바람·들이받기 — 갤리선은 선체 그림 16방향 + 돛대·돛·노·사람을 코드로), 레벨은 `wind`·`wind_strength`·`sea_path`를 둔다. 오디세우스는 `Player.set_riding(ship)`으로 탄다.
 - 영양: 오디세우스는 `player.nutrition`(탄 = 체력 회복 · 단 = 힘 · 지 = 완충/과하면 느림). 새 챕터는 채집 지점(`FoodSource`)·사냥감(`Animal`)을 배치한다 — `docs/NUTRITION.md`.
   챕터 2부터 레벨에 `rations`(배 식량 창고·부하 배부름)를 두면 음식을 짧게 눌러 창고에 넣을 수 있다.
 - 소리: `Sfx.play/at`(효과음), `Bgm.play/sting/amb`(음악·환경음). 파일이 있으면 파일, 없으면 효과음은 합성음. 느낌은 영화 《오디세이》(2026)처럼 — 오케스트라 없이 고대 악기·징·쇠붙이·일그러진 신시·목소리(README "소리").

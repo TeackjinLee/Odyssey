@@ -1,0 +1,38 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) pose.png = the SAME character standing in 3 facings, left to right: EAST, SOUTH-EAST (front-right), SOUTH (front).
+2) guide.png = a MOTION guide drawn as stick figures with the SAME layout as the image you must create (one row per facing, one column per frame):
+   RED legs = right leg / BLUE legs = left leg, DARK RED arm with a big round fist = the STRIKING right arm,
+   DARK BLUE arm = the left arm held in front of the chest, black dot = hip, circle = head with a short line showing where the chest faces, black bar = shoulders.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 4-frame ATTACK animation (BACKHAND SLASH, the return swing after a first slash, right hand) of the SAME character as in "pose.png":
+Odysseus as a cute stocky CHIBI hero (about 3 heads tall) in his SEA VOYAGE clothes exactly like pose.png: bare head with wind-blown curly dark-brown hair and a thin bronze brow band, face visible (dark eyebrows, brown eyes, short dark beard), a short weathered blue-green cloak over the shoulders, a bronze breastplate over a cream linen tunic, a rope belt with a gold round buckle, a crimson front flap, bronze bracers, laced leather sandals. NO brow band, NO short blue-green cloak.
+Weapons always carried, exactly like pose.png: a short bronze leaf-blade sword with a gold crossguard held in the RIGHT fist, a round bronze shield with a gold eight-pointed star strapped to the LEFT forearm, and a wooden recurve bow with a brown quiver of white-fletched arrows slung diagonally on his BACK.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+In each ROW he starts and ends facing that row's direction and attacks toward it (unless the motion says he turns):
+  Row 1: EAST, right side profile toward the right
+  Row 2: SOUTH-EAST (front-right), three-quarter front view toward the lower-right
+  Row 3: SOUTH (front), facing the viewer
+
+MOTION (most important): in each cell put his body, legs, striking fist and left arm where "guide.png" shows them for that row and frame number.
+- Frame 1 wind-up: right fist low on his LEFT side near the left hip, torso twisted left.
+- Frame 2 swing: right arm sweeping forward and upward, torso turning back to the right.
+- Frame 3 follow-through: right arm extended high out to his RIGHT side at shoulder height, torso twisted right.
+- Frame 4 recovery: back toward a ready stance, right fist in front of the body.
+- Do NOT draw the stick lines, circles, numbers or ground line of the guide.
+- DYNAMIC ATTACK with a strong EFFECT: big wind-up, explosive strike, the short cloak and his hair whip with the swing, deep lunge.
+  In the striking frames draw a bold pixel-art SLASH TRAIL following the sword tip path: a thick crescent arc with a white core, pale gold edge and a thin cyan outer rim, solid opaque pixels (no blur, no transparency, no glow haze), tapering at both ends, drawn BEHIND the sword blade, fully inside the cell. A few sharp spark pixels at the arc's leading end. Wind-up and recovery frames have no trail or only a fading thin tail. No dust, no text.
+- SE row: Keep the SAME three-quarter body turn in all frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+- S row: FRONT VIEW: the lifted leg bends its knee toward the viewer and shows the top of the sandal; the forward foot is slightly lower on screen. Both fists stay visible beside the body and move up and down as the arms swing. Face looks straight at the viewer in every frame.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps. 
+- Each ROW is one facing (top to bottom as listed above), each COLUMN is one frame, left to right, same order as guide.png.
+- EXACTLY the same character size and head size in every cell of every row (about 290px tall when standing straight, head as big as in pose.png).
+- The standing feet touch the same ground line near the bottom of every row. In-place animation: the hip stays near the cell center.
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- WEAPONS EXACTLY LIKE pose.png in EVERY frame: the bronze sword GRIPPED INSIDE the RIGHT fist (fingers around the hilt, the blade continues the forearm), the round bronze star shield STRAPPED on the LEFT forearm (moves with that arm, never in front of the face, never floating), the bow and quiver stay slung on his back. The short blue-green cloak and his curly hair follow the motion.

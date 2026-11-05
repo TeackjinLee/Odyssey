@@ -17,6 +17,7 @@ import math
 import sys
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 FRAME = 192             # 투구 볏·점프, 베기 궤적·쓰러진 몸이 잘리지 않게 여유를 둔 정사각 칸
@@ -39,6 +40,8 @@ ANIMS = [
     ("block", 2, 6, True), ("bow", 4, 10, False), ("hit", 2, 10, False), ("dodge", 4, 14, False),
     ("death", 5, 9, False), ("interact", 4, 8, True), ("downed", 1, 1, True),
 ]
+# 그려 받은 원본이 있는 캐릭터에만 붙이는 동작(2장 로토스를 먹고 멍하게 앉은 부하)
+EXTRA_ANIMS = [("sit", 4, 4, True)]
 
 
 def is_bg(c):
@@ -373,7 +376,55 @@ def strip_frames(root, anim, k=None, cols=6, ref=None, name="odysseus", gear=Non
 # 원래 그려 받은 키 차이(대장은 더 크게, 투구 없는 궁수는 작게)를 그대로 살린다. 적·동료는 기본 8방향만 받아 동작은 변형으로 만든다
 ARMED_BODIES = {"odysseus_ch1": 118, **{n: "odysseus_ch1" for n in (
     "greek_sword", "greek_spear", "greek_archer", "trojan_sword", "trojan_spear", "trojan_archer", "trojan_captain", "sinon",
-    "odysseus_sea", "cicones_sword", "cicones_spear", "cicones_archer", "cicones_chief")}}
+    "odysseus_sea", "cicones_sword", "cicones_spear", "cicones_archer", "cicones_chief", "lotophagi")}}
+
+
+# 같은 배율로 묶어도 요청마다 인물을 조금씩 다른 크기로 그려 오므로(막기·피격·앉기가 1.2~1.5배로 오곤 함),
+# 그려 받은 동작은 방향마다 몸 넓이를 걷기 줄에 맞춘다. 키(웅크림)·머리 폭(볏·털모자)은 자세·차림에 따라 흔들려 쓰지 않는다.
+# 쓰러지는 동작은 몸이 눕혀져 넓이가 달라 재지 않는다. 자세 차이로 넓이가 5% 안팎 달라지므로 SIZE_TOL 안은 그대로 둔다
+SIZE_SKIP = ("walk", "death", "downed")
+SIZE_TOL = 0.08
+BODY_ERODE = 3   # 시트 픽셀: 이보다 가는 것(창대·칼날·활시위)은 깎여 넓이에서 빠진다
+
+
+def body_area(img):
+    """베기 궤적(밝은 흰·하늘색)을 빼고 반지름 BODY_ERODE로 깎은 불투명 면적."""
+    a = np.asarray(img).astype(np.int16)
+    m = (a[..., 3] > 60) & ~((a[..., 1] > 190) & (a[..., 2] > 190))
+    e = m.copy()
+    for dy in range(-BODY_ERODE, BODY_ERODE + 1):
+        for dx in range(-BODY_ERODE, BODY_ERODE + 1):
+            if dx * dx + dy * dy <= BODY_ERODE * BODY_ERODE:
+                e &= np.roll(np.roll(m, dy, 0), dx, 1)
+    return int(e.sum())
+
+
+def size_ratio(frames, ref):
+    """걷기 대비 배율 = sqrt(걷기 넓이 / 동작 넓이), 넓이는 프레임 가운데값."""
+    fa = sorted(body_area(f) for f in frames)
+    ra = sorted(body_area(f) for f in ref)
+    return (ra[len(ra) // 2] / max(1, fa[len(fa) // 2])) ** 0.5
+
+
+def match_walk_size(strips):
+    """그려 받은 동작 줄을 방향마다 걷기 몸 넓이에 맞춰 발(ANCHOR)을 기준으로 다시 줄이거나 키운다."""
+    walk = strips.get("walk")
+    for anim, rows in strips.items():
+        if anim in SIZE_SKIP or not rows:
+            continue
+        for d in range(8):
+            s = size_ratio([f for f, _ in rows[d]], [f for f, _ in walk[d]])
+            if abs(s - 1) <= SIZE_TOL:
+                continue
+            print(f"  크기 맞춤 {anim} 방향{d} ×{s:.2f}")
+            out = []
+            for f, hands in rows[d]:
+                small = f.resize((round(FRAME * s), round(FRAME * s)), Image.LANCZOS)
+                g = Image.new("RGBA", (FRAME, FRAME), (0, 0, 0, 0))
+                g.paste(small, (round(ANCHOR[0] * (1 - s)), round(ANCHOR[1] * (1 - s))), small)
+                hs = [round(ANCHOR[i % 2] + (v - ANCHOR[i % 2]) * s, 1) if i < 4 else v for i, v in enumerate(hands)]
+                out.append((g, hs))
+            rows[d] = out
 
 
 def armed_k(root, body, height):
@@ -523,6 +574,7 @@ def affine(p):
 
 def build(root, name="odysseus"):
     body, gnames = GEAR.get(name, (name, []))
+    anims = ANIMS + [x for x in EXTRA_ANIMS if (root / f"assets/source/{body}_{x[0]}_8dir.webp").exists()]
     src = Image.open(root / f"assets/source/{body}_8dir.webp").convert("RGB")
     cells = cut_cells(src)
     gear = [(load_gear(root, g, body), mode) for g, mode in gnames]
@@ -539,7 +591,7 @@ def build(root, name="odysseus"):
             hands0[d] = [ANCHOR[0], ANCHOR[1] - 50, ANCHOR[0], ANCHOR[1] - 50]
     strips = {}
     k = None
-    n_frames = {a[0]: a[1] for a in ANIMS}
+    n_frames = {a[0]: a[1] for a in anims}
     unit_ref = ARMED_BODIES.get(body)
     # 다른 캐릭터와 같은 배율을 쓰는 병사: 그 캐릭터 걷기 줄의 배율을 그대로 쓴다(같은 SPRITE_SRC_H로 묶었으므로 같은 원본 픽셀 크기)
     k_ref = strip_frames(root, "walk", cols=n_frames["walk"], name=unit_ref)[1] if isinstance(unit_ref, str) else None
@@ -550,19 +602,20 @@ def build(root, name="odysseus"):
             strips[anim], _, _ = strip_frames(root, anim, cols=n_frames[anim], ref=(k, walk_head), name=body, gear=gear)
     if body in ARMED_BODIES and strips["walk"]:
         # pack_strip.py가 모든 동작을 같은 배율로 묶어 두었으므로 걷기 배율 k를 그대로 쓴다(머리 폭 맞춤은 볏 때문에 어긋난다)
-        for anim, n, _, _ in ANIMS:
+        for anim, n, _, _ in anims:
             if anim != "walk":
                 strips[anim], _, _ = strip_frames(root, anim, k=k, cols=n, name=body, gear=gear)
+        match_walk_size(strips)
     armed = armed_frames(root, body, gear, strips)
     strips.update(armed)
     if body in ARMED_BODIES:
-        armed = {a: None for a, *_ in ANIMS}
-    total = sum(a[1] for a in ANIMS)
+        armed = {a: None for a, *_ in anims}
+    total = sum(a[1] for a in anims)
     sheet = Image.new("RGBA", (FRAME * total, FRAME * 8), (0, 0, 0, 0))
     meta = {"frame": [FRAME, FRAME], "anchor": list(ANCHOR), "dirs": 8, "scale": DISPLAY_SCALE, "anims": {}, "hands": {},
             "drawn": [a for a, s in strips.items() if s], "armed": list(armed)}
     col = 0
-    for anim, n, fps, loop in ANIMS:
+    for anim, n, fps, loop in anims:
         meta["anims"][anim] = {"start": col, "frames": n, "fps": fps, "loop": loop}
         meta["hands"][anim] = []
         for i in range(n):

@@ -24,8 +24,8 @@ var autoplay := false
 var stealth_bot := false
 ## 오디세우스가 입은 옷(= assets/sprites/<이름>.png). 시트가 없는 이름은 기본 옷으로 돌아간다
 const OUTFITS := ["odysseus_ch1", "odysseus", "odysseus_helm", "odysseus_king", "odysseus_sea", "odysseus_beggar", "odysseus_beggar_hood"]
-## 챕터별 기본 옷(기획: 전투 갑옷 1·3·4, 항해복 2·5, 거지 변장 6). 시트가 없으면 기본 옷
-const CHAPTER_OUTFITS := {1: "odysseus_ch1", 2: "odysseus_sea", 3: "odysseus_king", 4: "odysseus_king", 5: "odysseus_sea", 6: "odysseus_beggar_hood"}
+## 챕터별 기본 옷(전투 갑옷 1·2·3·4, 항해복 5, 거지 변장 6 — 2장도 1장 갑옷 그대로). 시트가 없으면 기본 옷
+const CHAPTER_OUTFITS := {1: "odysseus_ch1", 2: "odysseus_ch1", 3: "odysseus_king", 4: "odysseus_king", 5: "odysseus_sea", 6: "odysseus_beggar_hood"}
 ## 무기를 숨기는 옷(변장)
 const UNARMED_OUTFITS := ["odysseus_beggar", "odysseus_beggar_hood"]
 var outfit := "odysseus"

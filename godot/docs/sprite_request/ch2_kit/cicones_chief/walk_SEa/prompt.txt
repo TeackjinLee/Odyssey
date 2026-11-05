@@ -1,0 +1,32 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images, in this order:
+1) pose.png = the character standing, facing SOUTH-EAST (front-right) - three-quarter front view walking toward the lower-right.
+2) guide.png = a 12-frame MOTION guide drawn as stick figures: RED = right leg, BLUE = left leg, DARK RED = right arm with fist, DARK BLUE = left arm with fist, black dot = hip, circle = head.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art 12-frame WALK CYCLE of the SAME character as the attached "pose.png":
+A CICONIAN (Thracian) WAR CHIEF boss, cute stocky chibi exactly like pose.png, about 25% BIGGER and broader in every cell, thick braided reddish-brown beard, ornate bronze Thracian helmet with a forward-curving peak, cheek guards and a tall black horsehair crest, bronze scale armor over a rust-red tunic, a long dark teal cloak with a wide ochre zigzag border and a bear-fur collar, bronze greaves; a heavy curved RHOMPHAIA (long sickle blade on a long hilt) in the RIGHT fist and a crescent-shaped (pelta) bronze shield with an ochre sun pattern strapped on the LEFT forearm.
+Keep his face, proportions, colors, outline thickness and pixel density EXACTLY like "pose.png".
+Facing in every frame: SOUTH-EAST (front-right) - three-quarter front view walking toward the lower-right.
+
+MOTION (most important): in each frame put his legs, feet, arms and fists where "guide.png" shows them for that frame number.
+- LEGS: the foot standing on the ground slides steadily BACKWARD (opposite to the walking direction) a little every frame, like on a treadmill.
+  The other leg lifts with a bent knee and swings FORWARD past it; in frames 3-4 and 9-10 the legs pass each other (feet close together).
+  Do NOT keep the same stance in every frame: legs open, pass, and open again.
+- ARMS: relaxed, hanging down from the shoulders, swinging like a pendulum OPPOSITE to the legs:
+  when the RIGHT foot is in front, the RIGHT fist is behind the hip and the LEFT fist is in front, and the other way round.
+  The arms swing smoothly every frame (frames 3-4 and 9-10 both fists beside the hips). Do NOT hold the arms bent up in front of the chest.
+- Frames 7-12 are frames 1-6 with left and right swapped. Frame 12 flows back into frame 1. Head height changes at most 3px.
+- Keep the SAME three-quarter body turn in all 12 frames: chest and face always turned the same amount toward the lower-right, never turning more to the front.
+Do not draw the stick lines, circles, numbers or ground dots of the guide.
+
+Layout (very important):
+- ONE image 1536x1024, 4 columns x 3 rows, every cell 384x341, no gaps.
+- Frames in reading order: top row 1-4, middle row 5-8, bottom row 9-12 (same order as guide.png).
+- EXACTLY the same character size and head size in every cell of all three rows (as tall as in pose.png (a big captain)), feet on the same baseline near the bottom of every cell,
+  hip at the same x in every cell (in-place animation, does not move across the cell).
+
+Style rules:
+- Solid flat magenta background #FF00FF everywhere. No shadow, no ground, no grid lines, no labels, no text, no frame numbers.
+- 2D pixel art, crisp 1px dark outline, no anti-aliasing blur, no motion blur.
+- Isometric 3/4 top-down game view (camera looks down about 30 degrees).
+- WEAPONS EXACTLY LIKE pose.png in EVERY frame: his weapon (exactly as in pose.png) GRIPPED INSIDE the RIGHT fist (fingers around the hilt, the blade continues the forearm), his shield (exactly as in pose.png) STRAPPED on the LEFT forearm (moves with that arm, never in front of the face, never floating).
