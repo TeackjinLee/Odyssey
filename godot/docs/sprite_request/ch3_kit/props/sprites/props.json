@@ -1,0 +1,295 @@
+{
+  "source": "godot/docs/sprite_request/ch3_kit/props/results/cave_puzzle_atlas.png",
+  "status": "candidate",
+  "camera": "isometric30",
+  "items": {
+    "wine_closed": {
+      "file": "wine_closed.png",
+      "size": [
+        26,
+        34
+      ],
+      "anchor": [
+        13,
+        33
+      ],
+      "cell_alpha_bounds": [
+        115,
+        94,
+        274,
+        306
+      ],
+      "group_crop": [
+        114,
+        94,
+        274,
+        306
+      ],
+      "needs_visual_registration_check": true
+    },
+    "wine_open": {
+      "file": "wine_open.png",
+      "size": [
+        26,
+        34
+      ],
+      "anchor": [
+        13,
+        33
+      ],
+      "cell_alpha_bounds": [
+        114,
+        100,
+        274,
+        306
+      ],
+      "group_crop": [
+        114,
+        94,
+        274,
+        306
+      ],
+      "needs_visual_registration_check": true
+    },
+    "stake_cold": {
+      "file": "stake_cold.png",
+      "size": [
+        104,
+        71
+      ],
+      "anchor": [
+        51,
+        70
+      ],
+      "cell_alpha_bounds": [
+        52,
+        110,
+        338,
+        306
+      ],
+      "group_crop": [
+        52,
+        110,
+        339,
+        306
+      ],
+      "needs_visual_registration_check": true
+    },
+    "stake_hot": {
+      "file": "stake_hot.png",
+      "size": [
+        104,
+        71
+      ],
+      "anchor": [
+        51,
+        70
+      ],
+      "cell_alpha_bounds": [
+        53,
+        110,
+        339,
+        306
+      ],
+      "group_crop": [
+        52,
+        110,
+        339,
+        306
+      ],
+      "needs_visual_registration_check": true
+    },
+    "hearth_cold": {
+      "file": "hearth_cold.png",
+      "size": [
+        88,
+        56
+      ],
+      "anchor": [
+        43,
+        55
+      ],
+      "cell_alpha_bounds": [
+        60,
+        147,
+        328,
+        300
+      ],
+      "group_crop": [
+        60,
+        129,
+        328,
+        300
+      ],
+      "needs_visual_registration_check": true
+    },
+    "hearth_lit": {
+      "file": "hearth_lit.png",
+      "size": [
+        88,
+        56
+      ],
+      "anchor": [
+        43,
+        55
+      ],
+      "cell_alpha_bounds": [
+        60,
+        129,
+        328,
+        300
+      ],
+      "group_crop": [
+        60,
+        129,
+        328,
+        300
+      ],
+      "needs_visual_registration_check": true
+    },
+    "boulder_closed": {
+      "file": "boulder_closed.png",
+      "size": [
+        112,
+        106
+      ],
+      "anchor": [
+        58,
+        105
+      ],
+      "cell_alpha_bounds": [
+        50,
+        45,
+        321,
+        302
+      ],
+      "group_crop": [
+        50,
+        45,
+        322,
+        302
+      ],
+      "needs_visual_registration_check": true
+    },
+    "boulder_rolled": {
+      "file": "boulder_rolled.png",
+      "size": [
+        112,
+        106
+      ],
+      "anchor": [
+        58,
+        105
+      ],
+      "cell_alpha_bounds": [
+        56,
+        48,
+        322,
+        302
+      ],
+      "group_crop": [
+        50,
+        45,
+        322,
+        302
+      ],
+      "needs_visual_registration_check": true
+    },
+    "pen_gate_closed": {
+      "file": "pen_gate_closed.png",
+      "size": [
+        112,
+        92
+      ],
+      "anchor": [
+        55,
+        91
+      ],
+      "cell_alpha_bounds": [
+        71,
+        80,
+        318,
+        296
+      ],
+      "group_crop": [
+        56,
+        80,
+        331,
+        305
+      ],
+      "needs_visual_registration_check": true
+    },
+    "pen_gate_open": {
+      "file": "pen_gate_open.png",
+      "size": [
+        112,
+        92
+      ],
+      "anchor": [
+        55,
+        91
+      ],
+      "cell_alpha_bounds": [
+        56,
+        80,
+        331,
+        305
+      ],
+      "group_crop": [
+        56,
+        80,
+        331,
+        305
+      ],
+      "needs_visual_registration_check": true
+    },
+    "giant_bed": {
+      "file": "giant_bed.png",
+      "size": [
+        168,
+        97
+      ],
+      "anchor": [
+        86,
+        96
+      ],
+      "cell_alpha_bounds": [
+        10,
+        89,
+        367,
+        296
+      ],
+      "group_crop": [
+        10,
+        89,
+        367,
+        296
+      ],
+      "needs_visual_registration_check": true
+    },
+    "giant_club": {
+      "file": "giant_club.png",
+      "size": [
+        88,
+        57
+      ],
+      "anchor": [
+        45,
+        56
+      ],
+      "cell_alpha_bounds": [
+        25,
+        85,
+        348,
+        296
+      ],
+      "group_crop": [
+        25,
+        85,
+        348,
+        296
+      ],
+      "needs_visual_registration_check": true
+    }
+  }
+}
