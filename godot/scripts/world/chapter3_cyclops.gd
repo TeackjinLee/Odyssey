@@ -2,12 +2,16 @@ class_name Chapter3Cyclops
 extends IsoLevel
 ## CHAPTER 3 — 외눈박이 거인 (docs/maps/CH3_CYCLOPS.md).
 ## 바닷가 동굴에 들어가 치즈 선반을 살피면 → 폴리페모스가 돌아와 큰 바위로 입구를 막는다(연출) →
+## 1막 첫날 밤(NIGHT_TIME초): 거인이 동굴을 돌며 보고·냄새 맡고·소리를 듣는다. 부하도 노린다(잡히면 끌려감) —
+## 부하를 그림자에 세우고(위치 사수), 거인이 숨은 쪽으로 오면 옮기고, 미끼 돌로 고개를 돌린다 → 다음 날 저녁 →
 ## 거인의 시야 부채꼴을 피해 포도주 항아리를 가져와 건넨다(들고 있으면 거인이 치지 않음) → 「우티스(아무도 아니다)」 대화,
 ## 거인이 취해 침상에 눕는다 → 동쪽 구석의 올리브 말뚝을 들고(느려지고 뛸 수 없음) 화덕에서 끝을 달궈 잠든 외눈을 찌른다
-## (곁에서 뛰면 뒤척이며 움켜쥠) → 눈 먼 거인이 바위를 치우고 입구에 앉아 지킨다(가까이 가거나 뛰면 잡음) →
+## (곁에서 뛰면 뒤척이며 움켜쥠) → 5막 날뛰기(RAMPAGE_TIME초): 눈 먼 거인이 소리 난 곳으로 돌진해 내려친다(뛰거나 가까이 걷거나
+## 움직이는 부하) — 멈춰 서고 미끼 돌로 돌리고 구르기로 피한다 → 지쳐서 바위를 치우고 입구에 앉아 지킨다(가까이 가거나 뛰면 잡음) →
 ## 양 우리 문을 열고 큰 숫양 배 밑에 매달려 빠져나간다(연출) → 「나는 오디세우스다」 → 클리어.
 ## 칼로는 거인을 이길 수 없다(Cyclops는 actors 그룹 밖). 영양·부하는 챕터 2에서 이어받는다(Game.carry_for(3)).
-## 체크포인트: 동굴에 갇힘(cave) · 거인이 잠듦(sleep) · 외눈을 찌름(blind).
+## 체크포인트: 첫날 밤(cave) · 포도주(wine) · 거인이 잠듦(sleep) · 외눈을 찌름(blind).
+## 단계(step): 0 살피기 · 1 밤 · 2 포도주 · 3 말뚝 · 4 날뛰기 · 5 탈출 · 6 끝.
 ##
 ## 격자 30×30: 위쪽 y 0~3은 동굴 밖 바위 길, y 4는 뒷벽(입구 x 13~15), x 0은 왼쪽 벽, x 29·y 29는 앞쪽 끝.
 ## 서쪽 위 = 치즈·포도주 창고, 가운데 = 화덕, 동쪽 위 = 말뚝, 동쪽 아래 = 거인 침상, 서쪽 아래 = 양 우리(문은 위쪽).
@@ -33,6 +37,13 @@ const GUARD_AT := Vector2(16.4, 5.7)
 const EXIT_AT := Vector2(14.5, 0.6)
 ## 거인이 지키는 자리(포도주 전): [격자, 바라볼 격자 방향]
 const POSTS := [[Vector2(17.5, 12.0), Vector2(1, 1)], [Vector2(9.5, 17.5), Vector2(-0.4, 1)], [Vector2(19.0, 8.0), Vector2(1, 0.6)]]
+## 1막 밤: 버틸 시간, 순찰 자리(창고 구석 숨는 자리 쪽도 들른다 — 그때 부하를 옮겨야 한다), 둘째 숨을 곳
+const NIGHT_TIME := 90.0
+const NIGHT_POSTS := [[Vector2(17.5, 12.5), Vector2(-1, 1)], [Vector2(7.0, 9.0), Vector2(-1, 0.3)], [Vector2(6.0, 14.8), Vector2(-1, 0.1)],
+	[Vector2(11.5, 19.5), Vector2(-1, 0.6)], [Vector2(23.5, 17.5), Vector2(0.4, 1)]]
+const HIDE2 := Vector2(19.5, 27.0)
+## 5막 날뛰기를 버틸 시간
+const RAMPAGE_TIME := 60.0
 const CARRY_SPEED := 46.0
 const RIDE_SPEED := 30.0
 
@@ -67,6 +78,11 @@ var _riding := false
 var _ride_path := PackedVector2Array()
 var _ride_said := false
 var _flock: Array = []
+var _night_t := 0.0
+var _rage_t := 0.0
+var _hide_at := Vector2.ZERO
+var lost: Array = []
+var _spot_cd := 0.0
 var _tuts: Array = []
 var _tut_cur: Array = []
 var _tut_t := 0.0
@@ -248,6 +264,7 @@ func start() -> void:
 		giant.posts.append([g(p[0]), _gdir(p[1])])
 	world.add_child(giant)
 	giant.woke.connect(func(): Game.show_hint(Lines.t("hint.stirred")))
+	giant.crew_taken.connect(_on_crew_taken)
 	# 양 떼(우리 안)와 큰 숫양
 	for i in 6:
 		var s := Animal.new().setup("sheep")
@@ -394,9 +411,96 @@ func _arrival_done() -> void:
 	camera_target = null
 	Game.cutscene = false
 	player.script_goal = Vector2.INF
+	_start_night()
+
+
+## 1막: 거인이 부하까지 노리며 순찰한다
+func _start_night() -> void:
+	giant.posts.clear()
+	for pp in NIGHT_POSTS:
+		giant.posts.append([g(pp[0]), _gdir(pp[1])])
+	giant.watch_time = 7.0
+	giant.hunts_crew = true
 	giant.post_i = 0
 	giant.walk_to(giant.posts[0][0], giant.watch)
+	_night_t = NIGHT_TIME
+	_hide_at = g(HIDE)
 	_set_step(1)
+
+
+## 밤이 지나 다음 날 저녁: 거인이 양 떼와 돌아와 화덕 곁에 앉는다(2막 낮 준비는 아직 — 바로 3막 포도주)
+func _end_night(instant := false) -> void:
+	if step != 1:
+		return
+	step = -2
+	Game.cutscene = not instant
+	var after := func():
+		giant.hunts_crew = false
+		giant.watch_time = 9.0
+		giant.posts.clear()
+		for pp in POSTS:
+			giant.posts.append([g(pp[0]), _gdir(pp[1])])
+		giant.post_i = 0
+		giant.global_position = giant.posts[0][0]
+		giant.watch()
+		player.global_position = g(HIDE)
+		squad.set_mode(Squad.Mode.FOLLOW)
+		for i in squad.members.size():
+			squad.members[i].global_position = g(HIDE + Vector2(-1.0 + i * 0.9, 1.2))
+		Game.cutscene = false
+		_set_step(2)
+	if instant or Game.hud == null:
+		after.call()
+		return
+	Game.hud.fade_to(1.0, 0.8)
+	get_tree().create_timer(1.0).timeout.connect(func():
+		after.call()
+		Game.hud.show_title(Lines.list("title.evening"))
+		Game.hud.fade_to(0.0, 1.2)
+		Game.say(Lines.say("evening")))
+
+
+## 거인이 부하를 알아챘을 때(쫓기 시작)
+func on_crew_spotted(c: Node2D) -> void:
+	if _spot_cd > 0.0:
+		return
+	_spot_cd = 6.0
+	Game.show_hint(Lines.t("hint.crew_spotted", c.display_name))
+
+
+## 거인이 부하를 움켜쥠: 끌려간다(잃은 부하는 4장으로 넘어가지 않음)
+func _on_crew_taken(c: Node2D) -> void:
+	if not c in squad.members:
+		return
+	squad.members.erase(c)
+	for i in squad.members.size():
+		squad.members[i].squad_index = i
+	lost.append(c.display_name)
+	Game.stats["lost"] = Game.stats.get("lost", 0) + 1
+	Sfx.at("cry", c.global_position, 0.0)
+	Game.shake(6.0)
+	Fx.text(c.global_position + Vector2(0, -60), Lines.t("fx.taken", c.display_name), Color(1, 0.35, 0.3))
+	var tw := create_tween()
+	tw.tween_property(c, "global_position", giant.global_position + Vector2(0, -90), 0.5)
+	tw.parallel().tween_property(c, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(c.queue_free)
+	c.process_mode = Node.PROCESS_MODE_DISABLED
+	c.remove_from_group("actors")
+	if lost.size() == 1:
+		Game.say(Lines.say("taken"))
+
+
+## 소리(IsoLevel.noise: 경보·동물 울음 등)는 거인도 듣는다
+func noise(pos: Vector2, radius: float, amount: float) -> void:
+	super.noise(pos, radius, amount)
+	if giant and Combat.ground_dist(pos, giant.global_position) < radius * 1.5:
+		giant.hear(pos, amount)
+
+
+## 미끼 돌이 떨어진 곳(Skills._decoy_land가 부른다): 거인은 넓게 듣는다
+func on_decoy(pos: Vector2) -> void:
+	if giant and Combat.ground_dist(pos, giant.global_position) < 420.0:
+		giant.hear(pos, 1.0)
 
 
 func _give_wine() -> void:
@@ -416,7 +520,7 @@ func _giant_asleep(quiet := false) -> void:
 	giant.sleep_on(g(Vector2(BED) + Vector2(1.5, 1.5)) + Vector2(66, -16))
 	if not quiet:
 		Game.say(Lines.say("sleep"))
-	_set_step(2)
+	_set_step(3)
 
 
 func _heat() -> void:
@@ -448,12 +552,23 @@ func _stab() -> void:
 
 
 ## 눈 먼 거인: 일어나 더듬어 입구로 가서 바위를 치우고 앉는다
+## 눈 먼 거인이 일어나 날뛴다(5막 ①)
 func _blinded() -> void:
 	Game.cutscene = false
-	giant.blind()
 	giant.global_position = g(BED_SIDE)
+	giant.rampage()
+	_rage_t = RAMPAGE_TIME
+	_set_step(4)
+
+
+## 날뛰다 지쳐: 더듬어 입구로 가서 바위를 치우고 앉는다(5막 ②)
+func _end_rampage() -> void:
+	if Game.autoplay:
+		Game.stealth_bot = false
+	giant.blind()
 	giant.walk_to(g(GUARD_AT), _guard_entrance, Cyclops.DRUNK_SPEED, Cyclops.Mode.BLIND)
-	_set_step(3)
+	Game.say(Lines.say("rage_end"))
+	_set_step(5)
 
 
 func _guard_entrance() -> void:
@@ -548,7 +663,7 @@ func _update_ride(delta: float) -> void:
 
 func _escaped() -> void:
 	_riding = false
-	step = 5
+	step = 6
 	camera_target = null
 	player.visible = true
 	player.global_position = g(EXIT_AT + Vector2(-1.2, 0.6))
@@ -586,16 +701,29 @@ func _set_step(s: int) -> void:
 			Game.set_objective(chapter_title, Lines.t("objective.look"))
 		1:
 			_save_checkpoint("cave")
-			wine_point.enabled = true
 			if Game.hud:
 				Game.hud.show_title(Lines.list("title.cave"))
-			_tut(Lines.t("tut.sight"), func(): return carrying == "wine", 16.0)
+			_tut(Lines.t("tut.night_hold"), func(): return squad.mode == Squad.Mode.HOLD, 16.0)
+			_tut(Lines.t("tut.smell"), func(): return false, 10.0)
+			_tut(Lines.t("tut.decoy"), func(): return false, 10.0)
 		2:
+			_save_checkpoint("wine")
+			wine_point.enabled = true
+			_tut(Lines.t("tut.sight"), func(): return carrying == "wine", 16.0)
+		3:
 			_save_checkpoint("sleep")
 			stake_point.enabled = true
 			_tut(Lines.t("tut.carry"), func(): return carrying == "hot", 20.0)
-		3:
+		4:
 			_save_checkpoint("blind")
+			if Game.hud and not _restored:
+				Game.hud.show_title(Lines.list("title.rampage"))
+			_tut(Lines.t("tut.rage_still"), func(): return squad.mode == Squad.Mode.HOLD, 14.0)
+			_tut(Lines.t("tut.rage_decoy"), func(): return false, 12.0)
+			if Game.autoplay:   # 봇: 부하를 세우고 제자리에서 버틴다
+				squad.command(Squad.Mode.HOLD, player.global_position)
+		5:
+			squad.set_mode(Squad.Mode.FOLLOW)
 			gate_point.enabled = not gate_open
 			ram_point.enabled = gate_open
 			if Game.hud and not _restored:
@@ -613,13 +741,21 @@ func _refresh_marker() -> void:
 			at = look_point.global_position
 			obj = "look"
 		1:
+			at = _hide_at
+			obj = ""
+			Game.set_objective(chapter_title, Lines.t("objective.night" if _hide_at == g(HIDE) else "objective.night_move", ceili(_night_t)))
+		4:
+			obj = ""
+			Game.set_objective(chapter_title, Lines.t("objective.rampage", ceili(_rage_t)))
+			at = Game.quest_marker if Game.autoplay else Vector2.INF
+		2:
 			if carrying == "wine":
 				at = giant.global_position
 				obj = "give"
 			else:
 				at = wine_point.global_position
 				obj = "wine"
-		2:
+		3:
 			match carrying:
 				"stake":
 					at = heat_point.global_position
@@ -630,7 +766,7 @@ func _refresh_marker() -> void:
 				_:
 					at = stake_point.global_position
 					obj = "stake"
-		3:
+		5:
 			at = ram.global_position if gate_open else gate_point.global_position
 			obj = "ram" if gate_open else "gate"
 	if obj != "":
@@ -652,7 +788,7 @@ func _save_checkpoint(id: String) -> void:
 
 
 func checkpoint_name(id: String) -> String:
-	return {"cave": "동굴에 갇힘", "sleep": "거인이 잠듦", "blind": "외눈을 찌름"}.get(id, id)
+	return {"cave": "첫날 밤", "wine": "포도주", "sleep": "거인이 잠듦", "blind": "외눈을 찌름"}.get(id, id)
 
 
 func restore_checkpoint(cp: Dictionary) -> void:
@@ -671,7 +807,7 @@ func restore_checkpoint(cp: Dictionary) -> void:
 	Game.show_hint(Lines.t("hint.checkpoint"))
 
 
-## 검증용 --start=cave|sleep|blind|ending
+## 검증용 --start=cave|wine|sleep|blind|escape|ending
 func skip_to(id: String) -> void:
 	_tut_clear()
 	match id:
@@ -684,12 +820,14 @@ func skip_to(id: String) -> void:
 			player.global_position = g(HIDE)
 			for i in squad.members.size():
 				squad.members[i].global_position = g(HIDE + Vector2(-1.0 + i * 0.9, 1.2))
+			_start_night()
 			giant.global_position = giant.posts[0][0]
-			giant.post_i = 0
 			giant.watch()
-			_set_step(1)
-		"sleep":
+		"wine":
 			skip_to("cave")
+			_end_night(true)
+		"sleep":
+			skip_to("wine")
 			wine_point.enabled = false
 			player.global_position = g(STAB_AT + Vector2(-2.0, -1.5))
 			_giant_asleep(true)
@@ -700,12 +838,15 @@ func skip_to(id: String) -> void:
 			for c in [STAKE, STAKE + Vector2i(1, 0)]:
 				set_solid(c, false)
 			player.global_position = g(STAB_AT + Vector2(-1.5, 0.5))
+			_blinded()
+		"escape":
+			skip_to("blind")
 			giant.blind()
 			_place_boulder(false)
 			giant.guard_at(g(GUARD_AT), _gdir(Vector2(-1, 0.2)))
-			_set_step(3)
+			_set_step(5)
 		"ending":
-			skip_to("blind")
+			skip_to("escape")
 			_open_gate()
 			player.global_position = ram.global_position
 			_ride()
@@ -714,20 +855,20 @@ func skip_to(id: String) -> void:
 func report() -> Dictionary:
 	return {"ending": ending_done, "step": step, "carrying": carrying, "gate_open": gate_open,
 		"giant": Cyclops.Mode.keys()[giant.mode], "giant_cell": Iso.world_to_grid(giant.global_position).snapped(Vector2(0.1, 0.1)),
-		"crew": squad.members.size(), "downs": Game.stats.get("downs", 0)}
+		"crew": squad.members.size(), "lost": lost, "downs": Game.stats.get("downs", 0), "giant_seen": Game.stats.get("giant_seen", 0)}
 
 
 func result_info(st: Dictionary) -> Dictionary:
 	var t: float = st.get("time", 0.0)
 	var seen: int = st.get("giant_seen", 0)
 	var badge := ""
-	if seen == 0:
-		badge = "칭호 「아무도 아닌 자」 — 거인에게 한 번도 들키지 않고 빠져나옴"
+	if lost.is_empty():
+		badge = "칭호 「아무도 아닌 자」 — 부하를 하나도 잃지 않고 빠져나옴"
 	return {"head": "CHAPTER 3 클리어", "title": "폴리페모스의 동굴을 빠져나왔다", "badge": badge,
-		"badge_hint": "거인에게 한 번도 들키지 않고 빠져나오면 칭호를 얻는다",
+		"badge_hint": "부하를 하나도 잃지 않고 빠져나오면 칭호를 얻는다",
 		"rows": [
 			"시간 %d분 %02d초   ·   거인에게 들킴 %d   ·   다시 하기 %d" % [int(t) / 60, int(t) % 60, seen, st.get("retries", 0)],
-			"함께 나온 부하 %d   ·   먹은 횟수 %d" % [squad.members.size(), st.get("meals", 0)],
+			"함께 나온 부하 %d   ·   잃은 부하 %d   ·   먹은 횟수 %d" % [squad.members.size(), lost.size(), st.get("meals", 0)],
 		],
 		"next": "다음: CHAPTER 4 — 키르케의 섬 (준비 중). 포세이돈이 바다를 거칠게 할 것이다"}
 
@@ -739,9 +880,10 @@ func _process(delta: float) -> void:
 	if _riding:
 		_update_ride(delta)
 		return
-	if step >= 5 or player == null:
+	if step >= 6 or player == null:
 		return
 	_sword_cd -= delta
+	_spot_cd -= delta
 	# 칼로 거인을 치면: 튕겨 나온다(정면으로는 못 이김)
 	if _sword_cd <= 0.0 and player.state == Actor.St.ATTACK and giant.visible \
 			and Combat.ground_dist(player.global_position, giant.global_position) < 60.0:
@@ -749,20 +891,24 @@ func _process(delta: float) -> void:
 		Fx.spark(giant.global_position + Vector2(0, -40), Color(1, 0.9, 0.6), 6)
 		Sfx.at("block", giant.global_position, -4.0)
 		Game.show_hint(Lines.t("hint.no_sword"))
-	if giant.mode == Cyclops.Mode.CHASE and giant.suspicion >= 1.0 and not _chasing:
-		_chasing = true
-		Game.stats["giant_seen"] = Game.stats.get("giant_seen", 0) + 1
-	elif giant.mode != Cyclops.Mode.CHASE and giant.mode != Cyclops.Mode.ATTACK:
-		_chasing = false
 	match step:
 		1:
+			_update_night(delta)
+		4:
+			_bot_rampage(delta)
+			_rage_t -= delta
+			if fmod(_rage_t, 1.0) > fmod(_rage_t + delta, 1.0):
+				_refresh_marker()
+			if _rage_t <= 0.0 and giant.mode in [Cyclops.Mode.RAMPAGE, Cyclops.Mode.STUNNED]:
+				_end_rampage()
+		2:
 			give_point.enabled = carrying == "wine" and giant.mode in [Cyclops.Mode.WATCH, Cyclops.Mode.WALK, Cyclops.Mode.WAIT_WINE, Cyclops.Mode.CHASE]
 			if carrying == "wine":
 				_refresh_marker()
-		2:
+		3:
 			heat_point.enabled = carrying == "stake"
 			stab_point.enabled = carrying == "hot"
-		3:
+		5:
 			if gate_open and not Game.cutscene:
 				Game.quest_marker = ram.global_position
 			# 맨몸으로 입구에 다가가면: 거인 손이 막는다
@@ -772,8 +918,62 @@ func _process(delta: float) -> void:
 			_grab_hint -= delta
 
 
-var _chasing := false
 var _grab_hint := 0.0
+var _bot_t := 0.0
+
+
+## 봇(--auto): 날뛰는 동안 거인에게서 먼 곳으로 걸어서(뛰면 들림) 피하고, 거인이 사람에게 다가오면 미끼 돌을 반대쪽에 던진다
+func _bot_rampage(delta: float) -> void:
+	if not Game.autoplay:
+		return
+	Game.stealth_bot = true   # 잠입 봇처럼 걷기만(적이 없어 다른 행동은 같다)
+	_bot_t -= delta
+	if _bot_t > 0.0:
+		return
+	_bot_t = 1.0
+	var gp := giant.global_position
+	var best := player.global_position
+	var bd := -1.0
+	for c in [Vector2(3, 8), Vector2(26, 7), Vector2(16, 27), Vector2(26, 25), Vector2(12, 10), Vector2(20, 14)]:
+		var w := g(c)
+		var d := Combat.ground_dist(w, gp)
+		if d > bd:
+			bd = d
+			best = w
+	Game.quest_marker = best
+	var close := Combat.ground_dist(gp, player.global_position) < 200.0
+	for m in squad.members:
+		if Combat.ground_dist(gp, m.global_position) < 200.0:
+			close = true
+	if close and giant.mode == Cyclops.Mode.RAMPAGE:
+		var away := gp + (gp - player.global_position).normalized() * 160.0
+		if is_blocked_world(away):
+			away = g(Vector2(26, 7)) if gp.x < g(Vector2(15, 15)).x else g(Vector2(3, 8))
+		Skills.throw_decoy(player.global_position + Vector2(0, -2), away)
+		_bot_t = 5.0
+
+
+## 밤: 시간이 흐르고, 거인이 숨은 자리 쪽(창고 구석)으로 오면 둘째 숨을 곳을 가리킨다
+func _update_night(delta: float) -> void:
+	var before := ceili(_night_t)
+	_night_t -= delta
+	# 거인이 창고 쪽(자리 1·2)으로 떠나면 아래쪽 그림자로 옮기고, 밤이 끝날 때까지 거기 있는다
+	var coming := giant.post_i >= 1 and giant.posts.size() > 2
+	var want := g(HIDE2) if coming else _hide_at
+	if want != _hide_at:
+		_hide_at = want
+		if coming:
+			Game.show_hint(Lines.t("hint.move_crew"))
+		if Game.autoplay:
+			squad.set_mode(Squad.Mode.FOLLOW)
+	if ceili(_night_t) != before:
+		_refresh_marker()
+	# 봇: 숨는 자리에 닿으면 부하를 세운다
+	if Game.autoplay and squad.mode != Squad.Mode.HOLD and player.global_position.distance_to(_hide_at) < 24.0 \
+			and squad.members.all(func(c): return c.global_position.distance_to(player.global_position) < 48.0):
+		squad.command(Squad.Mode.HOLD, player.global_position)
+	if _night_t <= 0.0 and giant.mode != Cyclops.Mode.ATTACK:
+		_end_night()
 
 
 ## 거인 시야 부채꼴과 공격 예고를 바닥에 그린다

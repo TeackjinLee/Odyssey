@@ -44,6 +44,8 @@ static func _decoy_land(pos: Vector2) -> void:
 	for e in Game.level.enemies():
 		if Combat.ground_dist(pos, e.global_position) < DECOY_HEAR:
 			e.lure(pos)
+	if Game.level.has_method("on_decoy"):   # 챕터 3 거인처럼 적 목록 밖에서 듣는 것
+		Game.level.on_decoy(pos)
 
 
 ## shooter(궁병)가 center에 화살비를 내린다. burning이면 불화살(더 아프고 불꽃이 튄다).
