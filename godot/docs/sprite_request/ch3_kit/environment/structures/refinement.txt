@@ -1,0 +1,1 @@
+Background transparency edit using built-in imagegen: remove white background and grey shadows, including gaps in fence rails and cheese rack. Preserve12props, exact1536x1024 four-column three-row placement, colors proportions pixel outlines. Request real alpha0 around objects, no checkerboard/white/black fill or halos. Objects opaque, background empty.

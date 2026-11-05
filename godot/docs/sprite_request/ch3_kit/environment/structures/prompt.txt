@@ -1,0 +1,17 @@
+Create a production ISOMETRIC CAVE STRUCTURE AND PROP SPRITE ATLAS for ODYSSEY, using the attached cave map ONLY for stone, timber and cheese material style. No scene. EXACT1536x1024 PNG,4columns3rows invisible cells384x341, last1px unused. Exactly12 separate full props centered localx192 with bottom ground contact localy300, at least28px clear transparent margin. REAL transparent alpha everywhere outside sprites. No floor patches, shadows, glow, background gradient, labels text numbers borders grids. Crisp2D pixel-art stepped outlines, upper-left light, orthographic30degree downward2:1isometric, muted greybrown stone and cool teal cracks, brown timber, cream cheese. No3D or painterly blur.
+Row1 left to right:
+1 WALL_NE: natural rough cave wall straight segment running diagonally from lower-left to upper-right on screen. One repeatable segment, irregular stone TOP but straight connecting vertical end planes, no doorway or torch. Broadwall panel about240px wide200px high, not a detached rock.
+2 WALL_NW: matching mirror orientation ofcell1, segment from upper-left to lower-right. Same height thickness rock palette and edge geometry.
+3 WALL_NE_CRACKED: EXACT same footprint silhouette height connecting edges ascell1, altered central cracked stones only. No holes.
+4 WALL_NW_CRACKED: EXACT same footprint silhouette height connecting edges ascell2, altered central stones only.
+Row2:
+5 INSIDE_CORNER: concave L-shape joiningcell1and2 walls at90degrees in plan, same wall height and material, inner cave face visible. Not a freestanding tower.
+6 OUTSIDE_CORNER: convex L-shape of same walls, coherent same isometric orientation and height. Clearly distinguish concave from convex.
+7 LOW_COVER_ROCK: broad waist-high irregular rock cluster, dark outlined, no giant boulder gate (already another kit), about210x110px.
+8 STALAGMITE_CLUSTER: two thin tall pointed stone stalagmites with low rocky base, about170x230px, fully isolated, no cave ceiling or floor.
+Row3:
+9 FENCE_NE: short rustic sheep pen FENCE segment with2wood posts and horizontal rails, rope lashings, running lower-left to upper-right. No gate leaves and no sheep, no floor. Same wood style asreference pen gate.
+10 FENCE_NW: same fence segment in opposite screen diagonal upper-left to lower-right, same size construction and ground height.
+11 CHEESE_RACK: low rough wooden rack with cream/gold cheese wheels and one small reed basket, no large room.
+12 MILK_AMPHORAE: cluster of2plain cream clay milk jars and a low clay bowl, NO grape emblem and NO red wine jar (separate existing asset). No props outside this cluster.
+Shared wall/fence connection geometry must stay consistent so pieces can join on a grid. Keep sprites fully within cells, same scale relative neighboring walls. Small jars smaller than walls. Twelve isolated assets only on transparent background.

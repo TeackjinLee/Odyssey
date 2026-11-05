@@ -1,0 +1,416 @@
+{
+  "status": "candidate",
+  "tile": [
+    64,
+    32
+  ],
+  "rows": [
+    "cave_stone",
+    "cave_dust",
+    "cave_straw"
+  ],
+  "variants": 4,
+  "atlas": "floor_atlas.png",
+  "tiles": {
+    "cave_stone_0": {
+      "file": "tiles/cave_stone_0.png",
+      "source_alpha_bounds": [
+        10,
+        143,
+        377,
+        316
+      ]
+    },
+    "cave_stone_1": {
+      "file": "tiles/cave_stone_1.png",
+      "source_alpha_bounds": [
+        10,
+        143,
+        376,
+        316
+      ]
+    },
+    "cave_stone_2": {
+      "file": "tiles/cave_stone_2.png",
+      "source_alpha_bounds": [
+        9,
+        143,
+        376,
+        316
+      ]
+    },
+    "cave_stone_3": {
+      "file": "tiles/cave_stone_3.png",
+      "source_alpha_bounds": [
+        9,
+        143,
+        376,
+        316
+      ]
+    },
+    "cave_dust_0": {
+      "file": "tiles/cave_dust_0.png",
+      "source_alpha_bounds": [
+        10,
+        94,
+        377,
+        268
+      ]
+    },
+    "cave_dust_1": {
+      "file": "tiles/cave_dust_1.png",
+      "source_alpha_bounds": [
+        9,
+        94,
+        376,
+        268
+      ]
+    },
+    "cave_dust_2": {
+      "file": "tiles/cave_dust_2.png",
+      "source_alpha_bounds": [
+        9,
+        94,
+        376,
+        268
+      ]
+    },
+    "cave_dust_3": {
+      "file": "tiles/cave_dust_3.png",
+      "source_alpha_bounds": [
+        9,
+        94,
+        376,
+        268
+      ]
+    },
+    "cave_straw_0": {
+      "file": "tiles/cave_straw_0.png",
+      "source_alpha_bounds": [
+        10,
+        46,
+        377,
+        219
+      ]
+    },
+    "cave_straw_1": {
+      "file": "tiles/cave_straw_1.png",
+      "source_alpha_bounds": [
+        10,
+        46,
+        376,
+        219
+      ]
+    },
+    "cave_straw_2": {
+      "file": "tiles/cave_straw_2.png",
+      "source_alpha_bounds": [
+        10,
+        46,
+        376,
+        219
+      ]
+    },
+    "cave_straw_3": {
+      "file": "tiles/cave_straw_3.png",
+      "source_alpha_bounds": [
+        10,
+        46,
+        376,
+        219
+      ]
+    }
+  },
+  "props": {
+    "wall_ne": {
+      "file": "props/wall_ne.png",
+      "size": [
+        64,
+        59
+      ],
+      "anchor": [
+        32,
+        58
+      ],
+      "source_alpha_bounds": [
+        36,
+        31,
+        351,
+        323
+      ],
+      "group_crop": [
+        33,
+        31,
+        351,
+        323
+      ],
+      "connection_points_verified": false
+    },
+    "wall_nw": {
+      "file": "props/wall_nw.png",
+      "size": [
+        64,
+        59
+      ],
+      "anchor": [
+        32,
+        58
+      ],
+      "source_alpha_bounds": [
+        33,
+        31,
+        348,
+        323
+      ],
+      "group_crop": [
+        33,
+        31,
+        351,
+        323
+      ],
+      "connection_points_verified": false
+    },
+    "wall_ne_cracked": {
+      "file": "props/wall_ne_cracked.png",
+      "size": [
+        64,
+        59
+      ],
+      "anchor": [
+        32,
+        58
+      ],
+      "source_alpha_bounds": [
+        37,
+        31,
+        351,
+        323
+      ],
+      "group_crop": [
+        33,
+        31,
+        351,
+        323
+      ],
+      "connection_points_verified": false
+    },
+    "wall_nw_cracked": {
+      "file": "props/wall_nw_cracked.png",
+      "size": [
+        64,
+        59
+      ],
+      "anchor": [
+        32,
+        58
+      ],
+      "source_alpha_bounds": [
+        33,
+        31,
+        348,
+        323
+      ],
+      "group_crop": [
+        33,
+        31,
+        351,
+        323
+      ],
+      "connection_points_verified": false
+    },
+    "corner_inner": {
+      "file": "props/corner_inner.png",
+      "size": [
+        96,
+        82
+      ],
+      "anchor": [
+        48,
+        81
+      ],
+      "source_alpha_bounds": [
+        29,
+        32,
+        354,
+        303
+      ],
+      "group_crop": [
+        29,
+        32,
+        354,
+        308
+      ],
+      "connection_points_verified": false
+    },
+    "corner_outer": {
+      "file": "props/corner_outer.png",
+      "size": [
+        96,
+        82
+      ],
+      "anchor": [
+        48,
+        81
+      ],
+      "source_alpha_bounds": [
+        42,
+        46,
+        341,
+        308
+      ],
+      "group_crop": [
+        29,
+        32,
+        354,
+        308
+      ],
+      "connection_points_verified": false
+    },
+    "cover_rock": {
+      "file": "props/cover_rock.png",
+      "size": [
+        56,
+        28
+      ],
+      "anchor": [
+        28,
+        27
+      ],
+      "source_alpha_bounds": [
+        31,
+        105,
+        354,
+        269
+      ],
+      "group_crop": [
+        31,
+        105,
+        354,
+        269
+      ],
+      "connection_points_verified": false
+    },
+    "stalagmites": {
+      "file": "props/stalagmites.png",
+      "size": [
+        44,
+        48
+      ],
+      "anchor": [
+        21,
+        47
+      ],
+      "source_alpha_bounds": [
+        75,
+        35,
+        315,
+        296
+      ],
+      "group_crop": [
+        75,
+        35,
+        315,
+        296
+      ],
+      "connection_points_verified": false
+    },
+    "fence_ne": {
+      "file": "props/fence_ne.png",
+      "size": [
+        64,
+        57
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "source_alpha_bounds": [
+        54,
+        58,
+        335,
+        311
+      ],
+      "group_crop": [
+        49,
+        58,
+        335,
+        311
+      ],
+      "connection_points_verified": false
+    },
+    "fence_nw": {
+      "file": "props/fence_nw.png",
+      "size": [
+        64,
+        57
+      ],
+      "anchor": [
+        32,
+        56
+      ],
+      "source_alpha_bounds": [
+        49,
+        58,
+        329,
+        311
+      ],
+      "group_crop": [
+        49,
+        58,
+        335,
+        311
+      ],
+      "connection_points_verified": false
+    },
+    "cheese_rack": {
+      "file": "props/cheese_rack.png",
+      "size": [
+        52,
+        48
+      ],
+      "anchor": [
+        26,
+        47
+      ],
+      "source_alpha_bounds": [
+        46,
+        37,
+        338,
+        307
+      ],
+      "group_crop": [
+        46,
+        37,
+        338,
+        307
+      ],
+      "connection_points_verified": false
+    },
+    "milk_amphorae": {
+      "file": "props/milk_amphorae.png",
+      "size": [
+        30,
+        23
+      ],
+      "anchor": [
+        15,
+        22
+      ],
+      "source_alpha_bounds": [
+        64,
+        98,
+        320,
+        295
+      ],
+      "group_crop": [
+        64,
+        98,
+        320,
+        295
+      ],
+      "connection_points_verified": false
+    }
+  },
+  "seams_verified": false,
+  "game_registered": false
+}
