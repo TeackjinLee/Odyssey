@@ -66,6 +66,11 @@ var cloth: Texture2D = null
 var crew_tex: Texture2D = null
 var crew_meta := {}
 const ROWERS := ["greek_sword", "greek_spear", "greek_archer"]
+## 배마다 다른 것: 노꾼 시트(앉기 동작이 없는 시트는 윗부분만 그려 앉은 듯), 서 있는 궁수 시트, 돛대 높이 배율
+var rowers: Array = ROWERS
+var rower_cut := 1.0
+var archer_sheet := ""
+var mast_k := 1.0
 var target_ship: Ship = null
 ## 폭풍(챕터 2): 파도에 노가 휩쓸려 이보다 빨리 못 간다(칸/초). 돛이 찢어지면 다시 펼 수 없다(레벨이 고침)
 var max_speed := INF
@@ -102,7 +107,13 @@ func as_enemy_boat() -> Ship:
 	hull_color = Color(0.24, 0.16, 0.1)
 	deck_color = Color(0.45, 0.32, 0.2)
 	gear = 1
-	load_art("cicones_boat")
+	load_hull("cicones_boat")
+	if hull_art.is_empty():
+		load_art("cicones_boat")   # 선체 16방향이 없으면 돛까지 그린 8방향
+	rowers = ["cicones_sword", "cicones_spear"]
+	rower_cut = 0.62
+	archer_sheet = "cicones_archer"
+	mast_k = 0.78
 	return self
 
 
@@ -517,6 +528,7 @@ func _draw() -> void:
 	var flash := Color(1, 1, 1).lerp(Color(1.6, 0.6, 0.5), _flash)
 	if not hull_art.is_empty():
 		_draw_hull_ship(flash)
+		_draw_hull_bar()
 		return
 	# 그림자·물 닿는 곳
 	draw_colored_polygon(_outline(-1, 1.12), Color(0.02, 0.05, 0.12, 0.45))
@@ -534,7 +546,11 @@ func _draw() -> void:
 		_draw_art(flash)   # 머리 점도 코드 갑판 높이라 그림 위에선 떠 보여 그리지 않는다(부하는 HUD 목록에 '배 위')
 	else:
 		_draw_code_hull(flash)
-	# 적 배: 상했으면 체력 막대
+	_draw_hull_bar()
+
+
+## 적 배: 상했으면 체력 막대
+func _draw_hull_bar() -> void:
 	if team != Actor.Team.GREEK and hull < max_hull:
 		var r := Rect2(-14, -62, 28, 3)
 		draw_rect(r, Color(0, 0, 0, 0.7))
@@ -596,7 +612,7 @@ func _draw_hull_ship(flash: Color) -> void:
 	draw_colored_polygon(sh, Color(0.02, 0.05, 0.12, 0.45))
 	# 노: 먼 쪽 → 선체 → 갑판 위(깊이 순) → 가까운 쪽
 	var near := 1.0 if _hp(0, 1, 0).y > _hp(0, -1, 0).y or (is_equal_approx(_hp(0, 1, 0).y, _hp(0, -1, 0).y) and _hp(0, 1, 0).x > 0) else -1.0
-	var n := 5
+	var n := mini(oars, 5)
 	_draw_oars(-near, n, dw, flash)
 	_draw_hull_cell(m["dirs"][idx], flash)
 	if other_a > 0.0:
@@ -608,17 +624,26 @@ func _draw_hull_ship(flash: Color) -> void:
 		for i in n:
 			var lx := lerpf(-length * 0.3, length * 0.2, float(i) / (n - 1)) + sin(_oar_t + i * 0.15) * 0.04 * float(gear != 0)
 			var p := _hp(lx, side * dw * 0.24, deck)
-			items.append([p.y, 0, p, ROWERS[(i + (1 if side > 0 else 0)) % 3], back, 0])
+			items.append([p.y, 0, p, rowers[(i + (1 if side > 0 else 0)) % rowers.size()], back, 0, rower_cut])
+	if archer_sheet != "" and crew_meta["rows"].has(archer_sheet):
+		# 궁수: 뱃머리·고물에 서서 쫓는 배 쪽을 본다
+		var look := v
+		if target_ship:
+			var tg := target_ship.gpos - gpos
+			look = Iso.ex * tg.x + Iso.ey * tg.y
+		for j in archers:
+			var p := _hp(length * (0.34 if j % 2 == 0 else -0.36), (0.12 if j > 1 else 0.0) * dw, deck)
+			items.append([p.y, 0, p, archer_sheet, posmod(roundi(look.angle() / (PI / 4.0)), 8), int(Time.get_ticks_msec() / 300.0) + j, 1.0])
 	if rider:
 		var p := _hp(length * 0.36, 0, deck + 4)
 		var who: String = Game.outfit if crew_meta["rows"].has(Game.outfit) else "odysseus_ch1"
-		items.append([p.y, 0, p, who, face, int(Time.get_ticks_msec() / 250.0)])
+		items.append([p.y, 0, p, who, face, int(Time.get_ticks_msec() / 250.0), 1.0])
 	var mb := _hp(-length * 0.02, 0, deck)
 	items.append([mb.y, 1, mb])
 	items.sort_custom(func(x, y): return x[0] < y[0])
 	for it in items:
 		if it[1] == 0:
-			_draw_crew(it[2], it[3], it[4], it[5], flash)
+			_draw_crew(it[2], it[3], it[4], it[5], flash, it[6])
 		else:
 			_draw_mast(dw, deck, flash)
 	_draw_oars(near, n, dw, flash)
@@ -644,21 +669,24 @@ func _draw_oars(side: float, n: int, dw: float, flash: Color) -> void:
 		draw_line(a.lerp(b, 0.72), b, wood, 3.0)   # 노깃
 
 
-func _draw_crew(p: Vector2, sheet: String, dir: int, tick: int, flash: Color) -> void:
+## cut < 1이면 칸 위쪽 cut만 그려 그 아래 끝을 발 자리에 둔다(앉기 동작이 없는 인물을 노 젓는 자리에 앉은 듯이)
+func _draw_crew(p: Vector2, sheet: String, dir: int, tick: int, flash: Color, cut := 1.0) -> void:
 	var r: Dictionary = crew_meta["rows"][sheet]
 	var fs: float = crew_meta["frame"]
 	var nf: int = r["frames"]
 	var col := dir * nf + tick % nf
 	var an := Vector2(crew_meta["anchor"][0], crew_meta["anchor"][1]) * 0.5
-	draw_texture_rect_region(crew_tex, Rect2(p - an, Vector2(fs, fs) * 0.5), Rect2(col * fs, int(r["row"]) * fs, fs, fs), flash)
+	if cut < 1.0:
+		an.y = fs * cut * 0.5
+	draw_texture_rect_region(crew_tex, Rect2(p - an, Vector2(fs, fs * cut) * 0.5), Rect2(col * fs, int(r["row"]) * fs, fs, fs * cut), flash)
 
 
 ## 돛대·활대·돛(천 그림을 사각형에 입힘). 활대는 배 폭 방향이지만, 정면에서 옆으로 볼 때 돛이 선이 되지 않게 가로 폭을 남긴다
 func _draw_mast(dw: float, deck: float, flash: Color) -> void:
 	var lx := -length * 0.02
 	var base := _hp(lx, 0, deck)
-	var top := _hp(lx, 0, deck + 250)
-	var yard_h := deck + 225.0 if sail else deck + 200.0
+	var top := _hp(lx, 0, deck + 250 * mast_k)
+	var yard_h := deck + (225.0 if sail else 200.0) * mast_k
 	var y0 := _hp(lx, 0, yard_h)
 	var half := (_hp(lx, dw * 1.05, yard_h) - y0)
 	var full := dw * 1.05 * Iso.ex.length() * 1.4
@@ -668,7 +696,7 @@ func _draw_mast(dw: float, deck: float, flash: Color) -> void:
 	draw_line(base, top, Color(0.22, 0.14, 0.08) * flash, 3.0)
 	draw_line(base, top, wood, 1.5)
 	if sail and not sail_torn:
-		var drop := Vector2(0, 150.0 * _hk)
+		var drop := Vector2(0, 150.0 * mast_k * _hk)
 		var belly := (_hp(lx + 0.25, 0, 0) - _hp(lx, 0, 0))   # 돛이 뱃머리 쪽으로 부푼다
 		var pts := PackedVector2Array([y0 - half, y0 + half, y0 + half + drop + belly * 0.3, y0 + belly * 0.5 + drop * 1.05, y0 - half + drop + belly * 0.3])
 		# 가운데 아래 꼭짓점이 부풀어 다각형이 오목해지지 않게 두 장으로
@@ -683,7 +711,7 @@ func _draw_mast(dw: float, deck: float, flash: Color) -> void:
 		for i in k:
 			var a := y0 - half + half * 2.0 * i / k
 			var b := y0 - half + half * 2.0 * (i + 1) / k
-			draw_line(a + Vector2(0, 2), b + Vector2(0, 2), (Color(0.75, 0.22, 0.16) if i % 2 == 0 else Color(0.92, 0.86, 0.72)) * flash, 4.0)
+			draw_line(a + Vector2(0, 2), b + Vector2(0, 2), (stripe if i % 2 == 0 else sail_color) * flash, 4.0)
 	draw_line(y0 - half, y0 + half, Color(0.22, 0.14, 0.08) * flash, 2.0)
 	draw_line(top, y0 - half, Color(0.2, 0.14, 0.1, 0.7), 1.0)   # 밧줄
 	draw_line(top, y0 + half, Color(0.2, 0.14, 0.1, 0.7), 1.0)

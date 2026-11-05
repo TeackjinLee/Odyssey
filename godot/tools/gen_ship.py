@@ -14,6 +14,7 @@
        (docs/sprite_request/ch2_kit/ship/make_hull_guide.py)대로 칸마다 배 한가운데(물 높이)가 (256, 300), 격자 1칸 = 화면 (66, 33).
        서쪽 일곱은 동쪽을 뒤집는다 → <이름>_hull.png/.json(방향 16: 동부터 시계 방향, 칸마다 rect·ax·ay).
        돛 천: <이름>_sail.webp 남쪽 칸(정면으로 본 돛)에서 빨강·크림 부분만 잘라 <이름>_cloth.png — ship.gd가 돛대·돛을 코드로 그릴 때 씀.
+       키코네스 배(cicones_boat): 안내 그림이 더 작은 선체(HULL_GUIDE)라 json의 len·wid·deck이 다르고, 돛 천은 8칸 돛 그림의 남쪽 칸에서 자른다.
      python3 tools/gen_ship.py <폴더> <이름> --compose <앞 8칸 그림> <뒤 3칸 그림> <sail|furl>
        8칸을 다 맞게 그려 오지 못했을 때: 앞 그림에서 남(왼쪽 아래 칸)·남동(오른쪽 위 칸)만, 뒤 그림(1536×1024, 왼쪽부터 3척)에서
        북·북동·동을 쓰고 남서·서·북서는 남동·동·북동을 좌우로 뒤집어 assets/source/<이름>_<종류>.webp(8칸)를 만든다
@@ -149,9 +150,12 @@ HULL16 = ["E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "N
 HULL_SHOTS = {"a": ["E", "ESE", "SE", "SSE", "S", "ENE"], "b": ["NE", "NNE", "N"]}
 MIRROR = {"SSW": "SSE", "SW": "SE", "WSW": "ESE", "W": "E", "WNW": "ENE", "NW": "NE", "NNW": "NNE"}
 GUIDE = {"px": 66, "len": 4.5, "wid": 4.5 / 4.2, "deck": 46, "ax": 256, "ay": 300}
+# 이름별 안내 그림 값(make_hull_guide.py의 KINDS와 같게)
+HULL_GUIDE = {"cicones_boat": dict(GUIDE, len=3.3, wid=3.3 / 4.0, deck=36)}
 
 
 def build_hull(root, name):
+    guide = HULL_GUIDE.get(name, GUIDE)
     got = {}
     for key, names in HULL_SHOTS.items():
         src = Image.open(root / f"assets/source/{name}_hull_{key}.webp").convert("RGBA")
@@ -166,12 +170,12 @@ def build_hull(root, name):
                     elif min(r, b) - g > 30:   # 가장자리에 섞인 마젠타 → 나무 갈색
                         px[x, y] = (min(r, g + 50), g, min(b, g), a)
             bb = c.getbbox()
-            got[d] = (c.crop(bb), GUIDE["ax"] - bb[0], GUIDE["ay"] - bb[1])
+            got[d] = (c.crop(bb), guide["ax"] - bb[0], guide["ay"] - bb[1])
     for d, m in MIRROR.items():
         c, ax, ay = got[m]
         got[d] = (c.transpose(Image.FLIP_LEFT_RIGHT), c.width - ax, ay)
     sheet = Image.new("RGBA", (sum(got[d][0].width for d in HULL16), max(g[0].height for g in got.values())), (0, 0, 0, 0))
-    meta, x = dict(GUIDE, dirs=[]), 0
+    meta, x = dict(guide, dirs=[]), 0
     for d in HULL16:
         c, ax, ay = got[d]
         sheet.paste(c, (x, 0))
@@ -179,12 +183,14 @@ def build_hull(root, name):
         x += c.width
     sheet.save(root / f"assets/sprites/{name}_hull.png")
     (root / f"assets/sprites/{name}_hull.json").write_text(json.dumps(meta))
-    # 돛 천: 5칸 돛 그림의 남쪽 칸(정면) — 빨간 픽셀의 경계 상자
-    s = Image.open(root / f"assets/source/{name}_sail.webp").convert("RGB").crop((1024, 0, 1536, 512))
+    # 돛 천: 돛 그림의 남쪽 칸(정면 — 5칸이면 위 셋째, 8칸이면 아래 첫째) — 빨간 픽셀의 경계 상자
+    src = Image.open(root / f"assets/source/{name}_sail.webp").convert("RGB")
+    five = is_five(src)
+    s = src.crop((1024, 0, 1536, 512) if five else (0, 512, 384, 1024))
     px = s.load()
     xs, ys = [], []
-    for y in range(512):
-        for x in range(512):
+    for y in range(s.height):
+        for x in range(s.width):
             r, g, b = px[x, y]
             if r > 110 and r > g * 1.7 and r > b * 1.7:   # 빨간 줄(양 끝 줄이 빨강이라 이것만으로 돛 경계가 나온다)
                 xs.append(x)
@@ -194,8 +200,27 @@ def build_hull(root, name):
     rows = {}
     for y in ys:
         rows[y] = rows.get(y, 0) + 1
-    sail_rows = [y for y, n in rows.items() if n > (x1 - x0) * 0.2]
-    cloth = s.crop((x0, min(sail_rows), x1 + 1, max(sail_rows) + 1))
+    sail_rows = sorted(y for y, n in rows.items() if n > (x1 - x0) * 0.2)
+    # 뱃머리의 빨간 눈(키코네스 배)도 걸리니 위에서부터 이어진 줄만(틈 4줄까지) 돛으로
+    run = sail_rows[:1]
+    for y in sail_rows[1:]:
+        if y - run[-1] > 4:
+            break
+        run.append(y)
+    # 8칸 그림(통째로 빨간 돛): 위아래 끝(활대·돛 아래로 보이는 선체 옆)은 빨강이 돛 폭의 절반이 안 되는 줄이라 깎는다
+    # (5칸 갤리선 돛은 빨강·크림 세로 줄무늬라 줄마다 빨강이 절반쯤이어서 깎지 않는다)
+    while not five and len(run) > 2 and rows[run[-1]] < (x1 - x0) * 0.5:
+        run.pop()
+    while not five and len(run) > 2 and rows[run[0]] < (x1 - x0) * 0.5:
+        run.pop(0)
+    sail_rows = run
+    x0, x1 = min(x for x, y in zip(xs, ys) if run[0] <= y <= run[-1]), max(x for x, y in zip(xs, ys) if run[0] <= y <= run[-1])
+    cloth = s.crop((x0, min(sail_rows), x1 + 1, max(sail_rows) + 1)).convert("RGBA")
+    cp = cloth.load()
+    for y in range(cloth.height):      # 돛 가장자리가 휘어 들어온 배경(마젠타)은 투명하게
+        for x in range(cloth.width):
+            if is_bg(cp[x, y]):
+                cp[x, y] = (0, 0, 0, 0)
     cloth.save(root / f"assets/sprites/{name}_cloth.png")
     print(f"{name} 선체 16방향·돛 천 생성")
 

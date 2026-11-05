@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""배 위 사람 작은 시트: 노 젓는 부하(그리스 병사 앉기)·뱃머리의 오디세우스(서기)를 배 크기에 맞게 미리 줄여 둔다.
+"""배 위 사람 작은 시트: 노 젓는 부하(그리스 병사 앉기)·뱃머리의 오디세우스(서기)·키코네스 배의 노꾼·궁수(서기)를 배 크기에 맞게 미리 줄여 둔다.
 게임 화면에서 큰 시트를 0.2배쯤으로 nearest로 줄이면 깨져서, 여기서 LANCZOS로 줄여 ship_crew.png/.json을 만든다.
 줄 = (시트, 동작), 열 = 방향 0~7 × 프레임. ship.gd가 0.5배로 그린다(canvas_items 2배 화면에서 또렷하게).
 사용: python3 tools/gen_ship_crew.py <godot 프로젝트 폴더>"""
@@ -11,7 +11,8 @@ from PIL import Image
 
 K = 0.36
 ROWS = [("greek_sword", "sit"), ("greek_spear", "sit"), ("greek_archer", "sit"),
-        ("odysseus_ch1", "idle"), ("odysseus_sea", "idle")]
+        ("odysseus_ch1", "idle"), ("odysseus_sea", "idle"),
+        ("cicones_sword", "idle"), ("cicones_spear", "idle"), ("cicones_archer", "idle")]   # 키코네스 배: 노꾼(위만 그려 앉은 듯)·궁수
 
 
 def build(root):

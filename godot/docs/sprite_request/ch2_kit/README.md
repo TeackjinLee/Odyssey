@@ -44,4 +44,9 @@
 (`received/hull_{a,b}.png` → `assets/source/odysseus_galley_hull_*.webp`). 돛대·돛(5칸 돛 그림의 정면 돛을 잘라 낸 천)·노 젓기·
 노 젓는 부하·뱃머리의 오디세우스는 `ship.gd`가 코드로 그린다(사람 시트는 `tools/gen_ship_crew.py`).
 → `python3 tools/gen_ship.py . odysseus_galley --hull` · `python3 tools/gen_ship_crew.py .` → 그리스 배는 `_ready`에서 그 그림을 읽는다(없으면 코드 그림).
-키코네스 배(돛까지 그린 8방향)는 코드 노·머리 점을 그리지 않는다(선체 밖에 떠 보여서). 갤리선 돛 천은 `odysseus_galley_sail.webp`(5칸)에서 자르니 그 원본도 둔다.
+**키코네스 배도 같은 방식:** `python3 make_hull_guide.py cicones`가 더 작은 선체(길이 3.3·폭 4:1·갑판 36px, 같은 배율)의 안내 그림
+`cicones_hull_guide_{a,b}.png`을 만들고, `cicones_hull_run.sh`가 `cicones_hull_{a,b}.txt`(디자인은 돛 편 8방향 `cicones_design_ref.png`)로
+a → b 순서로 받아 `received/cicones_hull_{a,b}.png`에 둔다 → `assets/source/cicones_boat_hull_{a,b}.webp` → `python3 tools/gen_ship.py . cicones_boat --hull`
+(돛 천은 8칸 돛 그림의 남쪽 칸에서). `ship.gd`의 `as_enemy_boat`가 그것을 읽어 노 4쌍·노꾼(키코네스 전사·창병 서기 그림의 윗부분만 — 앉은 듯)·
+뱃머리와 고물에 서서 쫓는 배를 보는 궁수 둘·낮은 돛대(`mast_k`)를 코드로 그린다. 선체 그림이 없으면 예전 8방향 그림을 쓴다
+(그때는 코드 노·머리 점을 그리지 않는다 — 선체 밖에 떠 보여서). 갤리선 돛 천은 `odysseus_galley_sail.webp`(5칸)에서 자르니 그 원본도 둔다.

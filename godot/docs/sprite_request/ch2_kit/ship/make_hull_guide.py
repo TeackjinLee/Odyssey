@@ -2,15 +2,20 @@
 """갤리선 선체 16방향 요청용 안내 그림: 게임의 쿼터뷰(2:1) 투영으로 회색 선체 실루엣을 정확한 각도·크기로 그린다.
 칸 512×512, 3열×2줄, 1536×1024 두 장(hull_guide_a: E ESE SE / SSE S ENE, hull_guide_b: NE NNE N).
 뱃머리 끝 = 빨간 삼각형, 고물 = 짙은 기둥. 그림을 그리는 쪽은 실루엣 위에 같은 자리·크기·각도로 배를 그린다.
-선체 길이:폭 = 4.2:1, 동쪽 칸 선체 길이 ≈ 420px. 사용: python3 make_hull_guide.py (이 폴더에서)"""
+선체 길이:폭 = 4.2:1, 동쪽 칸 선체 길이 ≈ 420px. 사용: python3 make_hull_guide.py (이 폴더에서)
+키코네스 배: python3 make_hull_guide.py cicones → cicones_hull_guide_{a,b}.png. 같은 배율(격자 1칸 66px)에 길이 3.3·폭 4:1·갑판 36px
+(게임에서 갤리선 3.2 : 키코네스 배 2.3과 같은 비율이라 두 배의 픽셀 밀도가 같다). gen_ship.py의 HULL_GUIDE와 값을 맞춘다."""
 import math
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
 HERE = Path(__file__).parent
 P = 66.0                      # 격자 1칸 = 화면 (P, P/2) — 동쪽(화면 가로) 길이 = L·P·√2
-L, W, H = 4.5, 4.5 / 4.2, 46  # 선체 길이·폭(격자), 갑판 높이(px)
+KINDS = {"galley": (4.5, 4.5 / 4.2, 46, ""), "cicones": (3.3, 3.3 / 4.0, 36, "cicones_")}
+KIND = sys.argv[1] if len(sys.argv) > 1 else "galley"
+L, W, H, PREFIX = KINDS[KIND]  # 선체 길이·폭(격자), 갑판 높이(px), 파일 이름 앞
 SHOTS = {"a": ["E", "ESE", "SE", "SSE", "S", "ENE"], "b": ["NE", "NNE", "N"]}
 ANG = {"E": 0, "ESE": 22.5, "SE": 45, "SSE": 67.5, "S": 90, "ENE": -22.5, "NE": -45, "NNE": -67.5, "N": -90}
 
@@ -62,5 +67,5 @@ if __name__ == "__main__":
         out = Image.new("RGB", (1536, 1024), (255, 0, 255))
         for i, n in enumerate(names):
             out.paste(cell(n), (i % 3 * 512, i // 3 * 512))
-        out.save(HERE / f"hull_guide_{key}.png")
-    print("hull_guide_a.png · hull_guide_b.png")
+        out.save(HERE / f"{PREFIX}hull_guide_{key}.png")
+    print(f"{PREFIX}hull_guide_a.png · {PREFIX}hull_guide_b.png")
