@@ -117,7 +117,7 @@
 | `C-ODY-dodge` | 구르기 | 4 | 📨 | `action_requests/` 2장 |
 | `C-ODY-bow` | 활 당겨 쏘기 | 4 | 📨 | `action_requests/` 2장 |
 | `C-ODY-interact` | 권양기·불 붙이기·풀어 주기 | 4 | 📨 | `action_requests/` 2장 |
-| `C-ODY-throw` | 돌 던지기(미끼, C) | 4 | 📨 | `skill_requests/` 2장 |
+| `C-ODY-throw` | 돌 던지기(미끼, C) | 4 | ✅ | 무기 든 차림 `odysseus_ch1` `throw` (`next_batch_2026-11-05/`), `player.gd` `THROW` |
 | `C-ODY-takedown` | 뒤에서 조용히 처치 | 4 | ⬜ (지금은 attack1로 보임, 있으면 좋음) | — |
 | `C-ODY-downed` | (부하 전용 동작) | — | ➖ | — |
 | `C-ODY-helmet` | 머리 장식: 이마 위로 올린 코린트 투구 | 방향당 1 | ⬜ | OUTFIT.md "정한 것" — 프롬프트 아직 |
@@ -244,7 +244,8 @@
 |---|---|---|---|
 | `F-STORM-mood` | 목표 장면 — 같은 카메라로 본 폭풍 바다(색·밝기 기준) | `storm_mood.png` | ✅ |
 | `E-SEA-storm` | 거친 바다 이음매 없는 무늬 1024² | `sea_storm.png` | ✅ |
-| `E-SEA-calm` | 잔잔한 밤바다 무늬 1024²(챕터 1·2 평소 바다도 바뀐다) | `sea_calm.png` | ✅ |
+| `E-SEA-calm` | 잔잔한 밤바다 무늬 1024²(챕터 1·2 평소 바다도 바뀐다) | `sea_calm.png` | ✅ 지금은 안 씀 — 잔잔한 물은 셰이더 코드로 |
+| `E-GND-sand` | 이음매 없는 자갈 해안 무늬 1024²(챕터 2 모래 칸, `env_requests/ch2_sand_tex/`) | `ground_sand_shore.png` → `gen_ground_tex.py` | ✅ |
 | `F-STORM-fx` | 뱃전 파도 6·파도머리 4+4·뱃머리 물보라 4·빗방울 6·번개 3·거품 띠 2·물안개 4·빗줄기 6 | `storm_fx.png` | ✅ |
 
 ### 4.6 UI `U`
@@ -254,12 +255,12 @@
 | `U-portrait-odysseus` | 오디세우스 초상화 | ✅ |
 | `U-portrait-greek` | 부하 초상화 3 (검병·창병·궁병) | ✅ (`ch1_kit/units/portrait`, 트로이 4종도 받아 둠) |
 | `U-portrait-sinon` `-agenor` | 시논(대화창)·아게노르(보스 체력바) | ✅ 시논(대화창 왼쪽) · 아게노르(보스 체력바 왼쪽) |
-| `U-icons` | 아이콘 12: 검·활·함성·명령 4·상호작용·의심 ?·알아챔 !·체크포인트·잠입 | ⬜ (의심·알아챔은 지금 글자) |
-| `U-frames` | 체력·스태미나 바 틀, 슬롯 틀, 미니맵 테두리, 대화창 9칸 틀(뇌문 장식), 이름표 | ✅ 미니맵 테두리 빼고 연결(`assets/ui/frames/`, `hud.gd`의 `_frame`) |
-| `U-result` | 클리어 화면 칭호 배지 「밤의 그림자」「보이지 않는 자」 | ⬜ (있으면 좋음) |
+| `U-icons` | 아이콘 12: 검·활·함성·명령 4·상호작용·의심 ?·알아챔 !·체크포인트·잠입 | ✅ 슬롯·부대 명령·적 머리 위 ?·!·체크포인트 알림에 연결(상호작용·잠입 아이콘은 아직 안 씀) |
+| `U-frames` | 체력·스태미나 바 틀, 슬롯 틀, 미니맵 테두리, 대화창 9칸 틀(뇌문 장식), 이름표 | ✅ 연결(`assets/ui/frames/`, `hud.gd`의 `_frame`, 미니맵 테두리는 `tools/gen_minimap_frame.py`) |
+| `U-result` | 클리어 화면 칭호 배지 「밤의 그림자」「보이지 않는 자」 | ✅ 클리어 결과 화면 |
 | `U-logo` | 타이틀 로고 "ODYSSEY" | ✅ 타이틀 화면(`assets/ui/frames/logo.png`) |
-| `U-cursor` | 조준 커서 | ⬜ |
-| `U-font` | 한글 픽셀 글꼴 (제안: 갈무리 Galmuri, OFL 라이선스) | ⬜ |
+| `U-cursor` | 조준 커서 | ✅ 활을 들면 마우스 커서(창 배율만큼 키움) |
+| `U-font` | 한글 픽셀 글꼴 | ⬜ 갈무리7을 넣어 봤으나 작은 크기에서 잘 안 읽혀 시스템 글꼴로 되돌림(2026-11-05) |
 
 ### 4.7 영상
 
@@ -292,7 +293,7 @@
 | `C2-SHIP-galley` | 오디세우스의 갤리선 8방향(돛 폄·접음) | ✅ (1장 끝 배 디자인, 선체만 16방향 + 돛대·돛·노 젓기·노꾼·뱃머리 오디세우스는 코드 — `ship/hull_*.txt`) |
 
 아직 임시: 갤리선은 `ship.gd`의 코드 그림, 이스마로스 집·소품은 챕터 1 그림 그대로, 바다는 챕터 1 물 셰이더,
-로토스나무는 올리브 그림을 분홍빛으로(`chapter2_ismaros.gd` `_build_lotus_island`), 묶여 끌려가는 부하는 걷기 그대로. 폭풍은 받은 그림(§4.5b).
+로토스나무·섬 꾸밈과 이스마로스 항구 소품은 받은 그림(`tools/gen_env_ch2_props.py`), 묶여 끌려가는 부하는 걷기 그대로. 폭풍은 받은 그림(§4.5b).
 
 웹 시제품(`docs/legacy-web/SPEC.md`)에서 가져올 연출 아이디어: 폴리페모스의 금빛 외눈 약점과 활 조준선,
 세이렌의 청자색 음파 vs 청동 종의 금빛 공명파.

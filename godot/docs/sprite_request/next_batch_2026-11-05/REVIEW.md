@@ -20,3 +20,8 @@
 > Fix only facing and anatomical continuity. Row1 is BACK-RIGHT facing screen upper-right: RIGHT arm winds back holding the stone in frames1-2, then releases in frame3 and follows through in frame4. The LEFT forearm keeps the same strapped shield in ALL frames. Row2 must be TRUE NORTH, straight back view, no face or side profile in any frame; throw directly away from camera. Match pose.png. Keep bottom row empty magenta. No extra limbs, no arm swapping.
 
 검수 완료 전 `candidate`를 `integrated`로 바꾸지 않는다.
+
+## 2026-11-05 적용
+
+- NE·N은 위 보정 문구를 붙여 다시 받았다(`results/throw_NE-Na.png`, 첫 판 `throw_NE-Na_v1.png`). N 줄은 완전한 뒷모습이 됐다.
+- 환경 두 장은 다시 받지 않고 변환기(`tools/gen_env_ch2_props.py`)가 얼룩진 배경을 지운다. 네 장 모두 `integrated`.

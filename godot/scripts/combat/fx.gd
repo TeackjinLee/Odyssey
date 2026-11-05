@@ -92,6 +92,27 @@ static func text(pos: Vector2, s: String, color: Color) -> void:
 	tw.tween_callback(l.queue_free)
 
 
+## 머리 위로 떠올랐다 사라지는 아이콘(assets/ui/icon_<이름>.png, 24×24). 그림이 없으면 글자(fallback)로
+static func icon(pos: Vector2, name: String, fallback: String, color: Color) -> void:
+	var path := "res://assets/ui/icon_%s.png" % name
+	if not ResourceLoader.exists(path):
+		if fallback != "":
+			text(pos, fallback, color)
+		return
+	var layer := _layer()
+	if layer == null:
+		return
+	var s := Sprite2D.new()
+	s.texture = load(path)
+	s.position = pos + Vector2(0, -12)
+	s.z_index = 100
+	layer.add_child(s)
+	var tw := s.create_tween()
+	tw.tween_property(s, "position:y", s.position.y - 14, 0.7).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.parallel().tween_property(s, "modulate:a", 0.0, 0.5).set_delay(0.45)
+	tw.tween_callback(s.queue_free)
+
+
 static func spark(pos: Vector2, color: Color, count := 6) -> void:
 	var layer := _layer()
 	if layer == null:

@@ -35,3 +35,5 @@ Style rules:
 - In this action the sword is NOT in his hand (it hangs in a scabbard at his left hip); the star shield stays strapped on the LEFT forearm, the quiver stays on his back.
 
 Sword MUST be sheathed at the hip for this throwing action; right hand holds the small stone only in frames1-2, releases in frame3, empty in frame4. The left forearm keeps the star shield, helmet cape bow and quiver are preserved. Standing height about320px in every cell.
+
+Fix only facing and anatomical continuity. Row1 is BACK-RIGHT facing screen upper-right: RIGHT arm winds back holding the stone in frames1-2, then releases in frame3 and follows through in frame4. The LEFT forearm keeps the same strapped shield in ALL frames. Row2 must be TRUE NORTH, straight back view, no face or side profile in any frame; throw directly away from camera. Match pose.png. Keep bottom row empty magenta. No extra limbs, no arm swapping.

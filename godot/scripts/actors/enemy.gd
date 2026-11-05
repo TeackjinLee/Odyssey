@@ -42,6 +42,7 @@ var strikes := 0
 var retreated := false
 var vision := 150.0
 var suspicion := 0.0
+var _suspect_icon: Texture2D = null
 var look_pos := Vector2.INF
 var calm_delay := 0.0
 var home_facing := Vector2(0, 1)
@@ -142,7 +143,7 @@ func alert(t: Actor) -> void:
 	suspicion = 1.0
 	_drop_errand()
 	takedown.enabled = false
-	Fx.text(global_position + Vector2(0, -head_height - 4), "!", Color(1, 0.35, 0.25))
+	Fx.icon(global_position + Vector2(0, -head_height - 4), "alert", "!", Color(1, 0.35, 0.25))
 	Sfx.at("alert", global_position, -10.0)
 	if phase == "idle":
 		phase = "chase"
@@ -439,7 +440,7 @@ func lure(pos: Vector2) -> void:
 	look_pos = pos
 	calm_delay = 3.0
 	_drop_errand()
-	Fx.text(global_position + Vector2(0, -head_height - 4), "?", Color(1, 0.9, 0.5))
+	Fx.icon(global_position + Vector2(0, -head_height - 4), "suspect", "?", Color(1, 0.9, 0.5))
 
 
 ## 의심 중: 멈춰서 그쪽을 보고, 반 넘게 차면 천천히 다가가 살핀다.
@@ -467,7 +468,7 @@ func _look_for_torch() -> void:
 			errand = t
 			errand_time = 0.0
 			t["claimed"] = self
-			Fx.text(global_position + Vector2(0, -head_height - 4), "?", Color(1, 0.9, 0.5))
+			Fx.icon(global_position + Vector2(0, -head_height - 4), "suspect", "?", Color(1, 0.9, 0.5))
 			return
 
 
@@ -760,7 +761,12 @@ func _draw() -> void:
 		return
 	var y := -head_height - 8.0
 	var col := Color(1, 0.95, 0.6).lerp(Color(1, 0.3, 0.2), suspicion)
-	draw_string_outline(Game.ui_font, Vector2(-8, y), "?", HORIZONTAL_ALIGNMENT_CENTER, 16, 15, 4, Color(0, 0, 0, 0.85))
-	draw_string(Game.ui_font, Vector2(-8, y), "?", HORIZONTAL_ALIGNMENT_CENTER, 16, 15, col)
+	if _suspect_icon == null and ResourceLoader.exists("res://assets/ui/icon_suspect.png"):
+		_suspect_icon = load("res://assets/ui/icon_suspect.png")
+	if _suspect_icon:   # 의심 아이콘(24×24), 의심이 커질수록 붉게
+		draw_texture(_suspect_icon, Vector2(-12, y - 22), Color.WHITE.lerp(Color(1, 0.55, 0.45), suspicion))
+	else:
+		draw_string_outline(Game.ui_font, Vector2(-8, y), "?", HORIZONTAL_ALIGNMENT_CENTER, 16, 15, 4, Color(0, 0, 0, 0.85))
+		draw_string(Game.ui_font, Vector2(-8, y), "?", HORIZONTAL_ALIGNMENT_CENTER, 16, 15, col)
 	draw_rect(Rect2(-8, y + 3, 16, 3), Color(0, 0, 0, 0.75))
 	draw_rect(Rect2(-8, y + 3, 16 * suspicion, 3), col)

@@ -1,0 +1,15 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below. Attached images:
+1) layout.png = the EXACT LAYOUT: a 1024x1024 square. The gray ring is only a PLACEHOLDER showing where the frame goes and how
+   thick it is (outer diameter 960px, inner diameter 840px, centered). Replace the gray ring with the finished frame at the same
+   place and size. Do NOT keep any gray.
+2) style_frames.png = the game's existing UI frames: match this exact bronze/gold material, outline, meander studs and pixel density.
+3) style_fire.png and 4) style_hero.png = extra STYLE references.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+
+Pixel art round MINIMAP FRAME for an ancient Greek action game. ONE image exactly 1024x1024.
+- A circular ring of weathered bronze with gold highlights, like a round Greek shield rim, with a thin Greek meander (key pattern)
+  band running around it and four small gold studs at top, bottom, left and right.
+- The ring must stay inside the placeholder: outer edge at radius 480px, inner edge at radius 420px from the center.
+- Everything outside the ring AND the whole inside of the ring must be solid flat magenta #FF00FF (the game draws the map inside).
+- No text, no compass letters, no grid lines, no shadow, no glow.
+2D pixel art, crisp pixel edges, dark 1px-style outline, no anti-aliasing blur.

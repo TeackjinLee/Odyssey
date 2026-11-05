@@ -20,6 +20,9 @@ const BRAKE := 0.9
 ## 키: 초당 도는 각도(라디안). 속도가 TURN_FULL 칸/초보다 느리면 그만큼 덜 돈다(가만히 있으면 거의 못 돎)
 const TURN_RATE := 0.95
 const TURN_FULL := 0.9
+## 사람이 몰 때 키(방향타)를 꺾고 푸는 빠르기(초당) — 키를 누르자마자 확 돌지 않고 0.25초쯤에 걸쳐 꺾인다
+const RUDDER_IN := 4.0
+const RUDDER_OUT := 6.0
 ## 노꾼 힘: 힘껏 저으면 초당 줄고, 아니면 회복. 0이면 힘껏이 천천히와 같아진다
 const ROW_DRAIN := 5.5
 const ROW_REST := 4.0
@@ -76,6 +79,7 @@ var target_ship: Ship = null
 var max_speed := INF
 var sail_torn := false
 var turn_in := 0.0
+var _rudder := 0.0
 
 var _shoot_cd := 1.5
 var _path := PackedVector2Array()
@@ -242,13 +246,21 @@ func _physics_process(delta: float) -> void:
 			_stroke = 0.0
 			if is_riding_player():
 				Sfx.play("oar", -15.0 if gear == 1 else -11.0)
-	if absf(speed) > 0.25:
+	if absf(speed) > 0.2:
 		_wake_t -= delta
 		if _wake_t <= 0.0:
-			_wake_t = 0.12
-			_wake.push_front([Iso.grid_to_world(gpos - fwd() * length * 0.5 * signf(speed)), 1.0])
+			_wake_t = 0.07
+			var sd := signf(speed)
+			var side := Iso.ex * right().x + Iso.ey * right().y
+			var back := -(Iso.ex * fwd().x + Iso.ey * fwd().y).normalized() * sd
+			var k := clampf(absf(speed) / 2.5, 0.3, 1.0)
+			_wake.push_front([Iso.grid_to_world(gpos - fwd() * length * 0.5 * sd), 1.0, side, k, randi(), back * (14.0 + 10.0 * k)])
+	# 물결은 고물에서 뒤로 밀려나며 느려지고, 바다 무늬와 같은 흐름(바람 쪽)으로 함께 떠간다
+	var flow := _sea_flow()
 	for w in _wake:
-		w[1] -= delta * 0.7
+		w[1] -= delta * 0.3
+		w[0] += (w[5] + flow) * delta
+		w[5] *= exp(-1.2 * delta)
 	while _wake.size() > 0 and _wake[_wake.size() - 1][1] <= 0.0:
 		_wake.pop_back()
 	_deck_fire(delta)
@@ -262,7 +274,10 @@ func _read_controls() -> void:
 	if Input.is_action_just_pressed("move_down"):
 		gear = maxi(-1, gear - 1)
 		Sfx.play("ui", -12.0)
-	turn_in = Input.get_axis("move_left", "move_right")
+	var want := Input.get_axis("move_left", "move_right")
+	var rate := RUDDER_IN if absf(want) > absf(_rudder) and signf(want) == signf(_rudder) or _rudder == 0.0 else RUDDER_OUT
+	_rudder = move_toward(_rudder, want, rate * get_physics_process_delta_time())
+	turn_in = _rudder
 	if Input.is_action_just_pressed("run"):
 		set_sail(not sail)
 
@@ -520,11 +535,7 @@ func _outline(h: float, k := 1.0) -> PackedVector2Array:
 
 
 func _draw() -> void:
-	# 물결 자국
-	for w in _wake:
-		var p: Vector2 = w[0] - global_position
-		var a: float = w[1]
-		draw_arc(p, 4.0 + (1.0 - a) * 10.0, 0, TAU, 12, Color(0.85, 0.92, 1.0, 0.35 * a), 1.0)
+	_draw_wake()
 	var flash := Color(1, 1, 1).lerp(Color(1.6, 0.6, 0.5), _flash)
 	if not hull_art.is_empty():
 		_draw_hull_ship(flash)
@@ -579,7 +590,8 @@ func _draw_art(flash: Color) -> void:
 # ── 선체 16방향 그림 + 코드 돛대·돛·노·사람 ─────────────────────────────
 # 선체 그림은 화면 방향 22.5°마다 한 장이라, 노·사람·돛대도 그 칸의 방향(_hf)으로 놓아 선체에서 어긋나지 않게 한다.
 # 높이는 그림 픽셀(요청 안내 그림 기준)로 재고 _hk배 해서 화면 픽셀로.
-const BLEND := 0.18   # 선체 그림 두 장을 겹치는 폭(한 칸 22.5°의 몇 배, 경계 양쪽)
+const HYST := 0.2   # 선체 그림을 바꾸기 전 경계를 넘어 더 돌아야 하는 몫(한 칸 22.5°의 몇 배)
+var _hull_idx := -1
 var _hf := Vector2.RIGHT
 var _hk := 0.35
 
@@ -592,14 +604,13 @@ func _hp(lx: float, ly: float, h: float) -> Vector2:
 func _draw_hull_ship(flash: Color) -> void:
 	var m: Dictionary = hull_art[1]
 	var v := Iso.ex * fwd().x + Iso.ey * fwd().y
-	# 22.5°마다 한 장이라, 경계 앞뒤(BLEND칸)에서는 두 장을 겹쳐 바꾸고 노·사람·돛대도 두 방향 사이로 옮겨 갑자기 바뀌지 않게
+	# 22.5°마다 한 장. 반투명으로 두 장을 겹치면 배가 둘로 보여, 한 장씩 딱 바꾸되 경계에서 떨리지 않게 HYST만큼 더 돌아야 바꾼다.
+	# 노·사람·돛대·물거품도 지금 그림의 방향(_hf)에 맞춰 함께 바뀐다
 	var f := v.angle() / (PI / 8.0)
-	var i0 := floori(f)
-	var w := smoothstep(0.5 - BLEND, 0.5 + BLEND, f - i0)   # 0 = i0 칸, 1 = 다음 칸
-	var idx := posmod(i0 + (1 if w >= 0.5 else 0), 16)
-	var other := posmod(i0 + (0 if w >= 0.5 else 1), 16)
-	var other_a := 1.0 - absf(w - 0.5) * 2.0   # 겹치는 장의 세기: 경계에서 1(그릴 때 ×0.5), 겹침 폭 끝에서 0
-	var a := lerp_angle(i0 * PI / 8.0, (i0 + 1) * PI / 8.0, w)
+	if _hull_idx < 0 or absf(wrapf(f - _hull_idx, -8.0, 8.0)) > 0.5 + HYST:
+		_hull_idx = posmod(roundi(f), 16)
+	var idx := _hull_idx
+	var a := idx * PI / 8.0
 	_hf = Vector2(cos(a) + 2.0 * sin(a), 2.0 * sin(a) - cos(a)).normalized()   # 화면 방향 → 격자 방향(투영의 역)
 	_hk = Iso.ex.x / float(m["px"]) * length / float(m["len"])
 	var dw := length * float(m["wid"]) / float(m["len"])
@@ -614,9 +625,9 @@ func _draw_hull_ship(flash: Color) -> void:
 	var near := 1.0 if _hp(0, 1, 0).y > _hp(0, -1, 0).y or (is_equal_approx(_hp(0, 1, 0).y, _hp(0, -1, 0).y) and _hp(0, 1, 0).x > 0) else -1.0
 	var n := mini(oars, 5)
 	_draw_oars(-near, n, dw, flash)
+	_draw_waterline(dw, false)
 	_draw_hull_cell(m["dirs"][idx], flash)
-	if other_a > 0.0:
-		_draw_hull_cell(m["dirs"][other], Color(flash, other_a * 0.5))
+	_draw_waterline(dw, true)
 	var items: Array = []   # [화면 y, 종류, 값…]
 	var back := posmod(roundi((-v).angle() / (PI / 4.0)), 8)
 	var face := posmod(roundi(v.angle() / (PI / 4.0)), 8)
@@ -766,3 +777,94 @@ func _draw_code_sail(flash: Color) -> void:
 		draw_polyline(quad, Color(0.2, 0.15, 0.1, 0.8), 1.0)
 	else:
 		draw_line(_pt(mx, -span, 45), _pt(mx, span, 45), sail_color.darkened(0.15), 3.0)
+
+
+# ── 물과 닿는 곳: 뱃전 물거품 띠·뱃머리 물결·고물 뒤 V자 물결 ─────────────
+const FOAM := Color(0.86, 0.93, 1.0)
+
+
+## 바다 무늬가 흐르는 속도(월드 px/초) — iso_level._update_sea와 같은 방향·빠르기
+func _sea_flow() -> Vector2:
+	var lv = Game.level
+	if lv == null or lv.get("sea_speed") == null:
+		return Vector2.ZERO
+	var dir := Vector2(1.0, 0.3).normalized()
+	var w: Variant = lv.get("wind")
+	if w is Vector2 and w != Vector2.ZERO:
+		dir = (Iso.ex * w.x + Iso.ey * w.y).normalized()
+	return dir * float(lv.sea_speed.x)
+
+
+## 흘수선 둘레 거품: 선체 둘레 타원을 따라 픽셀 점이 깜박인다. front면 화면 앞쪽 반(선체 위에), 아니면 뒤쪽 반(선체 아래에)
+func _draw_waterline(dw: float, front: bool) -> void:
+	var c := _hp(0, 0, 0)
+	var sp := clampf(absf(speed) / 2.5, 0.0, 1.0)
+	var tick := int(Time.get_ticks_msec() / 110.0)
+	var n := 40
+	for i in n:
+		var t := TAU * i / n
+		var lx := cos(t)
+		var p := _hp(lx * length * 0.5, sin(t) * dw * 0.52, 0)
+		if (p.y > c.y) != front:
+			continue
+		var bow := maxf(0.0, lx * signf(speed if absf(speed) > 0.05 else 1.0))   # 뱃머리 쪽일수록 거품이 많다
+		var on := 0.35 + bow * sp * 0.6
+		if float(hash(i * 7 + tick) % 100) / 100.0 > on:
+			continue
+		var q := p.round()
+		draw_rect(Rect2(q, Vector2(2 if bow * sp > 0.4 else 1, 1)), Color(FOAM, 0.55 + 0.35 * bow))
+	# 뱃머리 물결: 빠를수록 길게 갈라지는 두 줄
+	if sp > 0.1:
+		var sd := signf(speed)
+		var tip := _hp(length * 0.5 * sd, 0, 0)
+		for side in [-1.0, 1.0]:
+			var end := _hp(length * (0.5 - 0.35 * sp) * sd, side * dw * (0.6 + 0.5 * sp), 0)
+			if (end.y > c.y) != front:
+				continue
+			var k := 7
+			for j in k:
+				if hash(j * 13 + tick + int(side)) % 4 == 0:
+					continue
+				var q := tip.lerp(end, (j + 0.5) / k).round()
+				draw_rect(Rect2(q, Vector2(2, 1)), Color(FOAM, 0.8 - 0.07 * j))
+
+
+## 고물 뒤 물결: 뿌린 자리(월드)에서 뒤로 밀려나며 양옆으로 벌어지는(V자) 두 줄 거품 + 그 사이 옅게 일렁이는 물
+func _draw_wake() -> void:
+	var arms := [[], []]
+	var mids: Array = []
+	for w in _wake:
+		var a: float = w[1]
+		if a <= 0.0:
+			continue
+		var age := 1.0 - a
+		var base: Vector2 = w[0] - global_position
+		var side: Vector2 = w[2] * width * 0.5
+		var spread := 0.5 + age * (1.3 + float(w[3]))
+		arms[0].append([(base - side * spread).round(), a, int(w[4])])
+		arms[1].append([(base + side * spread).round(), a, int(w[4]) >> 3])
+		mids.append([base, a, int(w[4])])
+	# 사이 물: 두 줄 사이를 옅은 물빛으로
+	for i in range(arms[0].size() - 1):
+		var a: float = arms[0][i + 1][1]
+		var quad := PackedVector2Array([arms[0][i][0], arms[0][i + 1][0], arms[1][i + 1][0], arms[1][i][0]])
+		if arms[0][i][0].distance_to(arms[0][i + 1][0]) < 30.0:
+			var qc := Color(0.5, 0.65, 0.85, 0.16 * a)
+			draw_primitive(quad, PackedColorArray([qc, qc, qc, qc]), PackedVector2Array())   # 꼬인 사각형도 삼각분할 없이
+	# 두 줄 거품: 이웃 점을 잇되 군데군데 끊는다
+	for arm in arms:
+		for i in range(arm.size() - 1):
+			var p0: Vector2 = arm[i][0]
+			var p1: Vector2 = arm[i + 1][0]
+			var a: float = arm[i + 1][1]
+			if p0.distance_to(p1) > 30.0 or arm[i][2] % 6 == 0:
+				continue
+			draw_line(p0, p1, Color(FOAM, minf(1.0, 1.3 * a * a)), 2.0 if a > 0.7 else 1.0)
+	# 고물 바로 뒤 휘도는 거품
+	for m in mids:
+		var a: float = m[1]
+		if a < 0.6:
+			continue
+		var sd0: int = m[2]
+		var jit := Vector2((sd0 % 9) - 4, ((sd0 / 9) % 5) - 2)
+		draw_rect(Rect2((m[0] + jit).round(), Vector2(2, 1)), Color(FOAM, (a - 0.6) * 2.2))

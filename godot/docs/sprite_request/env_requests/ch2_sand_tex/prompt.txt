@@ -1,0 +1,21 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Attached images:
+1) style_env.png = the STYLE reference (palette, outline, pixel density).
+2) game_coast_now.png = the current game (camera angle and scale). The dark grey pebble ground ringing the islands is what this replaces.
+3) sand_tiles_now.png = the current pebble shore tiles (4 diamond variants). Keep their look and colours, but they show a visible
+   diamond grid because every tile has its own border; the new texture must have NO tile borders at all.
+
+Pixel art ground texture of a ROCKY PEBBLE SHORE (wet dark grey stones and coarse grey-brown sand between them), at night.
+Make the image 1024x1024 (square). It is a SEAMLESS TILEABLE TEXTURE: the left edge must continue exactly into the
+right edge and the top edge into the bottom edge, so that it can be repeated in a grid without any visible seam.
+Seen from the game camera: 2:1 isometric, looking down about 30 degrees, so round stones look squashed vertically
+(about twice as wide as tall). NO horizon, NO sky, NO perspective change across the image.
+Draw it as pixel art at QUARTER resolution blown up 4x: every art pixel is a clean 4x4 block of image pixels (256x256 art pixels).
+Stones are small: most 6 to 14 art pixels wide, a few up to 20, each with a 1 art pixel darker outline on the lower edge
+and a light top highlight, scattered irregularly with no rows, no grid, no diamond shapes, no repeating pattern visible.
+Coarse sand and small gravel fill the gaps. Even overall brightness: no light spot, no vignette, no gradient,
+no water, no foam, no plants, no objects, no shadows of objects.
+Style: 2D pixel art, crisp hard-edged pixels, no anti-aliasing blur, no photo texture, limited palette of about 7 colours
+matching sand_tiles_now.png: dark slate stone (#3d3f45), mid stone (#6b6a68), stone highlight (#9a958c), sand (#76695a),
+dark sand (#4f463d). No text, no labels, no grid lines.

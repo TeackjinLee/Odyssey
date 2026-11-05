@@ -9,7 +9,7 @@
         "lotus_props/style_ref.png"
       ],
       "result": "results/lotus_props.png",
-      "status": "candidate"
+      "status": "integrated"
     },
     {
       "id": "harbor_props",
@@ -19,7 +19,7 @@
         "harbor_props/style_ref.png"
       ],
       "result": "results/harbor_props.png",
-      "status": "candidate"
+      "status": "integrated"
     },
     {
       "id": "throw_E-SE-Sa",
@@ -28,7 +28,7 @@
         "armed_throw/throw_E-SE-Sa/pose.png"
       ],
       "result": "results/throw_E-SE-Sa.png",
-      "status": "candidate"
+      "status": "integrated"
     },
     {
       "id": "throw_NE-Na",
@@ -37,7 +37,7 @@
         "armed_throw/throw_NE-Na/pose.png"
       ],
       "result": "results/throw_NE-Na.png",
-      "status": "candidate"
+      "status": "integrated"
     }
   ]
 }

@@ -454,6 +454,7 @@ func _save_checkpoint(id: String) -> void:
 	if id != "stealth":
 		Sfx.play("checkpoint", -8.0)
 		Fx.text(player.global_position + Vector2(0, -64), Lines.t("fx.checkpoint"), Color(0.55, 0.85, 1.0))
+		Fx.icon(player.global_position + Vector2(0, -78), "checkpoint", "", Color.WHITE)
 
 
 ## 체크포인트에서 다시: 그 단계의 시작으로 옮기고, 그 뒤에 이룬 골라서 하는 목표·경보로 는 경비도 되살린다.

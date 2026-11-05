@@ -47,6 +47,8 @@ var camera_target: Node2D = null
 var water_material: ShaderMaterial
 ## 맵 밖도 바다로 그림(바다 챕터 — 쿼터뷰 마름모 맵의 모서리가 검게 비지 않게)
 var open_sea := false
+## 바닥 칸 전부에 바다 셰이더를 씌워 해안선·바닥 종류 경계를 칸 마름모 대신 휜 선으로(water.gdshader soft) — 부두·성벽이 없는 바다 챕터용
+var soft_coast := false
 ## 바다 무늬가 흘러가는 속도(월드 픽셀/초): 평소·폭풍(셰이더 storm 1일 때)
 var sea_speed := Vector2(5.0, 16.0)
 var _sea_a := Vector2.ZERO
@@ -185,12 +187,26 @@ func _make_tileset() -> TileSet:
 
 func _apply_floor() -> void:
 	var variants: int = int(AssetLibrary.env()["floor_atlas"]["variants"])
+	var fmap := Image.create(W, H, false, Image.FORMAT_RGBA8)
 	for x in W:
 		for y in H:
 			var c := Vector2i(x, y)
 			var kind: String = floor_kind.get(c, "cobble")
 			var v := int(abs(hash(c)) % variants)
 			ground.set_cell(c, _source_id, Vector2i(v, FLOOR_ROWS[kind]))
+			fmap.set_pixelv(c, Color8(FLOOR_ROWS[kind], v, 0))
+	if soft_coast and water_material:
+		var src := ground.tile_set.get_source(_source_id) as TileSetAtlasSource
+		for r in FLOOR_ROWS.values():
+			for v in variants:
+				src.get_tile_data(Vector2i(v, r), 0).material = water_material
+		water_material.set_shader_parameter("soft", true)
+		water_material.set_shader_parameter("floor_map", ImageTexture.create_from_image(fmap))
+		water_material.set_shader_parameter("atlas_size", Vector2(src.texture.get_size()))
+		water_material.set_shader_parameter("water_row", float(FLOOR_ROWS["water"]))
+		if FLOOR_ROWS.has("sand") and ResourceLoader.exists("res://assets/env/ground_sand.png"):
+			water_material.set_shader_parameter("sand_tex", load("res://assets/env/ground_sand.png"))
+			water_material.set_shader_parameter("sand_row", float(FLOOR_ROWS["sand"]))
 	if water_material:
 		var img := Image.create(W, H, false, Image.FORMAT_L8)
 		for c in floor_kind:

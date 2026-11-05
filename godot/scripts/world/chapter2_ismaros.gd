@@ -150,6 +150,7 @@ func build() -> void:
 	next_chapter = 3
 	minimap_land = true
 	open_sea = true
+	soft_coast = true
 	W = 64
 	H = 104
 	canvas_mod.color = _canvas_base
@@ -228,8 +229,12 @@ func build() -> void:
 		it.on_use = func(_by): _loot(it)
 		world.add_child(it)
 		loot_points.append(it)
-	# 해안 승선 지점의 깃발
+	# 해안 승선 지점의 깃발과 항구 소품(지나갈 수 있음)
 	add_prop("banner_greek", Vector2i(36, 22), true, false)
+	for d in [["harbor_bollard", Vector2i(37, 19)], ["harbor_rope", Vector2i(38, 19)], ["harbor_fish_basket", Vector2i(37, 23)],
+			["harbor_net", Vector2i(39, 23)], ["harbor_oars", Vector2i(38, 17)], ["harbor_cargo", Vector2i(40, 21)],
+			["harbor_amphorae", Vector2i(39, 25)]]:
+		_deco(d[0], d[1])
 	_build_lotus_island()
 	_build_sea_astar()
 
@@ -240,10 +245,15 @@ func _build_lotus_island() -> void:
 	_path_line(Vector2(38.0, 84.0), Vector2(36.0, 90.0))
 	_path_line(Vector2(38.0, 84.0), Vector2(42.0, 88.0))
 	fill(Rect2i(36, 86, 4, 3), "dirt")
-	for c in LOTUS_TREES:
+	for i in LOTUS_TREES.size():
+		var c: Vector2i = LOTUS_TREES[i]
 		_check_land(c)
-		var s := add_prop("olive", c, true, false)
-		s.modulate = Color(1.0, 0.74, 0.92)
+		add_prop("lotus_tree_fruit" if i % 2 == 0 else "lotus_tree_flower", c, true, false)
+	# 꾸밈(지나갈 수 있음): 꽃무더기·갈대·바구니 — 땅인 칸에만
+	for d in [["lotus_reeds", Vector2i(35, 77)], ["lotus_reeds", Vector2i(42, 78)], ["lotus_flower_patch", Vector2i(37, 82)],
+			["lotus_flower_patch", Vector2i(42, 90)], ["lotus_flower_patch", Vector2i(34, 89)], ["lotus_basket", Vector2i(40, 84)],
+			["lotus_fruit_cluster", Vector2i(37, 87)], ["lotus_bush", Vector2i(46, 87)]]:
+		_deco(d[0], d[1])
 	for c in [Vector2i(30, 80), Vector2i(44, 80), Vector2i(31, 92), Vector2i(45, 93), Vector2i(43, 78)]:
 		_check_land(c)
 		add_prop("pine" if c.x < 40 else "cypress", c, true, c.x >= 40)
@@ -252,6 +262,14 @@ func _build_lotus_island() -> void:
 		add_prop("bush", c, true, false)
 	add_prop("rock", Vector2i(28, 87), true, false)
 	add_prop("rock", Vector2i(48, 89), true, false)
+
+
+## 꾸밈 소품: 땅이고 막힌 칸이 아니면 놓는다(막지 않음). 그림이 없으면 건너뛴다
+func _deco(prop_name: String, c: Vector2i) -> void:
+	if floor_kind.get(c, "water") == "water" or solid.has(c) or not AssetLibrary.has_prop(prop_name):
+		push_warning("챕터 2: 꾸밈 소품을 놓지 않음 %s %s" % [prop_name, c])
+		return
+	add_prop(prop_name, c, false, false)
 
 
 func _check_land(c: Vector2i) -> void:
@@ -980,6 +998,7 @@ func _save_checkpoint(id: String) -> void:
 	Game.save_progress()
 	Sfx.play("checkpoint", -8.0)
 	Fx.text(player.global_position + Vector2(0, -64), Lines.t("fx.checkpoint"), Color(0.55, 0.85, 1.0))
+	Fx.icon(player.global_position + Vector2(0, -78), "checkpoint", "", Color.WHITE)
 
 
 func checkpoint_name(id: String) -> String:

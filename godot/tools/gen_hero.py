@@ -40,8 +40,8 @@ ANIMS = [
     ("block", 2, 6, True), ("bow", 4, 10, False), ("hit", 2, 10, False), ("dodge", 4, 14, False),
     ("death", 5, 9, False), ("interact", 4, 8, True), ("downed", 1, 1, True),
 ]
-# 그려 받은 원본이 있는 캐릭터에만 붙이는 동작(2장 로토스를 먹고 멍하게 앉은 부하)
-EXTRA_ANIMS = [("sit", 4, 4, True)]
+# 그려 받은 원본이 있는 캐릭터에만 붙이는 동작(2장 로토스를 먹고 멍하게 앉은 부하, 미끼 돌 던지기)
+EXTRA_ANIMS = [("sit", 4, 4, True), ("throw", 4, 12, False)]
 
 
 def is_bg(c):

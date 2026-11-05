@@ -13,6 +13,9 @@ const SWORD_COMBO := [
 const HEAVY := {"anim": "heavy", "dur": 0.72, "hit": 0.34, "dmg": 28.0, "reach": 35.0, "arc": 220.0, "kb": 230.0, "lunge": 120.0, "stop": 0.11, "shake": 5.0, "heavy": true}
 const BOW_RECOVER := {"anim": "", "dur": 0.2, "hit": 99.0}
 const TAKEDOWN := {"anim": "attack3", "dur": 0.42, "hit": 99.0, "quiet": true}
+## 미끼 돌 던지기: 그려 받은 throw 동작이 있는 옷이면 재생(서 있음), 돌은 손을 놓는 3번째 장면쯤 날아간다
+const THROW := {"anim": "throw", "dur": 0.34, "hit": 99.0, "quiet": true}
+const THROW_RELEASE := 0.16
 ## 검을 휘두르는 소리가 들리는 거리와 그 소리로 차는 의심
 const SWING_NOISE := 95.0
 const SWING_SUSPICION := 0.55
@@ -552,7 +555,14 @@ func _throw_decoy() -> void:
 			to = global_position.lerp(to, float(i - 1) / steps)
 			break
 	face(to - global_position)
-	Skills.throw_decoy(global_position + Vector2(0, -2), to)
+	if not body.sprite_frames.has_animation("throw_0"):
+		Skills.throw_decoy(global_position + Vector2(0, -2), to)
+		return
+	_start_attack(THROW)
+	face(to - global_position)
+	get_tree().create_timer(THROW_RELEASE).timeout.connect(func():
+		if is_alive():
+			Skills.throw_decoy(global_position + Vector2(0, -2), to))
 
 
 func _update_visual() -> void:

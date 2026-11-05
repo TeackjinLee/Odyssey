@@ -239,12 +239,17 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
 - 맵 개편용 소품·바닥은 `tools/gen_env_extra.py`가 임시 그림을 만든 뒤, 끝에서 `gen_env_redraw.py`가 다시 그려 받은 그림
   (`assets/source/troy_city.webp`·`troy_coast.webp`, 받으면 `troy_extra.webp`도)을 잘라 같은 이름으로 덮어쓴다: temple · steps · lion · fountain · stall_red/white ·
   bell_tower · ladder · column_broken · cypress · pine · olive · bush · pot · rock · galley · boat · pier_post, 바닥 water · sand · planks.
+- 챕터 2 로토스 섬·항구 소품(`lotus_*`·`harbor_*`)은 그 다음 `tools/gen_env_ch2_props.py`가 env.json에 더한다(환경을 다시 만들면 끝에 한 번 더 돌린다).
   `troy_extra`(요청 준비됨): alarm_bell · winch · brazier · banner_greek · torch_post_off · gate_open · house_a~d_burnt + 새 그림 armory · armory_burnt · sacks
   (새 그림은 env.json에 더해지기만 하므로 받으면 챕터 배치를 고친다).
   받은 그림은 안내 그림판(`docs/sprite_request/env_requests/<city|extra|coast>_redraw/guide.png`)과 같은 자리라 `boxes.json` 상자로 자르고,
   기준점은 임시 그림의 것을 물려받는다(그래서 늘 `gen_env_extra.py`부터 돌린다)
 - **바다**는 칸 그림 대신 셰이더(`scripts/world/water.gdshader`)로 그린다: 월드 좌표라 이음매가 없고, 물결이 흐르고 반짝임이 깜박이며,
   뭍·성벽과 닿는 곳에 거품, 부두(planks) 앞쪽 물에 부두 옆면·그림자. 물 칸 지도는 `iso_level.gd`의 `_apply_floor`가 넣는다
+  잔잔한 물은 코드(점무늬 3단 색 + 생겼다 사라지는 물비늘), 거친 물만 `sea_storm.png`. 레벨이 `soft_coast = true`(챕터 2)면 바닥 칸 전부에
+  이 셰이더를 씌워 해안선·바닥 종류 경계를 마름모 대신 휜 선으로 그린다(`floor_map` = 칸별 아틀라스 줄·변형).
+  모래 칸은 칸 그림 대신 이음매 없는 무늬 `assets/env/ground_sand.png`(`python3 tools/gen_ground_tex.py .`)를 월드 좌표로 깐다.
+  배(`ship.gd`): 선체 16방향은 겹치지 않고 한 장씩(경계에서 `HYST`만큼 더 돌아야 바뀜), 흘수선 거품·뱃머리 물결·V자 물결(바다 흐름 따라 떠감)
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:
   성벽·성탑·성문(열린 문은 문짝을 어둡게)·집 4채·목마·소품·바닥 6종. 그림 위치는 스크립트의 `ITEMS`·`FLOOR_BOX`

@@ -86,6 +86,10 @@ static func env() -> Dictionary:
 	return _env
 
 
+static func has_prop(name: String) -> bool:
+	return env()["props"].has(name)
+
+
 static func prop(name: String) -> Dictionary:
 	return env()["props"][name]
 

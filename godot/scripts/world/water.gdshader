@@ -8,6 +8,10 @@ shader_type canvas_item;
 // - 바다 무늬 그림(sea_calm·sea_storm, tools/gen_storm.py)이 있으면 use_tex: 줄무늬 대신 그림을 월드 좌표로 깐다.
 //   잔잔한 무늬는 off_a, 거친 무늬는 off_b만큼 밀어 깐다(레벨이 바람 쪽으로 흘린다).
 //   storm만큼 잔잔한 무늬 → 거친 무늬로 점무늬 섞기(픽셀아트라 반투명 섞기 대신)
+// - soft(챕터 2): 바닥 칸 전부에 이 셰이더를 씌워, 땅·물 경계를 칸 마름모 대신 부드럽게 휜 해안선으로 그린다.
+//   땅 여부를 칸 중심 사이로 이어 매끄럽게 하고(계단 없앰) 소음으로 흔든 뒤, 땅이면 floor_map의 칸 종류 그림을 아틀라스에서 뽑는다.
+//   종류끼리 경계(모래·풀·흙)도 같은 소음으로 휘어 격자가 덜 보인다.
+// - calm: 잔잔한 물은 그림 대신 코드로 — 느린 너울 띠 + 생겼다 사라지는 물비늘 줄(물결 따라 흐름)
 // iso_level.gd가 water_map(물 칸 = 흰색, 부두 = 회색 0.5, 나머지 = 검정)·map_size·origin·ex·ey를 넣는다.
 
 uniform sampler2D water_map : filter_nearest;
@@ -28,6 +32,13 @@ uniform sampler2D sea_calm_tex : filter_nearest, repeat_enable;
 uniform sampler2D sea_storm_tex : filter_nearest, repeat_enable;
 uniform vec2 off_a = vec2(0.0);
 uniform vec2 off_b = vec2(0.0);
+uniform bool soft = false;
+uniform sampler2D floor_map : filter_nearest;   // r = 아틀라스 줄, g = 변형 번호 (0~255)
+uniform vec2 atlas_size = vec2(256.0, 288.0);
+uniform float water_row = 6.0;
+// 이음매 없는 바닥 무늬(tools/gen_ground_tex.py): 이 줄의 칸은 칸 그림 대신 월드 좌표로 깐다
+uniform sampler2D sand_tex : filter_nearest, repeat_enable;
+uniform float sand_row = -1.0;
 
 varying vec2 wpos;
 
@@ -77,44 +88,136 @@ bool is_pier(vec2 cell) {
 	return k > 0.25 && k < 0.75;
 }
 
+// 칸이 땅인가(1) 물인가(0) — 부두는 땅으로
+float landv(vec2 cell) {
+	return kind(cell) > 0.75 ? 0.0 : 1.0;
+}
+
+// 칸 중심 사이를 이은 땅 값(0~1): 0.5 선이 계단 대신 비스듬히 깎인 해안선
+float land_field(vec2 g) {
+	vec2 h = g - 0.5;
+	vec2 i = floor(h);
+	vec2 t = h - i;
+	t = t * t * (3.0 - 2.0 * t);
+	return mix(mix(landv(i), landv(i + vec2(1.0, 0.0)), t.x), mix(landv(i + vec2(0.0, 1.0)), landv(i + vec2(1.0, 1.0)), t.x), t.y);
+}
+
+vec2 to_grid(vec2 q0) {
+	vec2 q = q0 - origin;
+	float det = ex.x * ey.y - ey.x * ex.y;
+	return vec2((q.x * ey.y - ey.x * q.y) / det, (ex.x * q.y - q.x * ex.y) / det);
+}
+
+// 잔잔한 바다(코드): 큰 얼룩 3단 색 + 너울 띠 + 물비늘 줄 두 겹
+vec3 calm_sea(vec2 p, float t) {
+	vec2 w = p - off_a;                         // 물결 따라 흐르는 좌표
+	float n = noise(w * vec2(0.006, 0.018) + vec2(t * 0.02, 0.0)) * 0.7 + noise(w * vec2(0.03, 0.06) - vec2(0.0, t * 0.03)) * 0.3;
+	float sw = sin(p.y * 0.16 + noise(p * vec2(0.008, 0.02)) * 7.0 + t * 0.55);   // 너울(위아래로 천천히)
+	float tone = n + sw * 0.08;
+	// 색 단계 사이는 점무늬로 섞어 얼룩 테두리가 선으로 보이지 않게
+	float m = smoothstep(0.3, 0.8, tone) * 2.0;
+	float lv = min(2.0, floor(m + bayer(p) * 0.9));
+	vec3 col = mix(deep.rgb, mid.rgb, lv * 0.32);
+	// 물비늘: (22×5)px 칸마다 줄 하나가 제 박자로 길어졌다 짧아진다. 줄은 칸마다 반 칸 어긋남
+	for (int layer = 0; layer < 2; layer++) {
+		vec2 sz = layer == 0 ? vec2(26.0, 6.0) : vec2(15.0, 4.0);
+		vec2 wp = w + (layer == 0 ? vec2(0.0) : vec2(5.0, 1.0));
+		float row = floor(wp.y / sz.y);
+		wp.x += mod(row, 2.0) * sz.x * 0.5;
+		vec2 slot = vec2(floor(wp.x / sz.x), row);
+		float h = hash(slot + float(layer) * 31.7);
+		float life = sin(t * (0.7 + h * 0.9) + h * 40.0) * (0.55 + 0.45 * sw * (h - 0.3));
+		float th = layer == 0 ? 0.42 : 0.8;
+		if (life > th) {
+			float len = floor((life - th) / (1.0 - th) * (layer == 0 ? 8.0 : 4.0)) + 1.0;
+			float cx = floor(h * (sz.x - 8.0)) + 4.0;
+			float lx = wp.x - slot.x * sz.x;
+			float ly = wp.y - row * sz.y;
+			if (ly < 1.0 && abs(lx - cx) < len * 0.5) {
+				col = layer == 0 ? (life > 0.85 && abs(lx - cx) < 1.0 ? mix(crest.rgb, foam.rgb, 0.4) : crest.rgb) : mix(col, crest.rgb, 0.5);
+			}
+		}
+	}
+	// 달빛 반짝임
+	vec2 cellp = floor(p / vec2(8.0, 4.0));
+	float hh = hash(cellp);
+	vec2 spot = cellp * vec2(8.0, 4.0) + floor(vec2(hash(cellp + 7.1) * 6.0, hash(cellp + 3.3) * 3.0));
+	if (hh > 0.985 && p.y == spot.y && (p.x == spot.x || p.x == spot.x + 1.0) && sin(t * 2.5 + hh * 60.0) > 0.5) {
+		col = foam.rgb;
+	}
+	return col;
+}
+
 void fragment() {
 	float a = texture(TEXTURE, UV).a;
 	vec2 p = floor(wpos);                      // 픽셀 단위로 끊어 픽셀아트처럼
 	float t = TIME * (1.0 + storm * 1.6);
 
-	// 격자 좌표(칸 안 위치 f: 0~1)
-	vec2 q = p + 0.5 - origin;
-	float det = ex.x * ey.y - ey.x * ex.y;
-	vec2 g = vec2((q.x * ey.y - ey.x * q.y) / det, (ex.x * q.y - q.x * ex.y) / det);
+	// soft: 휜 위치(wq)에서 땅·물과 칸 종류를 정한다
+	vec2 wq = p;
+	if (soft) {
+		wq += (vec2(noise(p * 0.05), noise(p * 0.05 + 17.3)) - 0.5) * vec2(16.0, 9.0)
+			+ (vec2(noise(p * 0.16 + 5.1), noise(p * 0.16 + 9.7)) - 0.5) * vec2(4.0, 2.0);
+	}
+	vec2 g = to_grid(wq + 0.5);
 	vec2 cell = floor(g);
 	vec2 f = g - cell;
 
+	bool land_px = false;
+	vec3 land_col = vec3(0.0);
+	float lf = 0.0;
+	float thr = 0.5;
+	if (soft) {
+		lf = land_field(g);
+		thr = 0.5 + (noise(p * vec2(0.09, 0.18)) - 0.5) * 0.22;
+		if (lf > thr) {
+			// 땅: 이 칸(휜 위치의 칸)이 땅이면 그 종류, 물 칸이면 가장 가까운 땅 칸의 종류(보통 모래)
+			vec2 src = cell;
+			if (landv(cell) < 0.5) {
+				vec2 best = cell;
+				float bd = 9.0;
+				for (int k = 0; k < 8; k++) {
+					vec2 o = vec2(k < 3 ? -1.0 : (k < 5 ? 0.0 : 1.0), float(k < 3 ? k - 1 : (k < 5 ? (k == 3 ? -1 : 1) : k - 6)));
+					vec2 c2 = cell + o;
+					float dd = length(g - (c2 + 0.5));
+					if (landv(c2) > 0.5 && dd < bd) { bd = dd; best = c2; }
+				}
+				src = best;
+			}
+			vec4 fm = texture(floor_map, (src + 0.5) / map_size);
+			float row = floor(fm.r * 255.0 + 0.5);
+			float vv = floor(texture(floor_map, (cell + 0.5) / map_size).g * 255.0 + 0.5);
+			// 아틀라스에서 휜 위치의 칸(cell) 마름모 안 같은 자리 — 같은 종류 칸끼리 이어지므로 종류만 바꿔 뽑아도 맞는다
+			vec2 top = origin + ex * cell.x + ey * cell.y;
+			vec2 tp = clamp(floor(wq - top + vec2(32.0, 0.0)), vec2(0.0), vec2(63.0, 31.0));
+			vec4 lc = texture(TEXTURE, (vec2(vv * 64.0, row * 32.0) + tp + 0.5) / atlas_size);
+			vec3 lcol = lc.rgb;
+			if (lc.a < 0.5) {   // 마름모 밖(드묾): 가까운 안쪽
+				lcol = texture(TEXTURE, (vec2(vv * 64.0, row * 32.0) + vec2(32.0, 16.0) + 0.5) / atlas_size).rgb;
+			}
+			if (row == sand_row) {
+				lcol = texture(sand_tex, fract((floor(wq) + 0.5) / vec2(textureSize(sand_tex, 0)))).rgb;
+			}
+			// 물가 젖은 띠
+			if (lf - thr < 0.06) {
+				lcol *= 0.78;
+			}
+			land_px = true;
+			land_col = lcol;
+		}
+	}
+
 	vec3 col;
 	if (use_tex) {
-		// 잔잔한 무늬는 off_a, 거친 무늬는 off_b로 흘린다(서로 다른 빠르기). 폭풍 세기만큼 점무늬로 바꿔 낀다
-		col = sea_tex(sea_calm_tex, p, off_a);
+		col = calm_sea(p, t);
 		if (storm > 0.01) {
 			vec3 sc = sea_tex(sea_storm_tex, p, off_b);
-			// 문턱은 큰 얼룩 + 점무늬: 폭풍이 오를 때 바다가 덩어리째 거칠어지고 경계만 점무늬
 			float th = mix(bayer(p), noise(p * vec2(0.012, 0.024) + vec2(t * 0.05, 0.0)), 0.7) * 0.94 + 0.03;
 			col = storm > th ? sc : col;
 		}
 	} else {
-		// 바탕: 느리게 움직이는 큰 얼룩으로 깊은 물·중간 물
-		float n = noise(p * vec2(0.012, 0.024) + vec2(t * 0.03, t * 0.01));
-		col = mix(deep.rgb, mid.rgb, smoothstep(0.35, 0.75, n));
-
-		// 물결: 화면 가로로 긴 짧은 줄. 줄 위치는 얼룩 소음으로 휘고, 시간에 따라 위아래로 출렁인다
-		float bend = noise(p * vec2(0.025, 0.07)) * 7.0;
-		float w = sin(p.y * 0.5 + bend + t * 1.2);
-		float dash = noise(vec2(p.x * 0.07 + t * 0.25, floor(p.y / 2.0) * 0.9));
+		col = calm_sea(p, t);
 		col = mix(col, col * 0.6 + vec3(0.015, 0.02, 0.035), storm * 0.7);
-		if (w > 0.93 - storm * 0.16 && dash > 0.62 - storm * 0.18) {
-			col = crest.rgb;
-		} else if (w > 0.78 - storm * 0.2 && dash > 0.55 - storm * 0.15) {
-			col = mix(col, crest.rgb, 0.35);
-		}
-		// 폭풍의 흰 파도머리: 큰 얼룩이 지나가는 자리에 부서지는 거품 줄
 		if (storm > 0.01) {
 			float wc = noise(p * vec2(0.04, 0.08) + vec2(t * 0.35, -t * 0.18));
 			float roll = sin(p.y * 0.8 - p.x * 0.15 + t * 2.6 + wc * 8.0);
@@ -124,35 +227,31 @@ void fragment() {
 				col = mix(col, foam.rgb, 0.5);
 			}
 		}
-
-		// 달빛 반짝임: 8×4 칸마다 드물게 가로 2px 점 하나가 제각각 깜박인다
-		vec2 cellp = floor(p / vec2(8.0, 4.0));
-		float h = hash(cellp);
-		vec2 spot = cellp * vec2(8.0, 4.0) + floor(vec2(hash(cellp + 7.1) * 6.0, hash(cellp + 3.3) * 3.0));
-		if (h > 0.985 && p.y == spot.y && (p.x == spot.x || p.x == spot.x + 1.0) && sin(t * 2.5 + h * 60.0) > 0.5) {
-			col = foam.rgb;
-		}
 	}
 
-	// 해안 거품: 물이 아닌 이웃 쪽 가장자리까지의 거리
+	// 해안 거품까지의 거리 d(칸 단위). soft면 땅 값으로, 아니면 이웃 칸으로
 	float d = 9.0;
-	if (!is_water(cell + vec2(-1.0, 0.0))) d = min(d, f.x);
-	if (!is_water(cell + vec2(1.0, 0.0))) d = min(d, 1.0 - f.x);
-	if (!is_water(cell + vec2(0.0, -1.0))) d = min(d, f.y);
-	if (!is_water(cell + vec2(0.0, 1.0))) d = min(d, 1.0 - f.y);
-	if (!is_water(cell + vec2(-1.0, -1.0))) d = min(d, max(f.x, f.y));
-	if (!is_water(cell + vec2(1.0, -1.0))) d = min(d, max(1.0 - f.x, f.y));
-	if (!is_water(cell + vec2(-1.0, 1.0))) d = min(d, max(f.x, 1.0 - f.y));
-	if (!is_water(cell + vec2(1.0, 1.0))) d = min(d, max(1.0 - f.x, 1.0 - f.y));
+	if (soft) {
+		if (lf > 0.02) {
+			d = (thr - lf) * 1.6;
+		}
+	} else {
+		if (!is_water(cell + vec2(-1.0, 0.0))) d = min(d, f.x);
+		if (!is_water(cell + vec2(1.0, 0.0))) d = min(d, 1.0 - f.x);
+		if (!is_water(cell + vec2(0.0, -1.0))) d = min(d, f.y);
+		if (!is_water(cell + vec2(0.0, 1.0))) d = min(d, 1.0 - f.y);
+		if (!is_water(cell + vec2(-1.0, -1.0))) d = min(d, max(f.x, f.y));
+		if (!is_water(cell + vec2(1.0, -1.0))) d = min(d, max(1.0 - f.x, f.y));
+		if (!is_water(cell + vec2(-1.0, 1.0))) d = min(d, max(f.x, 1.0 - f.y));
+		if (!is_water(cell + vec2(1.0, 1.0))) d = min(d, max(1.0 - f.x, 1.0 - f.y));
+	}
 	if (d < 2.0) {
-		// 얕은 물빛
 		col = mix(col, shallow.rgb, (1.0 - smoothstep(0.0, 0.7, d)) * 0.55);
-		// 밀려왔다 빠지는 거품 띠(가장자리를 따라 끊긴 모양)
 		float fn = noise(p * vec2(0.14, 0.28) + vec2(t * 0.5, t * 0.2));
 		float surge = 0.08 + 0.04 * sin(t * 1.3 + (g.x - g.y) * 1.7);
 		float edge = surge * (0.2 + 1.3 * fn);
 		if (d < 0.025) {
-			col = mix(col, crest.rgb, 0.8);       // 닿는 선은 늘 옅게
+			col = mix(col, crest.rgb, 0.8);
 		}
 		if (d < edge && fn > 0.32) {
 			col = foam.rgb;
@@ -160,15 +259,14 @@ void fragment() {
 			col = mix(col, crest.rgb, 0.6);
 		}
 	}
-	// 부두 옆면·그림자: 부두가 격자 -x 또는 -y 쪽(화면 위쪽)에 있으면 이 칸의 그쪽 가장자리에 보인다
 	float pd = 9.0;
 	if (is_pier(cell + vec2(-1.0, 0.0))) pd = min(pd, f.x);
 	if (is_pier(cell + vec2(0.0, -1.0))) pd = min(pd, f.y);
 	if (is_pier(cell + vec2(-1.0, -1.0))) pd = min(pd, max(f.x, f.y));
 	if (pd < 0.07) {
-		col = pier_side.rgb * (0.85 + 0.3 * step(0.5, fract(p.x / 6.0)));   // 나무 옆면(널 이음)
+		col = pier_side.rgb * (0.85 + 0.3 * step(0.5, fract(p.x / 6.0)));
 	} else if (pd < 0.24) {
 		col = mix(col, pier_shadow.rgb, 0.6 * (1.0 - smoothstep(0.07, 0.24, pd)) + 0.25);
 	}
-	COLOR = vec4(col, a);
+	COLOR = vec4(land_px ? land_col : col, a);
 }

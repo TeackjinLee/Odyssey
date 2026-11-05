@@ -124,7 +124,29 @@ func _process(delta: float) -> void:
 		if dialogue_auto > 0.25:
 			dialogue_auto = 0.0
 			_advance_dialogue()
+	_update_cursor()
 	canvas.queue_redraw()
+
+
+## 활을 든 채 게임 중이면 조준 커서(assets/ui/cursor.png 16×16)를 창 배율만큼 키워 쓴다. 메뉴·대화·연출 중엔 기본 커서
+var _cursor_scale := -1
+
+
+func _update_cursor() -> void:
+	var p: Player = Game.player
+	var want := 0
+	if p and Game.level and p.weapon == "bow" and p.riding == null and dialogue.is_empty() and overlay == "" \
+			and not cinematic and not get_tree().paused and ResourceLoader.exists("res://assets/ui/cursor.png"):
+		want = maxi(1, floori(get_window().size.y / 360.0))
+	if want == _cursor_scale:
+		return
+	_cursor_scale = want
+	if want == 0:
+		Input.set_custom_mouse_cursor(null)
+		return
+	var img: Image = (load("res://assets/ui/cursor.png") as Texture2D).get_image()
+	img.resize(16 * want, 16 * want, Image.INTERPOLATE_NEAREST)
+	Input.set_custom_mouse_cursor(ImageTexture.create_from_image(img), Input.CURSOR_ARROW, Vector2(8, 8) * want)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -367,7 +389,12 @@ func _draw_squad() -> void:
 	var y := 72.0
 	_panel(Rect2(6, y, 150, 14 + sq.members.size() * 27))
 	var mode_colors := [Color(0.6, 0.85, 1), Color(0.95, 0.85, 0.4), Color(1, 0.45, 0.35), Color(0.6, 1, 0.6)]
-	_text(Vector2(11, y + 10), "부대 명령: " + Squad.MODE_NAMES[sq.mode], 8, mode_colors[sq.mode])
+	var mode_icon := _portrait("res://assets/ui/icon_%s.png" % ["follow", "hold", "focus", "retreat"][sq.mode])
+	var tx := 11.0
+	if mode_icon:   # 지금 명령 아이콘(24→12, 정확히 절반)
+		canvas.draw_texture_rect(mode_icon, Rect2(10, y + 2, 12, 12), false)
+		tx = 25.0
+	_text(Vector2(tx, y + 10), "부대 명령: " + Squad.MODE_NAMES[sq.mode], 8, mode_colors[sq.mode])
 	y += 15
 	for c in sq.members:
 		var tex := _portrait(c.portrait)
@@ -404,7 +431,7 @@ func _draw_quest() -> void:
 
 
 func _draw_minimap(p: Player) -> void:
-	var center := Vector2(592, 50)
+	var center := Vector2(588, 52)
 	var radius := 42.0
 	var lvl: IsoLevel = Game.level
 	canvas.draw_circle(center, radius + 3, Color(0, 0, 0, 0.8))
@@ -456,8 +483,13 @@ func _draw_minimap(p: Player) -> void:
 		var blink := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.008)
 		canvas.draw_circle(m, 3.0, Color(1, 0.85, 0.2, blink))
 	canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -3), center + Vector2(2.5, 2.5), center + Vector2(-2.5, 2.5)]), GOLD)
-	canvas.draw_arc(center, radius + 1, 0, TAU, 48, GOLD, 1.5)
-	_text(Vector2(center.x - 40, center.y + radius + 11), lvl.area_name, 7, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 80)
+	# 테두리 그림(tools/gen_minimap_frame.py, 고리 안쪽 반지름 41)이 있으면 그것, 없으면 금색 선
+	var ring := _portrait("res://assets/ui/frames/minimap.png")
+	if ring:
+		canvas.draw_texture(ring, (center - ring.get_size() / 2).round())
+	else:
+		canvas.draw_arc(center, radius + 1, 0, TAU, 48, GOLD, 1.5)
+	_text(Vector2(center.x - 40, center.y + radius + 18), lvl.area_name, 7, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 80)
 
 
 ## 배(챕터 2~): 오른쪽 미니맵 아래 — 선체·노 단계·노꾼 힘·돛·바람 나침반, 식량 창고·부하 배부름·항해 하루
@@ -467,7 +499,7 @@ func _draw_ship(p: Player) -> void:
 	if ship == null or not is_instance_valid(ship):
 		return
 	var at_sea: bool = p.riding != null
-	var r := Rect2(522, 108, 112, 98 if at_sea else 34)
+	var r := Rect2(522, 116, 112, 98 if at_sea else 34)
 	_panel(r)
 	var x := r.position.x + 5
 	var y := r.position.y + 10
@@ -735,14 +767,22 @@ func _draw_clear_result() -> void:
 	var info: Dictionary = Game.level.result_info(overlay_stats) if Game.level else {}
 	_text(Vector2(0, 92), info.get("head", "클리어"), 12, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
 	_text(Vector2(0, 120), info.get("title", ""), 18, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, 640)
-	if info.get("badge", "") != "":
-		_text(Vector2(0, 148), info["badge"], 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
+	var badge: String = info.get("badge", "")
+	var badge_tex: Texture2D = null
+	for pair in [["보이지 않는 자", "unseen"], ["밤의 그림자", "shadow"]]:
+		if badge.contains(pair[0]):
+			badge_tex = _portrait("res://assets/ui/badge_%s.png" % pair[1])
+	if badge_tex:   # 칭호 배지 그림(128×64)을 절반 크기로 칭호 글 위에
+		canvas.draw_texture_rect(badge_tex, Rect2(288, 132, 64, 32), false)
+	var dy := 22.0 if badge_tex else 0.0
+	if badge != "":
+		_text(Vector2(0, 148 + dy), badge, 10, GOLD, HORIZONTAL_ALIGNMENT_CENTER, 640)
 	else:
 		_text(Vector2(0, 148), info.get("badge_hint", ""), 8, Color(0.7, 0.7, 0.7), HORIZONTAL_ALIGNMENT_CENTER, 640)
 	var rows: Array = info.get("rows", [])
 	for i in rows.size():
-		_text(Vector2(0, 178 + i * 16), rows[i], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)
-	_text(Vector2(0, 240), info.get("next", ""), 7, Color(0.65, 0.65, 0.65), HORIZONTAL_ALIGNMENT_CENTER, 640)
+		_text(Vector2(0, 178 + dy + i * 16), rows[i], 8, Color(0.9, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 640)
+	_text(Vector2(0, 240 + dy * 0.5), info.get("next", ""), 7, Color(0.65, 0.65, 0.65), HORIZONTAL_ALIGNMENT_CENTER, 640)
 
 
 func _draw_overlay() -> void:
