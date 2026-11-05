@@ -4,7 +4,7 @@
 요청 방법은 [sprite_request/](sprite_request/README.md), 오디세우스 차림 결정은 [sprite_request/OUTFIT.md](sprite_request/OUTFIT.md),
 직접 모은 참고 이미지는 [references/](references/README.md), 시트 `.json` 형식은 [../README.md](../README.md) §그림 바꾸기.
 
-> **2026-11-05 수령 현황 보정:** 아래 오디세우스 맨손 표는 옛 `odysseus` 작업 기록이다. 현재 1·2장은 무기·투구·망토를 함께 그린 `odysseus_ch1`을 사용하며 기본·이동·공격·나머지 동작은 이미 받았다(`ch1_kit/README.md`). 전투·기술 이펙트도 `0b3cf14`에서 적용했다. `troy_extra`·UI 아이콘·HUD 틀은 요청 결과를 받았지만 게임 연결 전이다. 다음 요청은 [현재 차림 기준 요청 묶음](sprite_request/next_batch_2026-11-05/README.md)을 우선한다. 이미 받은 그림과 검수 후보, 적용 완료를 구분한다.
+> **2026-11-05 수령 현황 보정:** 아래 오디세우스 맨손 표는 옛 `odysseus` 작업 기록이다. 현재 1·2장은 무기·투구·망토를 함께 그린 `odysseus_ch1`을 사용하며 기본·이동·공격·나머지 동작은 이미 받았다(`ch1_kit/README.md`). 전투·기술 이펙트도 `0b3cf14`에서 적용했다. `troy_extra`·UI 아이콘·HUD 틀은 받아서 연결했다(남은 아이콘은 `APPLIED_2026-11-05.md`). 다음 요청은 [현재 차림 기준 요청 묶음](sprite_request/next_batch_2026-11-05/README.md)을 우선한다. 이미 받은 그림과 검수 후보, 적용 완료를 구분한다.
 
 ---
 
@@ -255,9 +255,9 @@
 | `U-portrait-greek` | 부하 초상화 3 (검병·창병·궁병) | ✅ (`ch1_kit/units/portrait`, 트로이 4종도 받아 둠) |
 | `U-portrait-sinon` `-agenor` | 시논(대화창)·아게노르(보스 체력바) | ✅ 시논(대화창 왼쪽) · 아게노르(보스 체력바 왼쪽) |
 | `U-icons` | 아이콘 12: 검·활·함성·명령 4·상호작용·의심 ?·알아챔 !·체크포인트·잠입 | ⬜ (의심·알아챔은 지금 글자) |
-| `U-frames` | 체력·스태미나 바 틀, 슬롯 틀, 미니맵 테두리, 대화창 9칸 틀(뇌문 장식), 이름표 | ⬜ |
+| `U-frames` | 체력·스태미나 바 틀, 슬롯 틀, 미니맵 테두리, 대화창 9칸 틀(뇌문 장식), 이름표 | ✅ 미니맵 테두리 빼고 연결(`assets/ui/frames/`, `hud.gd`의 `_frame`) |
 | `U-result` | 클리어 화면 칭호 배지 「밤의 그림자」「보이지 않는 자」 | ⬜ (있으면 좋음) |
-| `U-logo` | 타이틀 로고 "ODYSSEY" | ⬜ |
+| `U-logo` | 타이틀 로고 "ODYSSEY" | ✅ 타이틀 화면(`assets/ui/frames/logo.png`) |
 | `U-cursor` | 조준 커서 | ⬜ |
 | `U-font` | 한글 픽셀 글꼴 (제안: 갈무리 Galmuri, OFL 라이선스) | ⬜ |
 

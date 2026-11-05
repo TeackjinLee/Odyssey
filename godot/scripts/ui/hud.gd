@@ -29,6 +29,7 @@ var show_help := false
 var overlay := ""
 var overlay_stats: Dictionary = {}
 var _portraits := {}
+var _frames := {}   # 이름 → StyleBoxTexture(그림이 없으면 null)
 var _speaker_sheets := {}
 var _speaker_level: Object = null   # 이름 표는 챕터 글에서 만든다 — 챕터가 바뀌면 다시
 var _buttons: Array = []
@@ -223,6 +224,42 @@ func _panel(r: Rect2) -> void:
 	canvas.draw_rect(r, EDGE, false, 1.0)
 
 
+## HUD 틀 그림(assets/ui/frames/<이름>.png, tools/fx_layout.py cut … frames)을 9칸으로 나눠 늘려 그린다.
+## 모서리는 원래 픽셀 크기 그대로, 변·가운데만 늘린다. 그림이 없으면 false — 부르는 쪽이 예전 사각형으로 그린다.
+const FRAME_MARGIN := {"bar_hp": [10, 4, 10, 5], "bar_stamina": [8, 4, 8, 4], "slot": [10, 10, 10, 10],
+	"nameplate": [5, 5, 5, 5], "dialogue": [13, 13, 13, 13]}
+
+
+func _frame(name: String, r: Rect2, tint := Color.WHITE) -> bool:
+	if not _frames.has(name):
+		var tex := _portrait("res://assets/ui/frames/%s.png" % name)
+		var sb: StyleBoxTexture = null
+		if tex:
+			sb = StyleBoxTexture.new()
+			sb.texture = tex
+			var m: Array = FRAME_MARGIN.get(name, [4, 4, 4, 4])
+			sb.texture_margin_left = m[0]
+			sb.texture_margin_top = m[1]
+			sb.texture_margin_right = m[2]
+			sb.texture_margin_bottom = m[3]
+		_frames[name] = sb
+	var box: StyleBoxTexture = _frames[name]
+	if box == null:
+		return false
+	box.modulate_color = tint
+	canvas.draw_style_box(box, r)
+	return true
+
+
+## 틀 그림이 있는 막대: 틀을 바깥에 그리고 안쪽을 채운다(체력·스태미나·보스)
+func _framed_bar(frame: String, r: Rect2, k: float, color: Color) -> void:
+	if not _frame(frame, r.grow_individual(4, 4, 4, 4)):
+		_bar(r, k, color)
+		return
+	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x * clamp(k, 0.0, 1.0), r.size.y)), color)
+	canvas.draw_rect(Rect2(r.position, Vector2(r.size.x * clamp(k, 0.0, 1.0), 1)), color.lightened(0.35))
+
+
 func _bar(r: Rect2, k: float, color: Color) -> void:
 	canvas.draw_rect(r.grow(1), Color(0, 0, 0, 0.8))
 	canvas.draw_rect(r, Color(0.18, 0.12, 0.1))
@@ -297,11 +334,11 @@ func _draw_player(p: Player) -> void:
 		canvas.draw_texture_rect(tex, Rect2(10, 10, 40, 40), false)
 	canvas.draw_rect(Rect2(9, 9, 42, 42), GOLD, false, 1.0)
 	_text(Vector2(56, 17), "Lv.1  오디세우스", 9, GOLD)
-	_bar(Rect2(56, 22, 122, 7), p.hp / p.max_hp, Color(0.85, 0.18, 0.16))
+	_framed_bar("bar_hp", Rect2(56, 22, 122, 7), p.hp / p.max_hp, Color(0.85, 0.18, 0.16))
 	_text(Vector2(56, 29), "%d / %d" % [ceili(p.hp), int(p.max_hp)], 6, Color(1, 1, 1, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 122)
-	_bar(Rect2(56, 33, 122, 4), p.stamina / p.max_stamina, Color(0.35, 0.7, 0.95))
+	_framed_bar("bar_stamina", Rect2(56, 35, 122, 4), p.stamina / p.max_stamina, Color(0.35, 0.7, 0.95))
 	var buff := "  ·  함성 효과" if p.buff_time > 0.0 else ""
-	_text(Vector2(56, 45), ("검과 방패" if p.weapon == "sword" else "활") + buff, 7, Color(0.85, 0.85, 0.85))
+	_text(Vector2(56, 49), ("검과 방패" if p.weapon == "sword" else "활") + buff, 7, Color(0.85, 0.85, 0.85))
 	_draw_food(p.nutrition)
 
 
@@ -512,8 +549,9 @@ func _draw_slots(p: Player) -> void:
 	for i in slots.size():
 		var s: Array = slots[i]
 		var r := Rect2(x0 + i * (w + 4), y, w, w)
-		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
-		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
+		if not _frame("slot", r, Color.WHITE if s[3] else Color(0.55, 0.55, 0.55)):
+			canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
+			canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
 		var has_icon := _draw_slot_icon(icon_keys[i], r, bool(s[3]))
 		if i == tut_slot and tut_done <= 0.0:
 			var pulse := 0.5 + 0.5 * sin(tut_t * 8.0)
@@ -540,8 +578,9 @@ func _draw_ship_slots(p: Player) -> void:
 	for i in slots.size():
 		var s: Array = slots[i]
 		var r := Rect2(x0 + i * (w + 4), 312.0, w, w)
-		canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
-		canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
+		if not _frame("slot", r, Color.WHITE if s[3] else Color(0.55, 0.55, 0.55)):
+			canvas.draw_rect(r, Color(0.08, 0.06, 0.06, 0.85))
+			canvas.draw_rect(r, GOLD if s[3] else Color(0.4, 0.35, 0.3), false, 1.0)
 		var has_icon := _draw_slot_icon(icon_keys[i], r, bool(s[3]))
 		_text(r.position + Vector2(0, 29 if has_icon else 17), s[0], 6 if has_icon else 8, Color(1, 1, 1) if s[3] else Color(0.55, 0.55, 0.55), HORIZONTAL_ALIGNMENT_CENTER, w)
 		_text(r.position + Vector2(0, w - 4), s[1], 6, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
@@ -552,7 +591,7 @@ func _draw_boss() -> void:
 		return
 	var r := Rect2(190, 14, 260, 7)
 	_text(Vector2(190, 11), boss.display_name, 8, Color(1, 0.75, 0.6), HORIZONTAL_ALIGNMENT_CENTER, 260)
-	_bar(r, boss.hp / boss.max_hp, Color(0.75, 0.15, 0.2))
+	_framed_bar("bar_hp", r, boss.hp / boss.max_hp, Color(0.75, 0.15, 0.2))
 	var tex := _portrait("res://assets/ui/portrait_%s.png" % boss.sheet)   # 보스 시트의 초상화가 있으면 바 왼쪽에
 	if tex:
 		var pr := Rect2(166, 2, 21, 21)
@@ -634,19 +673,30 @@ func _draw_title() -> void:
 func _draw_dialogue() -> void:
 	var line: Array = dialogue[dialogue_i]
 	var r := Rect2(70, 262, 500, 62)
-	canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.9))
-	canvas.draw_rect(r, GOLD, false, 1.0)
-	var x := 10.0
+	var framed := _frame("dialogue", Rect2(70, 254, 500, 72))
+	if framed:   # 틀 테두리(12px) 안에 초상화 48px이 들어가도록 위로 키운다
+		r = Rect2(70, 254, 500, 72)
+	else:
+		canvas.draw_rect(r, Color(0.05, 0.04, 0.05, 0.9))
+		canvas.draw_rect(r, GOLD, false, 1.0)
+	var pad := 12.0 if framed else 7.0
+	var x := 10.0 if not framed else 16.0
 	var tex := _speaker_portrait(line[0])
 	if tex:   # 말하는 이 초상화를 왼쪽에, 글은 그만큼 오른쪽으로
-		var pr := Rect2(r.position + Vector2(7, 7), Vector2(48, 48))
+		var pr := Rect2(r.position + Vector2(pad, pad), Vector2(48, 48))
 		canvas.draw_rect(pr, Color(0.2, 0.15, 0.12))
 		canvas.draw_texture_rect(tex, pr, false)
 		canvas.draw_rect(pr, GOLD, false, 1.0)
-		x = 62.0
-	_text(r.position + Vector2(x, 14), line[0], 9, GOLD)
-	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(x, 30), Game.keys_text(line[1]), HORIZONTAL_ALIGNMENT_LEFT, 490 - x, 9, 3, Color.WHITE)
-	_text(r.end + Vector2(-150, -6), _advance_keys() + " ▶", 7, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_RIGHT, 144)
+		x = pad + 55.0
+	if framed:   # 말하는 이 이름은 대화창 위 이름표에
+		var nw: float = Game.ui_font.get_string_size(line[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x + 14.0
+		_frame("nameplate", Rect2(r.position.x + x - 7, r.position.y - 16, nw, 18))
+		_text(r.position + Vector2(x, -3), line[0], 9, GOLD)
+	else:
+		_text(r.position + Vector2(x, 14), line[0], 9, GOLD)
+	var ty := 26.0 if framed else 30.0
+	canvas.draw_multiline_string(Game.ui_font, r.position + Vector2(x, ty), Game.keys_text(line[1]), HORIZONTAL_ALIGNMENT_LEFT, r.size.x - pad - 6 - x, 9, 3, Color.WHITE)
+	_text(r.end + Vector2(-150 - pad, -17.0 if framed else -6.0), _advance_keys() + " ▶", 7, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_RIGHT, 144)
 
 
 ## 대화 넘기기·연출 건너뛰기 키(상호작용 / 구르기 / 공격)

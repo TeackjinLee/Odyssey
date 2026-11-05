@@ -164,7 +164,7 @@ scripts/
   combat/              판정(combat.gd), 화살, 이펙트(fx.gd — 그림 이펙트가 있으면 그림), 기술 효과(skills.gd: 미끼·일제 사격)
   audio/sfx.gd         효과음: assets/audio/sfx 파일이 있으면 파일(변형 무작위), 없으면 코드 합성. at()은 거리로 줄임
   audio/bgm.gd         배경 음악 교차 페이드·짧은 곡(승리·패배)·환경음 층
-  ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드)
+  ui/hud.gd            HUD 전부 (+ 연출용 검은 띠·자막·페이드). 틀 그림은 assets/ui/frames/를 9칸으로 늘려 그림
   ui/pause_menu.gd     일시정지 메뉴(Esc)와 설정 화면(타이틀에서도 씀)
 data/food.json         음식 표(탄·단·지, 먹는 횟수, 다시 열리는 시간)
 data/dialogue/common.json 모든 챕터가 같이 쓰는 글(영양 안내 등)

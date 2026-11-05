@@ -228,7 +228,13 @@ func _show_menu() -> void:
 	key.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	key.modulate = Color(1, 1, 1, 0.45)
 	menu.add_child(key)
-	_label(menu, "ODYSSEY", Vector2(0, 30), 34, Color(0.95, 0.78, 0.38))
+	if ResourceLoader.exists("res://assets/ui/frames/logo.png"):   # 받은 로고 그림(256×64), 없으면 글자
+		var logo := TextureRect.new()
+		logo.texture = load("res://assets/ui/frames/logo.png")
+		logo.position = Vector2(192, 10)
+		menu.add_child(logo)
+	else:
+		_label(menu, "ODYSSEY", Vector2(0, 30), 34, Color(0.95, 0.78, 0.38))
 	_label(menu, "오디세우스의 귀환", Vector2(0, 76), 12, Color(0.9, 0.88, 0.82))
 	var y := 98.0
 	var first: Button = null
