@@ -1,0 +1,54 @@
+{
+  "status": "candidate",
+  "target_body_height": 156,
+  "scale": 0.3326226012793177,
+  "source_bounds": {
+    "E": [
+      125,
+      21,
+      362,
+      487
+    ],
+    "SE": [
+      98,
+      15,
+      408,
+      483
+    ],
+    "S": [
+      90,
+      16,
+      419,
+      485
+    ],
+    "NE": [
+      119,
+      15,
+      442,
+      488
+    ],
+    "N": [
+      89,
+      15,
+      418,
+      484
+    ]
+  },
+  "directions": [
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE"
+  ],
+  "mirrored": {
+    "SW": "SE",
+    "W": "E",
+    "NW": "NE"
+  },
+  "game_registered": false,
+  "interaction_points_verified": false
+}
