@@ -46,14 +46,15 @@ CONFIGS = {
         'sleep': dict(src=KIT + 'polyphemus/states/results/sleep.png', layout='sleep', cols=4, rows=2, fps=2, loop=True, ref='width'),
     },
     'v2': {
-        'idle': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=4, loop=True, ref='median'),
-        'walk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=True, ref='median'),
+        'idle': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=4, loop=True, ref='median', steady=True),
+        # 걷기 fps 4: 걸음 폭에 비해 7은 다리가 땅보다 3배 빨라 제자리 종종걸음처럼 보였다(속도에 맞춰 speed_scale로 빨라짐)
+        'walk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=4, loop=True, ref='median', steady=True),
         'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='median'),
         'club_slam': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'grab': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
-        'drunk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median'),
+        'drunk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
         'eye_wound': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=False, ref='first'),
-        'grope': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median'),
+        'grope': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
         # 바위 밀기·끌기: 몸을 숙여 키가 작으므로 걷기와 같은 배율(k_like)
         'push': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
         'pull': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
@@ -137,6 +138,14 @@ def load_anim(name, cfg, root):
     return out
 
 
+def torso_x(sp):
+    """몸통(위에서 20~55% 높이) 불투명 칸들의 가로 무게중심"""
+    a = opaque(sp)
+    y0, y1 = int(sp.height * 0.2), int(sp.height * 0.55)
+    xs = [x for y in range(y0, y1, 2) for x in range(0, sp.width, 2) if a.getpixel((x, y))]
+    return sum(xs) / len(xs) if xs else sp.width / 2
+
+
 def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H, k=None):
     boxes = {d: [main_body(c) for c in cs] for d, cs in frames_by_dir.items()}
     for d, bs in boxes.items():
@@ -166,11 +175,21 @@ def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H, k=None
     out, issues = {}, []
     for d, cs in frames_by_dir.items():
         base = median(b[3] for b in boxes[d])
+        dir_h = median(b[3] - b[1] for b in boxes[d])
         out[d] = []
         for i, (c, b) in enumerate(zip(cs, boxes[d])):
-            sp = shrink(c.crop(b), k)
-            x = round(anchor[0] + (b[0] - c.width / 2) * k)
-            y = round(anchor[1] + (b[1] - base) * k)
+            if cfg.get('steady'):
+                # 서기·걷기: 방향마다 키를 같게(돌아설 때 커졌다 작아지지 않게), 프레임마다 키 차이는 30%만 남기고,
+                # 가장 낮은 발을 땅(anchor)에 붙이고, 몸통 가운데를 anchor x에 맞춘다(발·곤봉이 흔들려도 몸이 미끄러지지 않게)
+                h = b[3] - b[1]
+                kf = k * ref / dir_h * (dir_h / h) ** 0.7
+                sp = shrink(c.crop(b), kf)
+                x = round(anchor[0] - torso_x(sp))
+                y = anchor[1] - sp.height
+            else:
+                sp = shrink(c.crop(b), k)
+                x = round(anchor[0] + (b[0] - c.width / 2) * k)
+                y = round(anchor[1] + (b[1] - base) * k)
             if x < 0 or y < 0 or x + sp.width > frame[0] or y + sp.height > frame[1]:
                 issues.append(f'{d} {i + 1}: 칸을 넘어 잘림')
             canvas = Image.new('RGBA', frame)
