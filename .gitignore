@@ -11,3 +11,6 @@ godot/docs/sprite_request/**/*.log
 godot/docs/sprite_request/**/results/cand/
 godot/docs/sprite_request/**/results/rejected/
 godot/docs/sprite_request/**/jobs/*.pick
+
+# 다른 도구가 만든 시안·검증 화면(자체 git 포함) — 저장소에 넣지 않음
+output/
