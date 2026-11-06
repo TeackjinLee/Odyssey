@@ -1,0 +1,20 @@
+{
+  "frame": [
+    512,
+    256
+  ],
+  "anchor": [
+    256,
+    214
+  ],
+  "dirs": 2,
+  "scale": 0.5,
+  "anims": {
+    "sleep": {
+      "start": 0,
+      "frames": 2,
+      "fps": 2,
+      "loop": true
+    }
+  }
+}

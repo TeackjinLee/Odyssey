@@ -48,18 +48,21 @@ CONFIGS = {
     'v2': {
         'idle': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=4, loop=True, ref='median'),
         'walk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=True, ref='median'),
-        'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='first'),
+        'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='median'),
         'club_slam': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'grab': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'drunk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median'),
         'eye_wound': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=False, ref='first'),
         'grope': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median'),
+        # 바위 밀기·끌기: 몸을 숙여 키가 작으므로 걷기와 같은 배율(k_like)
+        'push': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
+        'pull': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
         'sleep': dict(src=KIT + 'polyphemus_v2/results/sleep_S.png', layout='sleep', cols=2, rows=2, fps=2, loop=True, ref='width'),
     },
 }
 # 시트 묶음: 이름 → 동작들
 SHEETS = {'polyphemus': ['idle', 'walk', 'drunk', 'grope', 'roar'],
-          'polyphemus_combat': ['club_slam', 'grab', 'eye_wound']}
+          'polyphemus_combat': ['club_slam', 'grab', 'eye_wound', 'push', 'pull']}
 
 
 def opaque(im):
@@ -134,7 +137,7 @@ def load_anim(name, cfg, root):
     return out
 
 
-def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H):
+def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H, k=None):
     boxes = {d: [main_body(c) for c in cs] for d, cs in frames_by_dir.items()}
     for d, bs in boxes.items():
         if any(b is None for b in bs):
@@ -145,7 +148,21 @@ def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H):
         ref = median(bs[0][3] - bs[0][1] for bs in boxes.values())
     else:
         ref = median(b[2] - b[0] for bs in boxes.values() for b in bs)
-    k = target / ref
+    k = k or target / ref
+    # 팔·곤봉을 높이 든 장면이 칸 위·옆을 넘으면 그 동작 전체를 조금 줄여 넣는다(잘리는 것보다 낫다)
+    fit = k
+    for d, cs in frames_by_dir.items():
+        base = median(b[3] for b in boxes[d])
+        for c, b in zip(cs, boxes[d]):
+            if base - b[1] > 0:
+                fit = min(fit, (anchor[1] - 2) / (base - b[1]))
+            if c.width / 2 - b[0] > 0:
+                fit = min(fit, (anchor[0] - 2) / (c.width / 2 - b[0]))
+            if b[2] - c.width / 2 > 0:
+                fit = min(fit, (frame[0] - anchor[0] - 2) / (b[2] - c.width / 2))
+    if fit < k:
+        print(f'  칸에 맞춰 배율 {k:.2f} → {fit:.2f}')
+        k = fit
     out, issues = {}, []
     for d, cs in frames_by_dir.items():
         base = median(b[3] for b in boxes[d])
@@ -174,15 +191,20 @@ def pack(which, root):
         except FileNotFoundError as e:
             print('건너뜀(원본 없음):', name, e)
             continue
-        frames, k, issues = place(src, cfg, (FRAME, FRAME))
+        like = report.get(cfg.get('k_like', ''), {}).get('scale')
+        frames, k, issues = place(src, cfg, (FRAME, FRAME), k=like)
         for d, o in MIRROR.items():
             frames[d] = [f.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for f in frames[o]]
         anims[name] = frames
         report[name] = {'scale': round(k, 3), 'issues': issues}
         print(f'{name}: 배율 {k:.2f}', '· '.join(issues) if issues else '')
+    # 감은 눈(잠·취함)·찔린 눈(날뛰기) 정지 그림은 기본 시트에서 — 동작 그림이 없는 동작은 코드 자세가 이걸 기울여 쓴다
+    stills = ['idle_shut', 'idle_wound'] + ([] if 'idle' in anims else ['idle'])
+    for n, f in base_stills(root, stills).items():
+        anims[n] = f
     out_dir = root / 'assets/sprites'
     for sheet, names in SHEETS.items():
-        names = [n for n in names if n in anims]
+        names = [n for n in names + (stills if sheet == 'polyphemus' else []) if n in anims]
         total = sum(len(anims[n]['E']) for n in names)
         img = Image.new('RGBA', (FRAME * total, FRAME * 8))
         meta = {'frame': [FRAME, FRAME], 'anchor': list(ANCHOR), 'dirs': 8, 'scale': 0.5, 'anims': {}}
@@ -192,7 +214,8 @@ def pack(which, root):
             for r, d in enumerate(ORDER):
                 for i, f in enumerate(anims[n][d]):
                     img.paste(f, ((col + i) * FRAME, r * FRAME))
-            meta['anims'][n] = {'start': col, 'frames': cnt, 'fps': cfgs[n]['fps'], 'loop': cfgs[n]['loop']}
+            c = cfgs.get(n, {'fps': 1, 'loop': True})
+            meta['anims'][n] = {'start': col, 'frames': cnt, 'fps': c['fps'], 'loop': c['loop']}
             col += cnt
         img.save(out_dir / f'{sheet}.png')
         (out_dir / f'{sheet}.json').write_text(json.dumps(meta, indent=2) + '\n')
@@ -248,19 +271,29 @@ def eye_variant(cell, d, kind):
     return out
 
 
-def pack_base(root):
-    root = Path(root)
+BASE_VARIANTS = {'idle': None, 'idle_shut': 'shut', 'idle_wound': 'wound'}
+
+
+def base_stills(root, names=BASE_VARIANTS):
+    """기본 5방향 한 장 → 1프레임 동작들(뜬 눈·감은 눈·찔린 눈), 8방향"""
     src = Image.open(root / KIT / 'polyphemus_v2/results/base.png').convert('RGBA')
     cells = {d: clean(src.crop((c * 512, r * 512, c * 512 + 512, r * 512 + 512))) for d, (c, r) in BASE_CELLS.items()}
-    variants = {'idle': None, 'idle_shut': 'shut', 'idle_wound': 'wound'}
     frames_by_anim = {}
-    for name, kind in variants.items():
+    for name in names:
+        kind = BASE_VARIANTS[name]
         by_dir = {d: [eye_variant(c, d, kind) if kind else c] for d, c in cells.items()}
         frames, k, issues = place(by_dir, {'ref': 'median'}, (FRAME, FRAME))
         for d, o in MIRROR.items():
             frames[d] = [f.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for f in frames[o]]
         frames_by_anim[name] = frames
         print(f'{name}: 배율 {k:.2f}', '· '.join(issues))
+    return frames_by_anim
+
+
+def pack_base(root):
+    root = Path(root)
+    variants = BASE_VARIANTS
+    frames_by_anim = base_stills(root)
     img = Image.new('RGBA', (FRAME * len(variants), FRAME * 8))
     meta = {'frame': [FRAME, FRAME], 'anchor': list(ANCHOR), 'dirs': 8, 'scale': 0.5, 'anims': {}}
     for i, name in enumerate(variants):

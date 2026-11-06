@@ -5,3 +5,9 @@ dist/
 # Godot 프로젝트
 godot/.godot/
 __pycache__/
+
+# 그림 요청 부산물: Codex 실행 로그·후보 그림·버린 그림·자동 선택 점수(고른 결과만 커밋)
+godot/docs/sprite_request/**/*.log
+godot/docs/sprite_request/**/results/cand/
+godot/docs/sprite_request/**/results/rejected/
+godot/docs/sprite_request/**/jobs/*.pick

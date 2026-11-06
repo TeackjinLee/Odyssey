@@ -5,12 +5,12 @@ extends Node2D
 ## 다 차면 그 사람(오디세우스든 부하든)을 쫓아와 곤봉 내려치기·움켜잡기. 잡힌 부하는 끌려간다(crew_taken).
 ## 소리(미끼 돌·달리기)가 나면 그곳으로 가서 둘러본다(INVESTIGATE). 포도주를 든 오디세우스는 치지 않고 기다린다.
 ## → 취해 비틀거리며 침상으로 → 잠듦(뛰는 소리에 뒤척임) → 눈을 잃고 날뜀(RAMPAGE: 소리 난 곳으로 돌진해 내려침, 벽에 부딪히면 멈칫)
-## → 입구에 앉아 지킴(GUARD: 가까이 오거나 뛰는 소리가 나면 그쪽을 움켜잡음).
+## → 입구 바위를 직접 굴려 열고(PUSH — 들어올 때도 밀어서 닫는다) 입구에 앉아 지킴(GUARD: 가까이 오거나 뛰는 소리가 나면 그쪽을 움켜잡음).
 ## 그림: assets/sprites/polyphemus(대기·걷기·취함·더듬기·포효)·polyphemus_combat(곤봉·움켜잡기·눈 부상)·polyphemus_sleep(잠듦 2줄),
 ## 2배 밀도 시트(scale 0.5, tools/pack_polyphemus_hd.py). 시트에 없는 동작은 대기·걷기 그림을 기울이거나 눕혀 대신한다.
 ## 무서움: 노란 외눈 불빛, 땅을 울리는 발소리(가까울수록 화면이 흔들림), 쫓을 때 포효, 가까우면 심장 소리.
 
-enum Mode { AWAY, WALK, WATCH, CHASE, ATTACK, WAIT_WINE, DRUNK, SLEEP, BLIND, GUARD, INVESTIGATE, RAMPAGE, CHARGE, STUNNED, DRINK, SWIPE, ROAR, WOUND }
+enum Mode { AWAY, WALK, WATCH, CHASE, ATTACK, WAIT_WINE, DRUNK, SLEEP, BLIND, GUARD, INVESTIGATE, RAMPAGE, CHARGE, STUNNED, DRINK, SWIPE, ROAR, WOUND, PUSH }
 
 ## 서 있는 키(화면 px, 오디세우스 약 60의 두 배쯤) — 머리 위 글·눈 높이의 기준
 const HEIGHT := 125.0
@@ -70,6 +70,12 @@ const SWIPE_MISS := 28.0
 ## 이 땅 거리 안에서만 휘두른다. 멀면 이 빠르기로 비틀거리며 다가온다
 const SWIPE_REACH := 110.0
 const LURCH_SPEED := 52.0
+## 입구 바위 굴리기: 힘줄 때마다(HEAVE_RATE 라디안/초) 울컥울컥 밀고 끈다. 사람은 바위 발밑에서 PUSH_GAP px 떨어져 붙는다
+const PUSH_SPEED := 46.0
+const HEAVE_RATE := 3.4
+const PUSH_GAP := 50.0
+## 바위 반지름(굴러갈 때 도는 각도 = 간 거리 / 반지름)
+const ROLL_R := 52.0
 
 signal woke
 signal swipes_done
@@ -141,6 +147,15 @@ var rig: Node2D
 var _proc := true
 var _anim := "idle"
 var _walk_ph := 0.0
+## 바위 굴리기: 바위 틀(발밑), 도는 그림, 목적지, 끌기(true)·밀기, 끝나면 부를 것
+var _rock: Node2D
+var _rock_spr: Node2D
+var _rock_to := Vector2.ZERO
+var _rock_pull := false
+var _rock_then: Callable
+var _heave_ph := 0.0
+## 지금 힘주는 정도(0~1, 자세에 씀)
+var _heave := 0.0
 
 
 func _ready() -> void:
@@ -178,7 +193,7 @@ func _sheet(sheet: String) -> AnimatedSprite2D:
 ## 눈 높이(취했을 때 말뚝을 찌를 곳). 잠들면 머리가 왼쪽(누운 그림)
 func eye_pos() -> Vector2:
 	if mode == Mode.SLEEP:
-		return global_position + (Vector2(-66, -30) if sleeper else Vector2(-100, -16))
+		return global_position + (Vector2(-60, -53) if sleeper else Vector2(-100, -16))
 	return global_position + Vector2(facing.x * 8.0, -HEIGHT * 0.84)
 
 
@@ -191,7 +206,7 @@ func face(v: Vector2) -> void:
 
 ## 동작 재생: 그 동작이 있는 시트를 보이고 나머지는 숨긴다. 어느 시트에도 없으면 비슷한 동작으로 대신한다
 const STAND_IN := {"walk": "idle", "club_slam": "idle", "grab": "idle", "roar": "idle", "drunk": "idle_shut",
-	"grope": "idle_wound", "eye_wound": "idle_wound", "sleep": "idle_shut"}
+	"grope": "idle_wound", "eye_wound": "idle_wound", "sleep": "idle_shut", "push": "idle", "pull": "idle_wound"}
 
 func has_anim(anim: String) -> bool:
 	for s in [body, fight, sleeper]:
@@ -235,66 +250,90 @@ func _dread(p: Player, delta: float) -> void:
 	Sfx.play("heartbeat", -16.0 + 12.0 * k)
 
 
-## 코드 자세: 동작 그림이 없는 동작을 틀의 기울기·늘임·흔들림으로 낸다(그림이 있으면 바로 세움)
+## 코드 자세: 동작 그림이 없는 동작을 틀의 기울임(skew — 발은 땅에 붙인 채 윗몸만)·늘임·흔들림으로 낸다(그림이 있으면 바로 세움).
+## 걷기는 무게 옮김(엉덩이 좌우)·디딜 때 눌림·지날 때 솟음, 공격은 젖힘 → 내려침 → 느린 복귀로 무거운 몸을 흉내 낸다.
 func _pose(delta: float) -> void:
 	var pos := Vector2.ZERO
 	var rot := 0.0
+	var skw := 0.0
 	var sc := Vector2.ONE
-	var lean := signf(facing.x) if absf(facing.x) > 0.2 else 0.0
-	var breathe := sin(_t * 1.7)
-	eye_light.position = rig.position + Vector2(facing.x * 8.0, -HEIGHT * 0.84 + (6.0 if facing.y < -0.3 else 0.0))
+	## 화면에서 바라보는 쪽(-1 왼쪽 ~ 1 오른쪽): 윗몸을 이쪽으로 기울이면 앞으로 숙인 것
+	var lean := clampf(facing.x * 1.3, -1.0, 1.0)
+	var breathe := sin(_t * 1.5)
+	var head_y := -HEIGHT * 0.84 + (6.0 if facing.y < -0.3 else 0.0)
+	eye_light.position = rig.position + Vector2(facing.x * 8.0 - head_y * tan(rig.skew), head_y * rig.scale.y)
 	eye_light.energy = (0.9 if facing.y > -0.3 else 0.35) * (1.0 + 0.15 * sin(_t * 5.0))
 	eye_light.enabled = not blinded and mode != Mode.SLEEP and mode != Mode.DRUNK
 	if not _proc:
 		rig.position = Vector2.ZERO
 		rig.rotation = 0.0
+		rig.skew = 0.0
 		rig.scale = Vector2.ONE
 		return
 	match _anim:
 		"walk", "drunk", "grope":
-			var spd := maxf(_speed, 20.0) * (2.2 if mode == Mode.CHARGE else 1.0)
+			var charge := mode == Mode.CHARGE
+			var spd := maxf(_speed, 20.0) * (2.2 if charge else 1.0)
 			var before := sin(_walk_ph)
-			_walk_ph += delta * spd / 22.0
+			_walk_ph += delta * spd / (26.0 if _anim == "walk" else 20.0)
 			var st := sin(_walk_ph)
 			if signf(before) != signf(st):
 				_footstep()
-			pos.y = -absf(st) * 3.5
-			rot = 0.045 * st + lean * (0.14 if mode == Mode.CHARGE else 0.05)
-			sc = Vector2(1.0 + 0.02 * absf(st), 1.0 - 0.025 * absf(cos(_walk_ph)))
+			var up := absf(st)   # 1 = 한 발로 서서 지나감(높음), 0 = 디딤(낮고 눌림)
+			pos = Vector2(2.2 * st, -3.2 * up)
+			skw = lean * (0.2 if charge else 0.08) - 0.04 * st
+			rot = 0.012 * st
+			sc = Vector2(1.0 + 0.02 * (1.0 - up), 1.0 - 0.035 * (1.0 - up) + 0.01 * up)
 			if _anim == "drunk":
-				rot += 0.13 * sin(_t * 2.3)
-			elif _anim == "grope":
-				rot += 0.07 * sin(_t * 1.3)
-				pos.x = 4.0 * sin(_t * 1.3)
+				skw += 0.16 * sin(_t * 2.1) + 0.05 * sin(_t * 5.3)
+				pos.x += 5.0 * sin(_t * 2.1)
+			elif _anim == "grope":   # 눈 먼 더듬기: 고개를 흔들며 팔을 휘젓듯
+				skw += 0.09 * sin(_t * 1.3) + lean * 0.08
+				pos.x += 4.0 * sin(_t * 1.3)
+				sc.y -= 0.02
 		"club_slam", "grab":
 			var hit := float(_atk.get("hit", 0.6))
-			var u := _atk_t / maxf(0.05, hit)
-			if u < 1.0:   # 예고: 뒤로 젖혀 크게 들어 올림(곤봉) / 몸을 낮춰 웅크림(잡기)
-				var e := u * u
-				if _anim == "club_slam":
-					rot = -lean * 0.2 * e
-					sc = Vector2(1.0 - 0.04 * e, 1.0 + 0.09 * e)
-					pos.y = -5.0 * e
+			var u := clampf(_atk_t / maxf(0.05, hit), 0.0, 1.0)
+			var slam := _anim == "club_slam"
+			if _atk_t < hit:   # 예고: 크게 뒤로 젖혀 들어 올림(곤봉) / 낮게 웅크려 노림(잡기) — 끝에서 잠깐 멈칫
+				var e := 1.0 - pow(1.0 - u, 3.0)
+				if slam:
+					skw = -lean * 0.3 * e - 0.05 * e
+					sc = Vector2(1.0 - 0.05 * e, 1.0 + 0.1 * e)
+					pos = -facing * 5.0 * e + Vector2(0, -4.0 * e)
 				else:
-					rot = -lean * 0.1 * e
-					sc = Vector2(1.0 + 0.06 * e, 1.0 - 0.07 * e)
-			else:   # 내려침·뻗음 뒤 천천히 복귀
+					skw = -lean * 0.12 * e
+					sc = Vector2(1.0 + 0.08 * e, 1.0 - 0.1 * e)
+					pos = -facing * 3.0 * e
+				if u > 0.85:
+					pos.x += 0.8 * sin(_t * 60.0)
+			else:   # 내려침·뻗음: 한순간에 앞으로, 그 뒤 무겁게 천천히 복귀
 				var r := clampf((_atk_t - hit) / maxf(0.1, float(_atk.get("dur", 1.0)) - hit), 0.0, 1.0)
-				var f := 1.0 - r
-				if _anim == "club_slam":
-					rot = lean * 0.24 * f
-					sc = Vector2(1.0 + 0.07 * f, 1.0 - 0.12 * f)
+				var f := 1.0 - r * r
+				if slam:
+					skw = lean * 0.34 * f + 0.04 * f
+					sc = Vector2(1.0 + 0.09 * f, 1.0 - 0.15 * f)
+					pos = facing * 10.0 * f
 				else:
-					pos = facing * 20.0 * f
-					rot = lean * 0.16 * f
-					sc = Vector2(1.0 + 0.04 * f, 1.0 - 0.04 * f)
+					skw = lean * 0.24 * f
+					sc = Vector2(1.0 + 0.04 * f, 1.0 - 0.05 * f)
+					pos = facing * 24.0 * f
 		"roar":
 			var up := minf(1.0, (1.0 - clampf(_roar_t / 0.9, 0.0, 1.0)) * 3.0)
-			rot = -lean * 0.08 * up + 0.025 * sin(_t * 38.0) * up
-			sc = Vector2(1.0 + 0.05 * up, 1.0 + 0.08 * up)
+			skw = -lean * 0.16 * up - 0.03 * up
+			sc = Vector2(1.0 + 0.06 * up, 1.0 + 0.09 * up)
+			pos = Vector2(1.2 * sin(_t * 41.0) * up, -3.0 * up)
 		"eye_wound":
-			rot = 0.12 * sin(_t * 23.0) * clampf(_roar_t, 0.0, 1.0) + 0.06 * sin(_t * 3.0)
-			sc = Vector2(1.0 + 0.04 * sin(_t * 9.0), 0.94 + 0.04 * sin(_t * 7.0))
+			var k := clampf(_roar_t, 0.0, 1.0)
+			skw = 0.2 * sin(_t * 11.0) * k + 0.07 * sin(_t * 2.6)
+			pos.x = 6.0 * sin(_t * 5.5) * k
+			sc = Vector2(1.0 + 0.04 * sin(_t * 9.0), 0.93 + 0.05 * sin(_t * 7.0))
+		"push", "pull":   # 바위 밀기(앞으로 숙여 어깨로) / 끌기(뒤로 젖혀 버팀) — 힘줄 때 더 숙이고 낮아진다
+			var h := _heave
+			var dirk := -1.0 if _rock_pull else 1.0
+			skw = dirk * lean * (0.2 + 0.12 * h) + 0.015 * sin(_t * 31.0) * h
+			sc = Vector2(1.04 + 0.03 * h, 0.94 - 0.04 * h)
+			pos = facing * dirk * 4.0 * h + Vector2(0, 1.5 * h)
 		"sleep":
 			rot = -PI * 0.47
 			sc = Vector2(0.78 + 0.02 * breathe, 1.0)
@@ -302,20 +341,40 @@ func _pose(delta: float) -> void:
 				rot += 0.08 * sin(_t * 6.0)
 		_:
 			var sniff := _sniffing > 0.0
-			sc = Vector2(1.0 - 0.008 * breathe, 1.0 + (0.035 * sin(_t * 9.0) if sniff else 0.018 * breathe))
-			if sniff:
-				rot = -lean * 0.05
-				pos.y = -2.0
+			# 숨: 가슴이 오르내리고 무게를 천천히 이쪽저쪽 발로 옮긴다
+			var sway := sin(_t * 0.55)
+			sc = Vector2(1.0 - 0.01 * breathe, 1.0 + 0.022 * breathe)
+			skw = 0.025 * sway
+			pos.x = 1.2 * sway
+			if sniff:   # 킁킁: 고개를 앞으로 내밀고 짧게 들이마신다
+				skw = lean * 0.1 + 0.025 * sin(_t * 10.0)
+				sc.y = 1.0 + 0.03 * sin(_t * 10.0)
+				pos.y = -1.5
 			if mode == Mode.STUNNED:
-				rot = 0.15 * sin(_t * 9.0)
-			elif mode == Mode.DRINK:
-				rot = -lean * 0.2 * sin(clampf(1.0 - _drink_t / DRINK_TIME, 0.0, 1.0) * PI)
+				skw = 0.18 * sin(_t * 7.0)
+				sc.y = 0.95
+			elif mode == Mode.DRINK:   # 고개를 젖혀 들이켠다
+				var d := sin(clampf(1.0 - _drink_t / DRINK_TIME, 0.0, 1.0) * PI)
+				skw = -lean * 0.22 * d - 0.04 * d
+				sc.y = 1.0 + 0.05 * d
 			elif mode == Mode.SWIPE:
-				rot = 0.05 * drunk_k * sin(_t * 2.1)
-	var w := minf(1.0, delta * 14.0)
+				skw = 0.07 * drunk_k * sin(_t * 2.1)
+			elif mode == Mode.GUARD:   # 입구에 쪼그려 앉아 귀 기울임
+				sc = Vector2(1.04, 0.9 + 0.012 * breathe)
+				skw = lean * 0.08 + 0.02 * sway
+	# 내려치는 순간만 빠르게, 나머지는 무거운 몸답게 늦게 따라온다
+	var fast := (_anim == "club_slam" or _anim == "grab") and _atk_t >= float(_atk.get("hit", 9.0))
+	var w := minf(1.0, delta * (30.0 if fast else 11.0))
+	if _anim == "sleep":
+		rig.position = pos
+		rig.rotation = rot
+		rig.skew = 0.0
+		rig.scale = sc
+		return
 	rig.position = rig.position.lerp(pos, w)
-	rig.rotation = rot if _anim == "sleep" else lerp_angle(rig.rotation, rot, w)
-	rig.scale = sc if _anim == "sleep" else rig.scale.lerp(sc, w)
+	rig.rotation = lerp_angle(rig.rotation, rot, w)
+	rig.skew = lerpf(rig.skew, skw, w)
+	rig.scale = rig.scale.lerp(sc, w)
 
 
 ## 킁킁 냄새 맡기(지킬 때): 맡는 중이면 true
@@ -336,12 +395,15 @@ func _sniff(delta: float) -> bool:
 	return false
 
 
+## 눈을 잃은 뒤에도 그대로 쓸 수 있는 동작 그림(상처난 눈·눈이 안 보임). 나머지는 찔린 눈 정지 그림 + 코드 자세
+const BLIND_OK := ["grope", "eye_wound", "pull", "sleep"]
+
 func _play(anim: String) -> void:
 	_anim = anim
-	_proc = not has_anim(anim)
+	_proc = not has_anim(anim) or (blinded and not anim in BLIND_OK)
 	if _proc:
 		anim = STAND_IN.get(anim, "idle")
-		if blinded and anim == "idle" and has_anim("idle_wound"):
+		if blinded and anim in ["idle", "walk"] and has_anim("idle_wound"):
 			anim = "idle_wound"
 		if not has_anim(anim):
 			anim = "idle"
@@ -465,6 +527,58 @@ func swipe(n: int) -> void:
 	mode = Mode.SWIPE
 	_swipes_left = n
 	_swipe_gap = 0.7
+
+
+## 입구 바위를 굴린다: 바위 쪽에서 볼 때 화면 아래쪽(동굴 안)에 붙어서 to로 민다(pull이면 끌어당기며 뒷걸음).
+## rock은 발밑 틀, spr는 그 안에서 도는 그림. 끝나면 then
+func roll_rock(rock: Node2D, spr: Node2D, to: Vector2, pull: bool, then: Callable) -> void:
+	mode = Mode.PUSH
+	_rock = rock
+	_rock_spr = spr
+	_rock_to = to
+	_rock_pull = pull
+	_rock_then = then
+	_heave_ph = 0.0
+	_goal = Vector2.INF
+	global_position = rock_grip(rock.global_position, to, pull)
+	face(rock.global_position - global_position)
+	_play("pull" if pull else "push")
+
+
+## 바위를 굴리려면 설 자리: 미는 쪽 뒤(밀기) 또는 가는 쪽 앞(끌기) — 둘 다 바위에서 PUSH_GAP
+func rock_grip(rock_at: Vector2, to: Vector2, pull: bool) -> Vector2:
+	var d := (to - rock_at).normalized()
+	return rock_at + d * PUSH_GAP * (1.0 if pull else -1.0)
+
+
+func _push_step(delta: float) -> void:
+	var before := sin(_heave_ph)
+	_heave_ph += delta * HEAVE_RATE
+	var st := sin(_heave_ph)
+	_heave = maxf(0.0, st)
+	if before <= 0.0 and st > 0.0:   # 힘주기 시작: 끙 소리·발 구름
+		Sfx.at("roar", global_position, -17.0)
+		_footstep()
+	var to := _rock_to - _rock.global_position
+	var step := PUSH_SPEED * 2.2 * _heave * _heave * delta
+	if to.length() <= step + 0.5:
+		_rock.global_position = _rock_to
+		global_position = rock_grip(_rock_to, _rock_to + to, _rock_pull)
+		_heave = 0.0
+		mode = Mode.WATCH if not blinded else Mode.BLIND
+		_play("idle")
+		var cb := _rock_then
+		_rock_then = Callable()
+		if cb.is_valid():
+			cb.call()
+		return
+	var move := to.normalized() * step
+	_rock.global_position += move
+	global_position += move
+	if _rock_spr:
+		_rock_spr.rotation += signf(move.x if absf(move.x) > 0.01 else move.y) * move.length() / ROLL_R
+	if step > 0.0 and randf() < delta * 2.5 * _heave:
+		Fx.anim("dust", _rock.global_position + Vector2(randf_range(-40, 40), randf_range(-14, -4)))
 
 
 ## 소리: loud는 0~1(미끼 돌 1, 달리기 0.6). 깨어 있으면 가서 둘러보고, 날뛰는 중이면 돌진, 자는 중이면 뒤척임이 찬다
@@ -635,6 +749,8 @@ func _update(p: Player, delta: float) -> void:
 				mode = Mode.RAMPAGE
 		Mode.GUARD:
 			_guard(p)
+		Mode.PUSH:
+			_push_step(delta)
 
 
 ## 취한 휘두르기: 오디세우스 쪽(잔이 늘수록 엉뚱하게)으로 내려치기·움켜잡기를 번갈아

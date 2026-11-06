@@ -1,0 +1,44 @@
+{
+  "frame": [
+    384,
+    384
+  ],
+  "anchor": [
+    192,
+    366
+  ],
+  "dirs": 8,
+  "scale": 0.5,
+  "anims": {
+    "club_slam": {
+      "start": 0,
+      "frames": 6,
+      "fps": 6,
+      "loop": false
+    },
+    "grab": {
+      "start": 6,
+      "frames": 6,
+      "fps": 6,
+      "loop": false
+    },
+    "eye_wound": {
+      "start": 12,
+      "frames": 6,
+      "fps": 7,
+      "loop": false
+    },
+    "push": {
+      "start": 18,
+      "frames": 6,
+      "fps": 5,
+      "loop": true
+    },
+    "pull": {
+      "start": 24,
+      "frames": 6,
+      "fps": 5,
+      "loop": true
+    }
+  }
+}

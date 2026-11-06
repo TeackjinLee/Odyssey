@@ -1,0 +1,46 @@
+{
+  "idle": {
+    "scale": 0.6,
+    "issues": []
+  },
+  "walk": {
+    "scale": 0.655,
+    "issues": []
+  },
+  "roar": {
+    "scale": 0.646,
+    "issues": []
+  },
+  "club_slam": {
+    "scale": 0.691,
+    "issues": []
+  },
+  "grab": {
+    "scale": 0.585,
+    "issues": []
+  },
+  "drunk": {
+    "scale": 0.61,
+    "issues": []
+  },
+  "eye_wound": {
+    "scale": 0.536,
+    "issues": []
+  },
+  "grope": {
+    "scale": 0.585,
+    "issues": []
+  },
+  "push": {
+    "scale": 0.655,
+    "issues": []
+  },
+  "pull": {
+    "scale": 0.655,
+    "issues": []
+  },
+  "sleep": {
+    "scale": 0.484,
+    "issues": []
+  }
+}

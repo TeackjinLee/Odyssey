@@ -1,13 +1,13 @@
 class_name Chapter3Cyclops
 extends IsoLevel
 ## CHAPTER 3 — 외눈박이 거인 (docs/maps/CH3_CYCLOPS.md).
-## 바닷가 동굴에 들어가 치즈 선반을 살피면 → 폴리페모스가 돌아와 큰 바위로 입구를 막는다(연출) →
+## 바닷가 동굴에 들어가 치즈 선반을 살피면 → 폴리페모스가 돌아와 큰 바위를 직접 밀어 굴려 입구를 막는다(연출) →
 ## 1막 첫날 밤(NIGHT_TIME초): 거인이 동굴을 돌며 보고·냄새 맡고·소리를 듣는다. 부하도 노린다(잡히면 끌려감) —
 ## 부하를 그림자에 세우고(위치 사수), 거인이 숨은 쪽으로 오면 옮기고, 미끼 돌로 고개를 돌린다 → 다음 날 저녁 →
 ## 거인의 시야 부채꼴을 피해 포도주 항아리를 가져와 건넨다(들고 있으면 거인이 치지 않음) → 「우티스(아무도 아니다)」 대화,
 ## 거인이 취해 침상에 눕는다 → 동쪽 구석의 올리브 말뚝을 들고(느려지고 뛸 수 없음) 화덕에서 끝을 달궈 잠든 외눈을 찌른다
 ## (곁에서 뛰면 뒤척이며 움켜쥠) → 5막 날뛰기(RAMPAGE_TIME초): 눈 먼 거인이 소리 난 곳으로 돌진해 내려친다(뛰거나 가까이 걷거나
-## 움직이는 부하) — 멈춰 서고 미끼 돌로 돌리고 구르기로 피한다 → 지쳐서 바위를 치우고 입구에 앉아 지킨다(가까이 가거나 뛰면 잡음) →
+## 움직이는 부하) — 멈춰 서고 미끼 돌로 돌리고 구르기로 피한다 → 지쳐서 바위를 끌어 치우고 입구에 앉아 지킨다(가까이 가거나 뛰면 잡음) →
 ## 양 우리 문을 열고 큰 숫양 배 밑에 매달려 빠져나간다(연출) → 「나는 오디세우스다」 → 클리어.
 ## 칼로는 거인을 이길 수 없다(Cyclops는 actors 그룹 밖). 영양·부하는 챕터 2에서 이어받는다(Game.carry_for(3)).
 ## 체크포인트: 첫날 밤(cave) · 포도주(wine) · 거인이 잠듦(sleep) · 외눈을 찌름(blind).
@@ -34,6 +34,10 @@ const ENTRANCE := [13, 14, 15]
 const GIANT_OUT := Vector2(14.5, 0.8)
 const GIANT_IN := Vector2(14.5, 6.6)
 const GUARD_AT := Vector2(16.4, 5.7)
+## 입구 바위: 막은 자리 · 낮에 굴려 둔 자리(동굴 안 입구 오른쪽)와 그때 막히는 칸
+const ROCK_SHUT := Vector2(14.5, 4.6)
+const ROCK_ASIDE := Vector2(19.0, 5.7)
+const ROCK_ASIDE_CELLS := [Vector2i(18, 5), Vector2i(19, 5)]
 const EXIT_AT := Vector2(14.5, 0.6)
 ## 거인이 지키는 자리(포도주 전): [격자, 바라볼 격자 방향]
 const POSTS := [[Vector2(17.5, 12.0), Vector2(1, 1)], [Vector2(9.5, 17.5), Vector2(-0.4, 1)], [Vector2(19.0, 8.0), Vector2(1, 0.6)]]
@@ -69,7 +73,9 @@ var ending_done := false
 var giant: Cyclops
 var carrying := ""
 var gate_open := false
-var boulder: Sprite2D
+## 입구 바위: 발밑 틀(y 정렬) + 그 안에서 굴러가며 도는 그림
+var boulder: Node2D
+var boulder_spr: Sprite2D
 var gate_sprite: Sprite2D
 var stake_sprite: Sprite2D
 var hearth_light: PointLight2D
@@ -243,11 +249,18 @@ func build() -> void:
 	gate_sprite = cprop("pen_gate_closed", GATE, false, false, Vector2(16, 14))
 	_set_gate(false)
 	# 입구 바위: 처음엔 옆으로 굴려 둔 상태(거인이 돌아오며 닫는다)
-	boulder = Sprite2D.new()
-	boulder.centered = false
+	boulder = Node2D.new()
 	world.add_child(boulder)
+	boulder_spr = Sprite2D.new()
+	boulder_spr.position = Vector2(-2, -52)   # 그림 가운데(발밑 58,105 · 크기 112×106)
+	boulder.add_child(boulder_spr)
 	_place_boulder(false)
 	out_light = add_light(g(Vector2(14.5, 2.5)), Color(1.0, 0.62, 0.35), 1.2, 2.4, false)
+
+
+func _boulder_tex(closed: bool) -> void:
+	var meta: Dictionary = cave()["props"]["boulder_closed" if closed else "boulder_rolled"]
+	boulder_spr.texture = AssetLibrary.texture("res://assets/env/cave/" + String(meta["file"]))
 
 
 func _set_gate(open: bool) -> void:
@@ -257,12 +270,15 @@ func _set_gate(open: bool) -> void:
 		set_solid(Vector2i(x, 19), not open)
 
 
-## closed: 입구를 막음(칸도 막힘) / 아니면 입구 오른쪽 바깥에 굴려 둠
+## closed: 입구를 막음(칸도 막힘) / 아니면 동굴 안 입구 오른쪽에 굴려 둠(거인이 직접 굴려 닫고 연다)
 func _place_boulder(closed: bool) -> void:
-	_set_tex(boulder, "boulder_closed" if closed else "boulder_rolled")
-	boulder.position = g(Vector2(14.5, 4.6)) if closed else g(Vector2(19.6, 2.2))
+	_boulder_tex(closed)
+	boulder_spr.rotation = 0.0
+	boulder.position = g(ROCK_SHUT if closed else ROCK_ASIDE)
 	for x in ENTRANCE:
 		set_solid(Vector2i(x, 4), closed)
+	for c in ROCK_ASIDE_CELLS:
+		set_solid(c, not closed)
 	if out_light:
 		out_light.enabled = not closed
 
@@ -416,26 +432,29 @@ func _arrival() -> void:
 	Sfx.play("thunder", -4.0)
 	camera_target = giant
 	giant.global_position = g(GIANT_OUT)
-	giant.walk_to(g(GIANT_IN), _close_boulder)
+	giant.walk_to(g(GIANT_IN), func():
+		giant.walk_to(giant.rock_grip(g(ROCK_ASIDE), g(ROCK_SHUT), false), _close_boulder))
 
 
+## 거인이 바위 뒤에 붙어 어깨로 밀어 입구를 막는다
 func _close_boulder() -> void:
-	giant.face(_gdir(Vector2(0, -1)))
-	var tw := create_tween()
-	_set_tex(boulder, "boulder_closed")
-	tw.tween_property(boulder, "position", g(Vector2(14.5, 4.6)), 1.4).set_trans(Tween.TRANS_SINE)
-	tw.tween_callback(func():
+	for c in ROCK_ASIDE_CELLS:
+		set_solid(c, false)
+	giant.roll_rock(boulder, boulder_spr, g(ROCK_SHUT), false, func():
 		_place_boulder(true)
 		Sfx.play("stone", 0.0)
 		Sfx.play("hit_heavy", -2.0)
+		Fx.anim("dust", g(ROCK_SHUT))
 		Game.shake(9.0)
-		canvas_mod.color = Color(0.36, 0.31, 0.38))
-	tw.tween_interval(0.5)
-	tw.tween_callback(func():
-		giant.face(_gdir(Vector2(0, 1)))
-		giant.roar(func():
-			giant.mode = Cyclops.Mode.WATCH
-			Game.say(Lines.say("arrival"), _arrival_done)))
+		canvas_mod.color = Color(0.36, 0.31, 0.38)
+		giant.mode = Cyclops.Mode.WALK
+		var tw := create_tween()
+		tw.tween_interval(0.6)
+		tw.tween_callback(func():
+			giant.face(_gdir(Vector2(0, 1)))
+			giant.roar(func():
+				giant.mode = Cyclops.Mode.WATCH
+				Game.say(Lines.say("arrival"), _arrival_done))))
 
 
 func _arrival_done() -> void:
@@ -608,7 +627,7 @@ func _ask_name(cb: Callable) -> void:
 
 
 func _giant_asleep(quiet := false) -> void:
-	giant.sleep_on(g(Vector2(BED) + Vector2(1.5, 1.5)) + Vector2(60, -54))
+	giant.sleep_on(g(Vector2(BED) + Vector2(1.5, 1.5)) + Vector2(8, -14))
 	if not quiet:
 		Game.say(Lines.say("sleep"))
 	_set_step(3)
@@ -671,22 +690,26 @@ func _end_rampage() -> void:
 	if Game.autoplay:
 		Game.stealth_bot = false
 	giant.blind()
-	giant.walk_to(g(GUARD_AT), _guard_entrance, Cyclops.DRUNK_SPEED, Cyclops.Mode.BLIND)
+	giant.walk_to(giant.rock_grip(g(ROCK_SHUT), g(ROCK_ASIDE), true), _open_boulder, Cyclops.DRUNK_SPEED, Cyclops.Mode.BLIND)
 	Game.say(Lines.say("rage_end"))
 	_set_step(5)
 
 
-func _guard_entrance() -> void:
-	var tw := create_tween()
-	_set_tex(boulder, "boulder_rolled")
-	tw.tween_property(boulder, "position", g(Vector2(19.6, 2.2)), 1.4).set_trans(Tween.TRANS_SINE)
-	tw.tween_callback(func():
+## 눈 먼 거인이 바위를 붙잡고 뒷걸음질로 끌어 입구를 연다 → 입구 곁에 앉아 지킨다
+func _open_boulder() -> void:
+	_boulder_tex(false)
+	giant.roll_rock(boulder, boulder_spr, g(ROCK_ASIDE), true, func():
 		_place_boulder(false)
 		Sfx.play("stone", 0.0)
+		Fx.anim("dust", g(ROCK_ASIDE))
 		Game.shake(6.0)
-		giant.guard_at(g(GUARD_AT), _gdir(Vector2(-1, 0.2)))
-		if not _restored:
-			Game.say(Lines.say("blind_guard")))
+		giant.walk_to(g(GUARD_AT), _guard_entrance, Cyclops.DRUNK_SPEED, Cyclops.Mode.BLIND))
+
+
+func _guard_entrance() -> void:
+	giant.guard_at(g(GUARD_AT), _gdir(Vector2(-1, 0.2)))
+	if not _restored:
+		Game.say(Lines.say("blind_guard"))
 
 
 func _open_gate() -> void:
@@ -1190,11 +1213,41 @@ func _bot_rampage(delta: float) -> void:
 		if Combat.ground_dist(gp, m.global_position) < 200.0:
 			close = true
 	if close and giant.mode == Cyclops.Mode.RAMPAGE:
-		var away := gp + (gp - player.global_position).normalized() * 160.0
-		if is_blocked_world(away):
-			away = g(Vector2(26, 7)) if gp.x < g(Vector2(15, 15)).x else g(Vector2(3, 8))
-		Skills.throw_decoy(player.global_position + Vector2(0, -2), away)
+		Skills.throw_decoy(player.global_position + Vector2(0, -2), _decoy_spot(gp))
 		_bot_t = 5.0
+
+
+## 봇 미끼 돌 자리: 거인에게 가장 가까운 사람의 반대쪽, 오디세우스·부하 누구에게서든 140 넘게 떨어진 곳
+## (오디세우스 반대쪽에만 던지면 거인 너머에 숨은 부하 곁에 떨어져 거인이 부하에게 돌진했다)
+func _decoy_spot(gp: Vector2) -> Vector2:
+	var people: Array = [player]
+	people.append_array(squad.members)
+	var threat: Node2D = player
+	for m in people:
+		if Combat.ground_dist(gp, m.global_position) < Combat.ground_dist(gp, threat.global_position):
+			threat = m
+	var dir := (gp - threat.global_position).normalized()
+	if dir.length() < 0.1:
+		dir = Vector2(1, 0)
+	var spots: Array = []
+	for k in [0.0, 0.6, -0.6, 1.2, -1.2, PI]:
+		spots.append(gp + dir.rotated(k) * 160.0)
+	for c in [Vector2(3, 8), Vector2(26, 7), Vector2(16, 27), Vector2(26, 25), Vector2(12, 10), Vector2(20, 14)]:
+		spots.append(g(c))
+	var best: Vector2 = spots[0]
+	var best_d := -1.0
+	for at in spots:
+		if is_blocked_world(at):
+			continue
+		var nearest := INF
+		for m in people:
+			nearest = minf(nearest, Combat.ground_dist(at, m.global_position))
+		if nearest > 140.0:
+			return at
+		if nearest > best_d:
+			best_d = nearest
+			best = at
+	return best
 
 
 ## 날뛰는 거인이 벽·바위에 부딪힘(Cyclops가 부른다): 천장에서 돌이 떨어진다 — 둘레 몇 곳 + 오디세우스가 가까우면 그 자리
