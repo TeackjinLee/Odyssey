@@ -35,22 +35,10 @@ godot --headless --path . --import                      # 그림 가져오기(�
 godot --headless --fixed-fps 60 --path . -- --auto --quit-after=420    # 봇이 챕터 1을 끝까지 → REPORT(JSON). step 4·capture 100이면 클리어
 godot --headless --fixed-fps 60 --path . -- --auto=stealth --quit-after=420   # 잠입 봇, alarms 0이어야 함
 godot --headless --fixed-fps 60 --path . -- --auto --chapter=2 --quit-after=400   # 챕터 2 봇(로토스 섬까지), ending true면 클리어
-godot --headless --fixed-fps 60 --path . -- --auto --chapter=3 --quit-after=300   # 챕터 3 봇(동굴 탈출), ending true면 클리어
+godot --headless --fixed-fps 60 --path . -- --auto --chapter=3 --quit-after=480   # 챕터 3 봇(동굴 탈출, 약 330초), ending true면 클리어
 godot --path . -- --showcase --anim=walk                # 무기 든 오디세우스 8방향 확인
 godot --path . -- --start=gate --shot=/tmp/a.png --shot-at=5   # 화면 저장 (--start=winch·--start=ending도 있음, --nohud면 HUD 없이)
 godot --path . -- --play --god --at=37,38                # 오디세우스를 그 칸에 옮겨 맵 보기 (--menu=pause|settings, --continue)
-python3 tools/gen_hero.py .                             # 오디세우스 원본 → assets/sprites/odysseus.*
-python3 tools/gen_environment.py . && python3 tools/gen_env_from_sheet.py . && python3 tools/gen_env_extra.py .   # 환경 그림(순서대로, 끝에서 gen_env_redraw가 받은 troy_city·troy_coast로 덮어씀)
-python3 tools/motion_request.py <기본 시트> <인물.txt> <출력> <동작들> 1   # 이미지 요청 폴더 만들기
-python3 tools/split_rows.py <받은 그림> <동작> E,SE,S .  # 여러 방향 한 장 → 방향별 파일 (다른 캐릭터·옷: SPRITE_CHAR=<이름>)
-python3 tools/pack_strip.py . <동작> <열> <줄>          # 방향별 → 8방향 한 장 (SPRITE_CHAR·SPRITE_SRC_H, sprite_request/ch1_kit/README.md)
-python3 tools/gen_storm.py .                            # 받은 바다 무늬·폭풍 이펙트 → assets/env/sea_*·assets/fx/storm_* (요청 묶음 storm_requests/)
-python3 tools/gen_ship.py . odysseus_galley --hull && python3 tools/gen_ship_crew.py .   # 갤리선 선체 16방향·돛 천·배 위 사람 시트 (ch2_kit/README.md)
-python3 tools/gen_animal.py . chicken                    # 받은 동물 원본 → assets/sprites/animal_<종류>.* (요청 묶음 animal_kit/)
-python3 tools/gen_food.py .                             # 받은 음식 그림 → assets/sprites/food_icons.* (food_source.gd가 씀)
-python3 tools/gen_audio.py . [sfx amb music]            # 소리 전부 합성 → assets/audio/ (ffmpeg 필요, 음악 1분쯤)
-python3 tools/gen_video.py .                            # 컷신 영상 assets/source/video/*.mp4 → assets/video/*.ogv (Godot 무비 메이커로, 창이 잠깐 뜬다)
-python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려 받기 요청 묶음(아직 안 받은 시트만)
 ```
 
 테스트 프레임워크는 없다. 변경 확인은 `--auto` 봇 클리어(일반·잠입)와 직접 플레이·`--shot` 화면 저장으로 한다.
@@ -73,11 +61,6 @@ python3 tools/env_redraw_request.py . [시트]            # 환경 다시 그려
   챕터 2부터 레벨에 `rations`(배 식량 창고·부하 배부름)를 두면 음식을 짧게 눌러 창고에 넣을 수 있다.
 - 소리: `Sfx.play/at`(효과음), `Bgm.play/sting/amb`(음악·환경음). 파일이 있으면 파일, 없으면 효과음은 합성음. 느낌은 영화 《오디세이》(2026)처럼 — 오케스트라 없이 고대 악기·징·쇠붙이·일그러진 신시·목소리(README "소리").
 
-## 그림 작업 흐름
+## 그림 작업
 
-1. `ART_PLAN.md`에서 다음 항목(ID)을 고른다 → `sprite_request/`의 해당 요청 묶음·프롬프트를 사용자에게 준다.
-2. 받은 그림을 검사(`sprite_request/README.md`) → `assets/source/`에 이름 규칙대로 저장.
-3. `split_rows.py`·`pack_strip.py`·`gen_hero.py` 등 변환 → `--showcase`·`--auto`로 확인.
-4. `ART_PLAN.md`의 상태를 ✅로, 끝난 작업은 `ROADMAP.md` 체크박스를 고친다.
-
-사용자가 참고 이미지를 주면 `godot/docs/references/<분류>/`에 저장하고 `references/INDEX.md`에 한 줄 적는다.
+그림 요청·변환 명령(`gen_*`·`split_rows`·`pack_strip` 등)과 작업 흐름은 스킬 `art-pipeline`(`.claude/skills/art-pipeline/SKILL.md`)에 있다.

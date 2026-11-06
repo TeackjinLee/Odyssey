@@ -746,6 +746,42 @@ def sfx_wave(seed=0):
     return slam * 0.9 + wash * 1.2 + spray
 
 
+def sfx_roar(seed=0):
+    """거인의 포효: 낮게 갈라지는 목소리(성대 톱니 + 입 공명 A→O) + 숨 + 동굴 울림"""
+    r = np.random.default_rng(800 + seed)
+    n = int(2.4 * SR)
+    t = np.arange(n) / SR
+    f0 = 58 + 22 * np.minimum(1, t / 0.35) - 18 * np.maximum(0, t - 1.2) + 3 * r.standard_normal(n).cumsum() / np.sqrt(np.arange(1, n + 1))
+    ph = 2 * np.pi * np.cumsum(f0) / SR
+    saw = sum(np.sin(k * ph) / k for k in range(1, 30))
+    saw *= 1 + 0.5 * np.sin(2 * np.pi * 31 * t + r.uniform(0, 6))   # 거친 떨림
+    voice = ola_filter(saw, lambda s: (90, 700 + 500 * np.exp(-max(0.0, s - 0.6) * 1.5)), block=2048)
+    breath = ola_filter(r.standard_normal(n), lambda s: (300, 2400), block=2048) * 0.35
+    env = np.minimum(1, t / 0.18) * np.where(t < 1.5, 1.0, np.exp(-(t - 1.5) / 0.35))
+    y = sat((voice * 1.4 + breath) * env, 3.0)
+    return reverb(y, wet=0.45, dur=2.2, damp=1800.0, seed=800 + seed)
+
+
+def sfx_heartbeat(seed=0):
+    """심장 박동: 쿵-쿵(두 번째가 약함), 아주 낮게"""
+    n = int(0.75 * SR)
+    t = np.arange(n) / SR
+    def thump(t0, g):
+        tt_ = np.maximum(0, t - t0)
+        return np.sin(2 * np.pi * np.cumsum(48 + 30 * np.exp(-tt_ * 30)) / SR) * np.exp(-tt_ / 0.07) * (t >= t0) * g
+    return sat(thump(0.0, 1.0) + thump(0.24, 0.65), 1.4)
+
+
+def sfx_giant_step(seed=0):
+    """거인 발소리: 바닥을 울리는 낮은 쿵 + 자갈 부스럭"""
+    r = np.random.default_rng(850 + seed)
+    n = int(0.9 * SR)
+    t = np.arange(n) / SR
+    thud = np.sin(2 * np.pi * np.cumsum(38 + 40 * np.exp(-t * 22)) / SR) * env_exp(n, 0.25, 0.004)
+    grit = fft_filter(r.standard_normal(n), lo=900, hi=5000) * env_exp(n, 0.05, 0.002) * 0.25
+    return reverb(sat(thud * 1.3 + grit, 1.8), wet=0.3, dur=1.2, damp=1500.0, seed=850 + seed)
+
+
 SFX = {
     "swing": [lambda s=s: sfx_swing(False, s) for s in range(3)],
     "swing_heavy": [lambda s=s: sfx_swing(True, 10 + s) for s in range(2)],
@@ -781,6 +817,9 @@ SFX = {
     "ram": [sfx_ram],
     "thunder": [sfx_thunder],
     "wave": [sfx_wave],
+    "roar": [lambda s=s: sfx_roar(s) for s in range(2)],
+    "heartbeat": [sfx_heartbeat],
+    "giant_step": [lambda s=s: sfx_giant_step(s) for s in range(2)],
 }
 
 

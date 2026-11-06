@@ -42,8 +42,23 @@ const NIGHT_TIME := 90.0
 const NIGHT_POSTS := [[Vector2(17.5, 12.5), Vector2(-1, 1)], [Vector2(7.0, 9.0), Vector2(-1, 0.3)], [Vector2(6.0, 14.8), Vector2(-1, 0.1)],
 	[Vector2(11.5, 19.5), Vector2(-1, 0.6)], [Vector2(23.5, 17.5), Vector2(0.4, 1)]]
 const HIDE2 := Vector2(19.5, 27.0)
-## 5막 날뛰기를 버틸 시간
-const RAMPAGE_TIME := 60.0
+## 5막 날뛰기를 버틸 시간(진짜 이름을 댔으면 더 길다 — 거인이 형제들을 부르지 못하는 속임이 없음)
+const RAMPAGE_TIME := 75.0
+const RAMPAGE_TIME_NAMED := 95.0
+## 달군 말뚝이 식는 시간(초) — 식으면 다시 화덕에서 달궈야 한다
+const HOT_TIME := 13.0
+## 날뛰는 거인이 벽에 부딪히면 천장에서 돌이 떨어진다: 예고 시간·반지름·피해·개수
+const ROCK_WARN := 1.1
+const ROCK_R := 26.0
+const ROCK_DMG := 26.0
+const ROCK_COUNT := 4
+## 숫양 배 밑: 거인이 더듬는 동안(GRIP_TIME초) 손힘이 GRIP_DRAIN/초로 빠진다. 상호작용 키 한 번에 GRIP_TAP만큼 다시 움켜쥔다
+const GRIP_TIME := 4.5
+const GRIP_DRAIN := 0.42
+const GRIP_TAP := 0.11
+## 3막 포도주: 건넬 잔 수, 잔을 건넬 수 있는 거리(거인 발밑에서)
+const CUPS := 3
+const GIVE_RADIUS := 64.0
 const CARRY_SPEED := 46.0
 const RIDE_SPEED := 30.0
 
@@ -82,6 +97,20 @@ var _night_t := 0.0
 var _rage_t := 0.0
 var _hide_at := Vector2.ZERO
 var lost: Array = []
+var _hot_t := 0.0
+## 떨어지는 돌: [위치, 남은 예고 시간]
+var _rocks: Array = []
+## 숫양 매달리기: 남은 더듬기 시간(0이면 아님)·손힘(0~1)
+var _grip_t := 0.0
+var _grip := 1.0
+var _grip_bot := 0.0
+## 손힘 막대(화면 아래 가운데)
+var _grip_ui: CanvasLayer
+var _grip_fill: ColorRect
+var cups := 0
+## 2잔째 이름을 물을 때 진짜 이름을 댔는지
+var told_name := false
+var _choice: CanvasLayer
 var _spot_cd := 0.0
 var _tuts: Array = []
 var _tut_cur: Array = []
@@ -310,7 +339,7 @@ func _make_points() -> void:
 	look_point.on_use = func(_by): _look()
 	wine_point = _point("wine", WINE_AT, 30.0, 0.6)
 	wine_point.on_use = func(_by): _take("wine")
-	give_point = _point("give", Vector2.ZERO, 72.0, 0.0, giant)
+	give_point = _point("give", Vector2.ZERO, GIVE_RADIUS, 0.0, giant)
 	give_point.on_use = func(_by): _give_wine()
 	stake_point = _point("stake", Vector2(STAKE) + Vector2(1.0, 1.7), 34.0, 0.8)
 	stake_point.on_use = func(_by): _take("stake")
@@ -401,10 +430,12 @@ func _close_boulder() -> void:
 		Sfx.play("hit_heavy", -2.0)
 		Game.shake(9.0)
 		canvas_mod.color = Color(0.36, 0.31, 0.38))
-	tw.tween_interval(0.8)
+	tw.tween_interval(0.5)
 	tw.tween_callback(func():
 		giant.face(_gdir(Vector2(0, 1)))
-		Game.say(Lines.say("arrival"), _arrival_done))
+		giant.roar(func():
+			giant.mode = Cyclops.Mode.WATCH
+			Game.say(Lines.say("arrival"), _arrival_done)))
 
 
 func _arrival_done() -> void:
@@ -481,7 +512,7 @@ func _on_crew_taken(c: Node2D) -> void:
 	Game.shake(6.0)
 	Fx.text(c.global_position + Vector2(0, -60), Lines.t("fx.taken", c.display_name), Color(1, 0.35, 0.3))
 	var tw := create_tween()
-	tw.tween_property(c, "global_position", giant.global_position + Vector2(0, -90), 0.5)
+	tw.tween_property(c, "global_position", giant.global_position + Vector2(0, -Cyclops.HEIGHT * 0.7), 0.5)
 	tw.parallel().tween_property(c, "modulate:a", 0.0, 0.6)
 	tw.tween_callback(c.queue_free)
 	c.process_mode = Node.PROCESS_MODE_DISABLED
@@ -503,21 +534,81 @@ func on_decoy(pos: Vector2) -> void:
 		giant.hear(pos, 1.0)
 
 
+## 잔 건네기(3막): 마시고 → 취해 휘두르고(구르기로 피함) → "한 잔 더"를 세 번. 두 잔째에 이름을 묻는다
 func _give_wine() -> void:
-	if carrying != "wine":
+	if carrying != "wine" or giant.mode == Cyclops.Mode.DRINK or giant.mode == Cyclops.Mode.SWIPE:
 		return
 	give_point.enabled = false
-	_drop()
+	cups += 1
 	giant.face(player.global_position - giant.global_position)
-	giant.mode = Cyclops.Mode.WAIT_WINE
-	Sfx.play("eat", -4.0)
-	Game.say(Lines.say("give"), func():
-		Game.quest_marker = Vector2.INF
-		giant.walk_to(g(BED_SIDE), _giant_asleep, Cyclops.DRUNK_SPEED, Cyclops.Mode.DRUNK))
+	Fx.text(giant.global_position + Vector2(0, Cyclops.TEXT_Y), Lines.t("fx.cup", [cups, CUPS]), Color(1, 0.8, 0.5))
+	if cups >= CUPS:
+		_drop()
+		giant.drink(cups, func():
+			Game.say(Lines.say("cup3"), func():
+				Game.quest_marker = Vector2.INF
+				giant.walk_to(g(BED_SIDE), _giant_asleep, Cyclops.DRUNK_SPEED, Cyclops.Mode.DRUNK)))
+		return
+	giant.drink(cups, func():
+		if cups == 1:
+			Game.say(Lines.say("cup1"), _swipes)
+		else:
+			Game.say(Lines.say("cup2"), func():
+				_ask_name(func(i):
+					told_name = i == 1
+					Game.stats["told_name"] = 1 if told_name else 0
+					Game.say(Lines.say("name_true" if told_name else "name_outis"), _swipes))))
+	_refresh_marker()
+
+
+## 취한 거인이 휘두른다: 잔마다 2 + 잔 번
+func _swipes() -> void:
+	giant.swipe(3 + cups)
+	if cups == 1:
+		Game.show_hint(Lines.t("hint.swipe"))
+
+
+## 이름을 묻는 선택(대화창 아래 단추 둘). 봇은 우티스를 고른다
+func _ask_name(cb: Callable) -> void:
+	if Game.autoplay:
+		cb.call(0)
+		return
+	_choice = CanvasLayer.new()
+	_choice.layer = 30
+	_choice.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_choice)
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.55)
+	bg.position = Vector2(150, 236)
+	bg.size = Vector2(340, 82)
+	_choice.add_child(bg)
+	var q := Label.new()
+	q.text = Lines.t("choice.name_q")
+	q.position = Vector2(150, 242)
+	q.size = Vector2(340, 14)
+	q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	q.add_theme_font_size_override("font_size", 9)
+	_choice.add_child(q)
+	var opts := Lines.list("choice.name")
+	for i in opts.size():
+		var b := Button.new()
+		b.text = opts[i]
+		b.position = Vector2(166, 262 + i * 24)
+		b.size = Vector2(308, 20)
+		b.add_theme_font_size_override("font_size", 8)
+		b.pressed.connect(func():
+			_choice.queue_free()
+			_choice = null
+			get_tree().paused = false
+			cb.call(i))
+		_choice.add_child(b)
+		if i == 0:
+			b.grab_focus()
+	get_tree().paused = true
 
 
 func _giant_asleep(quiet := false) -> void:
-	giant.sleep_on(g(Vector2(BED) + Vector2(1.5, 1.5)) + Vector2(66, -16))
+	giant.sleep_on(g(Vector2(BED) + Vector2(1.5, 1.5)) + Vector2(60, -54))
 	if not quiet:
 		Game.say(Lines.say("sleep"))
 	_set_step(3)
@@ -529,6 +620,7 @@ func _heat() -> void:
 	Sfx.play("fire_burst", -4.0)
 	Fx.spark(player.global_position + Vector2(0, -20), Color(1, 0.6, 0.2), 10)
 	_take("hot")
+	_hot_t = HOT_TIME
 	Game.say(Lines.say("hot"))
 
 
@@ -554,11 +646,24 @@ func _stab() -> void:
 ## 눈 먼 거인: 일어나 더듬어 입구로 가서 바위를 치우고 앉는다
 ## 눈 먼 거인이 일어나 날뛴다(5막 ①)
 func _blinded() -> void:
-	Game.cutscene = false
 	giant.global_position = g(BED_SIDE)
+	giant.z_index = 0
+	if not _restored and Game.hud:
+		giant.wound(_rampage_start)
+		return
+	_rampage_start()
+
+
+func _rampage_start() -> void:
+	Game.cutscene = false
+	if step >= 5:
+		return
 	giant.rampage()
-	_rage_t = RAMPAGE_TIME
-	_set_step(4)
+	_rage_t = RAMPAGE_TIME_NAMED if told_name else RAMPAGE_TIME
+	if step != 4:
+		_set_step(4)
+	if told_name:
+		Game.say(Lines.say("rage_named"))
 
 
 ## 날뛰다 지쳐: 더듬어 입구로 가서 바위를 치우고 앉는다(5막 ②)
@@ -654,11 +759,82 @@ func _update_ride(delta: float) -> void:
 	if not _ride_said and ram.global_position.distance_to(giant.global_position) < 90.0:
 		_ride_said = true
 		giant.face(ram.global_position - giant.global_position)
-		Game.say(Lines.say("ride"))
+		_grip_t = GRIP_TIME
+		_grip = 1.0
+		_show_grip(true)
+		Sfx.at("roar", giant.global_position, -10.0)
+		Game.tutorial(Lines.t("tut.grip"))
+		return
+	if _grip_t > 0.0:
+		_update_grip(delta)
 		return
 	player.global_position = ram.global_position
 	if _walk_animal(ram, _ride_path, RIDE_SPEED, delta):
 		_escaped()
+
+
+## 거인이 숫양 등을 더듬는 동안: 상호작용 키를 연타해 털을 움켜쥔다. 손힘이 다 빠지면 거인이 잡아챈다(다치고 다시 매달림)
+func _show_grip(on: bool) -> void:
+	if not on:
+		if _grip_ui:
+			_grip_ui.queue_free()
+			_grip_ui = null
+		return
+	_grip_ui = CanvasLayer.new()
+	_grip_ui.layer = 20
+	add_child(_grip_ui)
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.7)
+	bg.position = Vector2(240, 226)
+	bg.size = Vector2(160, 9)
+	_grip_ui.add_child(bg)
+	_grip_fill = ColorRect.new()
+	_grip_fill.position = Vector2(242, 228)
+	_grip_fill.size = Vector2(156, 5)
+	_grip_ui.add_child(_grip_fill)
+	var lb := Label.new()
+	lb.text = Lines.t("fx.grip")
+	lb.position = Vector2(240, 212)
+	lb.size = Vector2(160, 12)
+	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lb.add_theme_font_size_override("font_size", 8)
+	_grip_ui.add_child(lb)
+
+
+func _update_grip(delta: float) -> void:
+	_grip_t -= delta
+	_grip -= GRIP_DRAIN * delta
+	if _grip_fill:
+		_grip_fill.size.x = 156.0 * clampf(_grip, 0.0, 1.0)
+		_grip_fill.color = Color(1.0, 0.85, 0.4).lerp(Color(1, 0.25, 0.2), 1.0 - clampf(_grip, 0.0, 1.0))
+	var tap := Input.is_action_just_pressed("interact")
+	if Game.autoplay:
+		_grip_bot -= delta
+		tap = _grip_bot <= 0.0
+		if tap:
+			_grip_bot = 0.16
+	if tap:
+		_grip = minf(1.0, _grip + GRIP_TAP)
+		Fx.spark(ram.global_position + Vector2(0, -6), Color(0.95, 0.9, 0.8), 2)
+	if fmod(_grip_t, 0.6) < delta:
+		Game.shake(1.5)
+	if _grip <= 0.0:
+		Game.shake(8.0)
+		Sfx.at("hit_heavy", ram.global_position, 0.0)
+		Fx.text(ram.global_position + Vector2(0, -40), Lines.t("fx.slip"), Color(1, 0.4, 0.3))
+		player.take_hit(Cyclops.WAKE_GRAB, giant, 0.0, true)
+		_grip = 0.55
+		_grip_t += 1.5
+		if not player.is_alive():
+			_grip_t = 0.0
+			_show_grip(false)
+			Game.tutorial_done()
+		return
+	if _grip_t <= 0.0:
+		_grip_t = 0.0
+		_show_grip(false)
+		Game.tutorial_done()
+		Game.say(Lines.say("ride"))
 
 
 func _escaped() -> void:
@@ -710,6 +886,10 @@ func _set_step(s: int) -> void:
 			_save_checkpoint("wine")
 			wine_point.enabled = true
 			_tut(Lines.t("tut.sight"), func(): return carrying == "wine", 16.0)
+			_tut(Lines.t("tut.wine_dodge"), func(): return squad.mode == Squad.Mode.HOLD, 14.0)
+			if Game.autoplay:   # 봇: 휘두르는 거인 곁에 부하를 데려가지 않고, 걷기만 한다(구를 힘을 남김)
+				squad.command(Squad.Mode.HOLD, g(HIDE))
+				Game.stealth_bot = true
 		3:
 			_save_checkpoint("sleep")
 			stake_point.enabled = true
@@ -749,9 +929,12 @@ func _refresh_marker() -> void:
 			Game.set_objective(chapter_title, Lines.t("objective.rampage", ceili(_rage_t)))
 			at = Game.quest_marker if Game.autoplay else Vector2.INF
 		2:
-			if carrying == "wine":
+			if carrying == "wine" and giant.mode in [Cyclops.Mode.SWIPE, Cyclops.Mode.DRINK, Cyclops.Mode.ATTACK] and cups > 0:
+				at = _open_spot(giant.global_position, player.global_position - giant.global_position, 140.0) if Game.autoplay else Vector2.INF
+				obj = "dodge"
+			elif carrying == "wine":
 				at = giant.global_position
-				obj = "give"
+				obj = "give" if cups == 0 else "give_more"
 			else:
 				at = wine_point.global_position
 				obj = "wine"
@@ -855,7 +1038,7 @@ func skip_to(id: String) -> void:
 func report() -> Dictionary:
 	return {"ending": ending_done, "step": step, "carrying": carrying, "gate_open": gate_open,
 		"giant": Cyclops.Mode.keys()[giant.mode], "giant_cell": Iso.world_to_grid(giant.global_position).snapped(Vector2(0.1, 0.1)),
-		"crew": squad.members.size(), "lost": lost, "downs": Game.stats.get("downs", 0), "giant_seen": Game.stats.get("giant_seen", 0)}
+		"crew": squad.members.size(), "lost": lost, "downs": Game.stats.get("downs", 0), "giant_seen": Game.stats.get("giant_seen", 0), "cups": cups, "told_name": told_name, "swings": giant.swings}
 
 
 func result_info(st: Dictionary) -> Dictionary:
@@ -891,6 +1074,7 @@ func _process(delta: float) -> void:
 		Fx.spark(giant.global_position + Vector2(0, -40), Color(1, 0.9, 0.6), 6)
 		Sfx.at("block", giant.global_position, -4.0)
 		Game.show_hint(Lines.t("hint.no_sword"))
+	_update_rocks(delta)
 	match step:
 		1:
 			_update_night(delta)
@@ -902,12 +1086,23 @@ func _process(delta: float) -> void:
 			if _rage_t <= 0.0 and giant.mode in [Cyclops.Mode.RAMPAGE, Cyclops.Mode.STUNNED]:
 				_end_rampage()
 		2:
-			give_point.enabled = carrying == "wine" and giant.mode in [Cyclops.Mode.WATCH, Cyclops.Mode.WALK, Cyclops.Mode.WAIT_WINE, Cyclops.Mode.CHASE]
+			give_point.enabled = carrying == "wine" and (giant.mode == Cyclops.Mode.WAIT_WINE \
+					or (cups == 0 and giant.mode in [Cyclops.Mode.WATCH, Cyclops.Mode.WALK, Cyclops.Mode.CHASE]))
 			if carrying == "wine":
 				_refresh_marker()
+			_bot_dodge()
 		3:
 			heat_point.enabled = carrying == "stake"
 			stab_point.enabled = carrying == "hot"
+			if carrying == "hot" and not Game.cutscene:
+				var before := ceili(_hot_t)
+				_hot_t -= delta
+				if ceili(_hot_t) != before:
+					Game.set_objective(chapter_title, Lines.t("objective.stab_t", maxi(0, ceili(_hot_t))))
+				if _hot_t <= 0.0:
+					_take("stake")
+					Sfx.play("torch_out", -4.0)
+					Game.show_hint(Lines.t("hint.cooled"))
 		5:
 			if gate_open and not Game.cutscene:
 				Game.quest_marker = ram.global_position
@@ -922,11 +1117,60 @@ var _grab_hint := 0.0
 var _bot_t := 0.0
 
 
+## 봇: from에서 want 쪽에 가까운 방향으로 dist 떨어진, 둘레가 트인 자리(구석에 몰려 구를 곳이 없지 않게)
+func _open_spot(from: Vector2, want: Vector2, dist: float) -> Vector2:
+	var best := from + want.normalized() * dist
+	var bs := -INF
+	for i in 16:
+		var v := Vector2.RIGHT.rotated(TAU * i / 16.0)
+		var at := from + v * dist
+		if is_blocked_world(at):
+			continue
+		var open := 0
+		for j in 8:
+			if not is_blocked_world(at + Vector2.RIGHT.rotated(TAU * j / 8.0) * 56.0):
+				open += 1
+		var sc := open * 2.0 + v.dot(want.normalized())
+		if sc > bs:
+			bs = sc
+			best = at
+	return best
+
+
+## 봇(--auto): 거인 공격 예고 원 안에서 맞기 직전이면 원 밖으로 구른다(사람이 하는 그대로)
+func _bot_dodge() -> void:
+	if not Game.autoplay or player.state == Actor.St.DODGE:
+		return
+	var k := giant.danger_at(player.global_position)
+	if k > 0.55:
+		# 예고 원 밖으로: 옆으로 구른다(뒤가 막혔으면 뒤로 굴러도 원 안에 남는다)
+		var to := (player.global_position - giant.global_position).normalized()
+		var away := to.orthogonal()
+		if is_blocked_world(player.global_position + away * 50.0):
+			away = -away
+		if is_blocked_world(player.global_position + away * 50.0):
+			away = to
+		player.face(away)
+		player.inp["move"] = away
+		player._start_dodge()
+
+
 ## 봇(--auto): 날뛰는 동안 거인에게서 먼 곳으로 걸어서(뛰면 들림) 피하고, 거인이 사람에게 다가오면 미끼 돌을 반대쪽에 던진다
 func _bot_rampage(delta: float) -> void:
 	if not Game.autoplay:
 		return
 	Game.stealth_bot = true   # 잠입 봇처럼 걷기만(적이 없어 다른 행동은 같다)
+	# 떨어지는 돌 예고 원 안이면 밖으로 구른다(거인이 벽에 부딪혀 멈칫한 동안이라 소리가 나도 괜찮다)
+	if player.state != Actor.St.DODGE:
+		for r in _rocks:
+			if float(r[1]) < 0.7 and Combat.ground_dist(r[0], player.global_position) < ROCK_R + 10.0:
+				var away := (player.global_position - Vector2(r[0])).normalized()
+				if away.length() < 0.1:
+					away = Vector2(1, 0)
+				player.face(away)
+				player.inp["move"] = away
+				player._start_dodge()
+				break
 	_bot_t -= delta
 	if _bot_t > 0.0:
 		return
@@ -951,6 +1195,40 @@ func _bot_rampage(delta: float) -> void:
 			away = g(Vector2(26, 7)) if gp.x < g(Vector2(15, 15)).x else g(Vector2(3, 8))
 		Skills.throw_decoy(player.global_position + Vector2(0, -2), away)
 		_bot_t = 5.0
+
+
+## 날뛰는 거인이 벽·바위에 부딪힘(Cyclops가 부른다): 천장에서 돌이 떨어진다 — 둘레 몇 곳 + 오디세우스가 가까우면 그 자리
+func on_giant_wall(pos: Vector2) -> void:
+	var spots: Array = []
+	if Combat.ground_dist(pos, player.global_position) < 300.0:
+		spots.append(player.global_position)
+	var tries := 0
+	while spots.size() < ROCK_COUNT and tries < 30:
+		tries += 1
+		var at := pos + Vector2(randf_range(-220, 220), randf_range(-110, 110))
+		if not is_blocked_world(at):
+			spots.append(at)
+	for at in spots:
+		_rocks.append([at, ROCK_WARN + randf_range(0.0, 0.5)])
+	Sfx.play("stone", -6.0)
+
+
+func _update_rocks(delta: float) -> void:
+	for r in _rocks.duplicate():
+		r[1] -= delta
+		if r[1] > 0.0:
+			continue
+		_rocks.erase(r)
+		var at: Vector2 = r[0]
+		Fx.anim("dust", at)
+		Fx.spark(at, Color(0.6, 0.55, 0.5), 6)
+		Sfx.at("stone", at, -2.0)
+		Game.shake(2.5)
+		if player.is_alive() and player.visible and Combat.ground_dist(at, player.global_position) < ROCK_R + 8.0:
+			player.take_hit(ROCK_DMG, giant, 120.0, true)
+		for c in squad.members:
+			if is_instance_valid(c) and c.visible and Combat.ground_dist(at, c.global_position) < ROCK_R + 8.0:
+				c.take_hit(ROCK_DMG * 0.6, giant, 80.0, true)
 
 
 ## 밤: 시간이 흐르고, 거인이 숨은 자리 쪽(창고 구석)으로 오면 둘째 숨을 곳을 가리킨다
@@ -982,6 +1260,15 @@ func _draw_sight() -> void:
 	if giant == null or not giant.visible:
 		return
 	giant.draw_warning(sight_layer)
+	for r in _rocks:
+		var k: float = clampf(1.0 - float(r[1]) / ROCK_WARN, 0.0, 1.0)
+		var at: Vector2 = r[0]
+		sight_layer.draw_set_transform(at, 0.0, Vector2(1.0, 1.0 / Combat.Y_STRETCH))
+		sight_layer.draw_circle(Vector2.ZERO, ROCK_R, Color(1.0, 0.25, 0.1, 0.1 + 0.25 * k))
+		sight_layer.draw_arc(Vector2.ZERO, ROCK_R * k, 0.0, TAU, 20, Color(1.0, 0.4, 0.2, 0.7), 1.5)
+		sight_layer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		sight_layer.draw_circle(at + Vector2(0, -220.0 * (1.0 - k)), 3.0 + 3.0 * k, Color(0.25, 0.22, 0.2, 0.9))
+
 	if not giant.watching() and giant.mode != Cyclops.Mode.CHASE:
 		return
 	var o: Vector2 = giant.global_position

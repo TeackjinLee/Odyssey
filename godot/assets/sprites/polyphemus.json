@@ -1,25 +1,31 @@
 {
   "frame": [
-    320,
-    320
+    384,
+    384
   ],
   "anchor": [
-    159.5,
-    292
+    192,
+    366
   ],
   "dirs": 8,
-  "scale": 1,
+  "scale": 0.5,
   "anims": {
     "idle": {
       "start": 0,
-      "frames": 4,
-      "fps": 4,
+      "frames": 1,
+      "fps": 1,
       "loop": true
     },
-    "walk": {
-      "start": 4,
-      "frames": 6,
-      "fps": 6,
+    "idle_shut": {
+      "start": 1,
+      "frames": 1,
+      "fps": 1,
+      "loop": true
+    },
+    "idle_wound": {
+      "start": 2,
+      "frames": 1,
+      "fps": 1,
       "loop": true
     }
   }

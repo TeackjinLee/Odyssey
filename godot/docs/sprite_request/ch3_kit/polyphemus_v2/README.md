@@ -1,0 +1,33 @@
+# 폴리페모스 다시 그리기 (v2) — 무서운 거인
+
+예전 거인(`../polyphemus/`)은 통통하고 귀여워 무섭지 않았고, 작은 원본을 줄였다 2배로 키워 화질이 뭉개졌다.
+v2는 영화 《오디세이》(2026)처럼 무서운 쪽: 잿빛 흉터 살갗, 엉킨 검은 머리, 핏발 선 노란 외눈, 구부정한 큰 몸, 뿌리 달린 올리브 줄기 곤봉.
+
+## 받은 것
+
+- `results/base.png` — 기본 5방향(1536×1024, 칸 512, 위 E·SE·S / 아래 NE·N). 요청 `base/prompt.txt`, 화풍 참고 `hero_style_ref.png`.
+- 게임 시트: `python3 tools/pack_polyphemus_hd.py base .` → `assets/sprites/polyphemus.*`
+  (idle·idle_shut·idle_wound 세 동작 1프레임, 감은 눈·찔린 눈은 눈 타원을 칠해 만듦 — `EYES` 좌표). 움직임은 `cyclops.gd`의 `_pose`.
+
+## 아직 못 받은 것 (Codex 사용 한도, 2026-11-09 이후)
+
+동작 8종 × 5방향 + 잠 1장 = 41장. 요청 글은 `jobs/<동작>_<방향>.txt`(방향마다 한 장: 6프레임은 3×2 칸 512, 4프레임은 2×2 칸 768×512).
+
+```bash
+cd godot/docs/sprite_request/ch3_kit/polyphemus_v2 && PAR=6 ./run_jobs.sh   # 이미 받은 것은 건너뜀, 첨부: base.png + ref/base_<방향>.png
+cd godot && python3 tools/pack_polyphemus_hd.py v2 .                         # → polyphemus·polyphemus_combat·polyphemus_sleep
+```
+
+| 동작 | 프레임 | 쓰는 곳 |
+|---|---|---|
+| idle | 4 | 지킴·킁킁 |
+| walk | 6 | 순찰·쫓기·돌진 |
+| roar | 4 | 알아챈 뒤 쫓기 전, 동굴을 막은 뒤 |
+| club_slam · grab | 6 | 공격(맞는 순간 = 4번째 장) |
+| drunk | 6 | 취해 침상으로 |
+| eye_wound | 6 | 눈을 찔린 직후(곤봉 없음) |
+| grope | 6 | 날뛰기·입구 지킴(곤봉 없음) |
+| sleep | 2×2 | 1줄 반듯이·2줄 웅크림 |
+
+받은 뒤 확인: 다섯 방향이 같은 얼굴·크기인지, 외눈(눈 부상·더듬기는 검붉은 상처), 칸 경계에서 잘림(묶을 때 `issues`에 나옴 — `ch3_kit/polyphemus_hd_v2.json`).
+동작 그림이 시트에 있으면 `cyclops.gd`가 코드 자세를 끄고 그림을 쓴다. 잠 그림이 생기면 `eye_pos`의 잠든 눈 위치를 화면으로 맞춘다.
