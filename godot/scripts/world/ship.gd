@@ -69,6 +69,8 @@ var cloth: Texture2D = null
 var crew_tex: Texture2D = null
 var crew_meta := {}
 const ROWERS := ["greek_sword", "greek_spear", "greek_archer"]
+## 그리스 노꾼 노 젓기 시트(ship_crew의 줄). 있으면 ROWERS 대신 노의 위상에 맞춰 그린다
+const ROW_SHEET := "greek_rower"
 ## 배마다 다른 것: 노꾼 시트(앉기 동작이 없는 시트는 윗부분만 그려 앉은 듯), 서 있는 궁수 시트, 돛대 높이 배율
 var rowers: Array = ROWERS
 var rower_cut := 1.0
@@ -254,11 +256,11 @@ func _physics_process(delta: float) -> void:
 			var side := Iso.ex * right().x + Iso.ey * right().y
 			var back := -(Iso.ex * fwd().x + Iso.ey * fwd().y).normalized() * sd
 			var k := clampf(absf(speed) / 2.5, 0.3, 1.0)
-			_wake.push_front([Iso.grid_to_world(gpos - fwd() * length * 0.5 * sd), 1.0, side, k, randi(), back * (14.0 + 10.0 * k)])
+			_wake.push_front([Iso.grid_to_world(gpos - fwd() * length * 0.5 * sd), 1.0, side, k, randi(), back * (WAKE_PUSH + 10.0 * k)])
 	# 물결은 고물에서 뒤로 밀려나며 느려지고, 바다 무늬와 같은 흐름(바람 쪽)으로 함께 떠간다
 	var flow := _sea_flow()
 	for w in _wake:
-		w[1] -= delta * 0.3
+		w[1] -= delta / WAKE_LIFE
 		w[0] += (w[5] + flow) * delta
 		w[5] *= exp(-1.2 * delta)
 	while _wake.size() > 0 and _wake[_wake.size() - 1][1] <= 0.0:
@@ -635,7 +637,17 @@ func _draw_hull_ship(flash: Color) -> void:
 		for i in n:
 			var lx := lerpf(-length * 0.3, length * 0.2, float(i) / (n - 1)) + sin(_oar_t + i * 0.15) * 0.04 * float(gear != 0)
 			var p := _hp(lx, side * dw * 0.24, deck)
-			items.append([p.y, 0, p, rowers[(i + (1 if side > 0 else 0)) % rowers.size()], back, 0, rower_cut])
+			var who: String = rowers[(i + (1 if side > 0 else 0)) % rowers.size()]
+			var tick := 0
+			if rowers == ROWERS and crew_meta["rows"].has(ROW_SHEET):
+				# 노 젓는 그림(tools/gen_rower.py): 노깃이 물에 드는 순간(cos = 0, 내려가며) 뻗기 → 당기기 → 끝까지 당김 → 돌아오기
+				who = ROW_SHEET
+				if gear != 0:
+					var u := fposmod(_oar_t + i * 0.15 - PI * 0.5, TAU) / TAU
+					tick = int(floor(u * 4.0 + 0.5)) % 4
+				else:
+					tick = 3
+			items.append([p.y, 0, p, who, back, tick, rower_cut])
 	if archer_sheet != "" and crew_meta["rows"].has(archer_sheet):
 		# 궁수: 뱃머리·고물에 서서 쫓는 배 쪽을 본다
 		var look := v
@@ -781,6 +793,10 @@ func _draw_code_sail(flash: Color) -> void:
 
 # ── 물과 닿는 곳: 뱃전 물거품 띠·뱃머리 물결·고물 뒤 V자 물결 ─────────────
 const FOAM := Color(0.86, 0.93, 1.0)
+## 손볼 수치: 물결 자국이 남는 시간(초), 벌어지는 빠르기, 고물에서 뒤로 밀려나는 빠르기(px/초)
+const WAKE_LIFE := 3.3
+const WAKE_SPREAD := 1.3
+const WAKE_PUSH := 14.0
 
 
 ## 바다 무늬가 흐르는 속도(월드 px/초) — iso_level._update_sea와 같은 방향·빠르기
@@ -840,7 +856,7 @@ func _draw_wake() -> void:
 		var age := 1.0 - a
 		var base: Vector2 = w[0] - global_position
 		var side: Vector2 = w[2] * width * 0.5
-		var spread := 0.5 + age * (1.3 + float(w[3]))
+		var spread := 0.5 + age * (WAKE_SPREAD + float(w[3]))
 		arms[0].append([(base - side * spread).round(), a, int(w[4])])
 		arms[1].append([(base + side * spread).round(), a, int(w[4]) >> 3])
 		mids.append([base, a, int(w[4])])

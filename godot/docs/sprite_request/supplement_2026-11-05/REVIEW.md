@@ -13,3 +13,11 @@
 > Keep the same identity, five row facings and magenta background. Increase ONLY rowing motion: frame1 shoulders reach forward over knees, frame2 torso begins backward pull with elbows bending, frame3 shoulders clearly behind hips and fists at lower ribs, frame4 torso returns halfway forward. Keep hips and both planted feet at exactly the same coordinates in every frame. No head turning within a row. Fit the entire silhouette including feet at least12px inside every384x204cell. No oar or bench. Do not repeat identical poses in frames1,2,4.
 
 다음 동작을 생성할 때 데이포보스 후보가 새로운 캐릭터 기준이다. 아게노르 기본 그림을 디자인 참조로 다시 사용하면 두 보스가 같은 모습으로 돌아가므로, 아게노르는 배치·화풍 참고로만 사용한다.
+
+## 2026-11-06 검수·적용
+
+- **노꾼**: 1차는 1·2·4칸 자세가 같아 위 보정 문구를 붙여 다시 받았다(`greek_row/prompt_v1.txt` → `prompt.txt`, 결과 `results/greek_row_v2.png`).
+  동·남동 줄은 뒤로 젖히는 3칸이 뚜렷하고 남·북 줄은 약하지만 읽힌다. `assets/source/greek_rower_row.png` → `tools/gen_rower.py` → `gen_ship_crew.py`로 넣었고,
+  `ship.gd`가 노의 위상(노깃이 물에 드는 순간 = 뻗기)에 맞춰 프레임을 고른다. 지상의 앉기 동작은 그대로다.
+- **데이포보스 기본·초상화**: 디자인 통과 — 검은 가로 볏·사자 방패·보라 비늘 갑옷으로 아게노르와 한눈에 구분된다. 초상화는 흰 배경이라 빼야 한다.
+  기본 8방향은 줄 순서가 요청과 달라 보이니(윗줄 뒷모습) 자를 때 칸마다 방향을 확인한다. 동작이 없어 적용은 미룬다.

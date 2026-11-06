@@ -115,6 +115,8 @@ func start_chapter(from_checkpoint := false, n := -1) -> void:
 		level.player.position = Iso.grid_to_world(Vector2(float(xy[0]), float(xy[1])))
 		if n == 1:
 			level.sinon.talk.enabled = false
+	if args.has("start") or args.has("at"):
+		level.snap_camera()
 
 
 func _showcase() -> void:

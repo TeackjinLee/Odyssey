@@ -33,12 +33,20 @@ uniform sampler2D sea_storm_tex : filter_nearest, repeat_enable;
 uniform vec2 off_a = vec2(0.0);
 uniform vec2 off_b = vec2(0.0);
 uniform bool soft = false;
+// 손볼 수치: 물비늘 양(0 없음 ~ 1 많음), 해안선 휨(px), 해안선 들쭉날쭉(0~0.5)
+uniform float glint_amount : hint_range(0.0, 1.0) = 0.5;
+uniform float coast_wobble = 16.0;
+uniform float coast_jitter = 0.22;
 uniform sampler2D floor_map : filter_nearest;   // r = 아틀라스 줄, g = 변형 번호 (0~255)
 uniform vec2 atlas_size = vec2(256.0, 288.0);
 uniform float water_row = 6.0;
 // 이음매 없는 바닥 무늬(tools/gen_ground_tex.py): 이 줄의 칸은 칸 그림 대신 월드 좌표로 깐다
 uniform sampler2D sand_tex : filter_nearest, repeat_enable;
 uniform float sand_row = -1.0;
+uniform sampler2D grass_tex : filter_nearest, repeat_enable;
+uniform float grass_row = -1.0;
+uniform sampler2D dirt_tex : filter_nearest, repeat_enable;
+uniform float dirt_row = -1.0;
 
 varying vec2 wpos;
 
@@ -127,7 +135,7 @@ vec3 calm_sea(vec2 p, float t) {
 		vec2 slot = vec2(floor(wp.x / sz.x), row);
 		float h = hash(slot + float(layer) * 31.7);
 		float life = sin(t * (0.7 + h * 0.9) + h * 40.0) * (0.55 + 0.45 * sw * (h - 0.3));
-		float th = layer == 0 ? 0.42 : 0.8;
+		float th = (layer == 0 ? 0.62 : 1.0) - glint_amount * (layer == 0 ? 0.4 : 0.4);
 		if (life > th) {
 			float len = floor((life - th) / (1.0 - th) * (layer == 0 ? 8.0 : 4.0)) + 1.0;
 			float cx = floor(h * (sz.x - 8.0)) + 4.0;
@@ -156,7 +164,7 @@ void fragment() {
 	// soft: 휜 위치(wq)에서 땅·물과 칸 종류를 정한다
 	vec2 wq = p;
 	if (soft) {
-		wq += (vec2(noise(p * 0.05), noise(p * 0.05 + 17.3)) - 0.5) * vec2(16.0, 9.0)
+		wq += (vec2(noise(p * 0.05), noise(p * 0.05 + 17.3)) - 0.5) * vec2(coast_wobble, coast_wobble * 0.56)
 			+ (vec2(noise(p * 0.16 + 5.1), noise(p * 0.16 + 9.7)) - 0.5) * vec2(4.0, 2.0);
 	}
 	vec2 g = to_grid(wq + 0.5);
@@ -169,7 +177,7 @@ void fragment() {
 	float thr = 0.5;
 	if (soft) {
 		lf = land_field(g);
-		thr = 0.5 + (noise(p * vec2(0.09, 0.18)) - 0.5) * 0.22;
+		thr = 0.5 + (noise(p * vec2(0.09, 0.18)) - 0.5) * coast_jitter;
 		if (lf > thr) {
 			// 땅: 이 칸(휜 위치의 칸)이 땅이면 그 종류, 물 칸이면 가장 가까운 땅 칸의 종류(보통 모래)
 			vec2 src = cell;
@@ -195,8 +203,13 @@ void fragment() {
 			if (lc.a < 0.5) {   // 마름모 밖(드묾): 가까운 안쪽
 				lcol = texture(TEXTURE, (vec2(vv * 64.0, row * 32.0) + vec2(32.0, 16.0) + 0.5) / atlas_size).rgb;
 			}
+			vec2 tq = floor(wq) + 0.5;
 			if (row == sand_row) {
-				lcol = texture(sand_tex, fract((floor(wq) + 0.5) / vec2(textureSize(sand_tex, 0)))).rgb;
+				lcol = texture(sand_tex, fract(tq / vec2(textureSize(sand_tex, 0)))).rgb;
+			} else if (row == grass_row) {
+				lcol = texture(grass_tex, fract(tq / vec2(textureSize(grass_tex, 0)))).rgb;
+			} else if (row == dirt_row) {
+				lcol = texture(dirt_tex, fract(tq / vec2(textureSize(dirt_tex, 0)))).rgb;
 			}
 			// 물가 젖은 띠
 			if (lf - thr < 0.06) {

@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 
 K = 0.36
-ROWS = [("greek_sword", "sit"), ("greek_spear", "sit"), ("greek_archer", "sit"),
+ROWS = [("greek_sword", "sit"), ("greek_spear", "sit"), ("greek_archer", "sit"), ("greek_rower", "row"),   # 노꾼: tools/gen_rower.py
         ("odysseus_ch1", "idle"), ("odysseus_sea", "idle"),
         ("cicones_sword", "idle"), ("cicones_spear", "idle"), ("cicones_archer", "idle")]   # 키코네스 배: 노꾼(위만 그려 앉은 듯)·궁수
 

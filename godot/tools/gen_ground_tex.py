@@ -2,7 +2,7 @@
 """이음매 없는 바닥 무늬(그려 받은 1장, 4×4 블록 픽셀아트) → assets/env/ground_<이름>.png (게임 px, 반복해서 깖).
 
 챕터 2처럼 레벨이 soft_coast면 water.gdshader가 그 종류 칸을 칸 그림 대신 이 무늬로 월드 좌표에 깐다 → 칸 테두리가 안 보인다.
-요청 묶음: docs/sprite_request/env_requests/ch2_sand_tex/
+요청 묶음: docs/sprite_request/env_requests/ch2_sand_tex/(모래)·ch2_ground_tex/(풀·흙)
 
     python3 tools/gen_ground_tex.py .
 """
@@ -12,7 +12,8 @@ from pathlib import Path
 from PIL import Image
 
 # 원본 → (출력 이름, 블록 크기 = 원본 px / 게임 px)
-SOURCES = {"ground_sand_shore.png": ("ground_sand.png", 4)}
+SOURCES = {"ground_sand_shore.png": ("ground_sand.png", 4), "ground_grass_dry.png": ("ground_grass.png", 4),
+           "ground_dirt_path.png": ("ground_dirt.png", 4)}
 
 
 def main(root: str) -> None:

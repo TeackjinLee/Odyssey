@@ -127,7 +127,7 @@
 
 ### 4.2 챕터 1 인물 `C-GRK` `C-TRO` `C-NPC`
 
-추가 미보유 역할: 왕자 데이포보스(`trojan_prince`)는 현재 `trojan_captain`을 재사용한다. 전용 기본 8방향·초상화 **후보**를 [추가 요청 묶음](sprite_request/supplement_2026-11-05/README.md)에 생성했다. 후속 동작을 받기 전 기존 보스 시트를 교체하지 않는다. 같은 묶음의 전용 노꾼 동작도 기존 식사 앉기 동작의 대체 후보이며 검수·노 위상 연결 전이다.
+추가 미보유 역할: 왕자 데이포보스(`trojan_prince`)는 현재 `trojan_captain`을 재사용한다. 전용 기본 8방향·초상화 **후보**를 [추가 요청 묶음](sprite_request/supplement_2026-11-05/README.md)에 생성했다. 후속 동작을 받기 전 기존 보스 시트를 교체하지 않는다. 같은 묶음의 노꾼 노 젓기는 동작이 약해 다시 받았고(2차, 2026-11-06) `tools/gen_rower.py`로 넣어 노의 위상에 맞춰 그린다 ✅. 데이포보스 후보는 검수 통과(볏·사자 방패·보라 갑옷으로 아게노르와 구분)했지만 걷기·공격 등 동작이 없어 아직 적용하지 않는다.
 
 병사 7종은 1장 오디세우스와 같은 화풍으로 그려 받았다(요청 기록 [sprite_request/ch1_kit/README.md](sprite_request/ch1_kit/README.md) "적·동료 7종").
 상태 칸의 "그려 받음"은 Codex로 받은 동작, 나머지 동작은 기본 8방향을 변형해 쓴다. 시논도 같은 화풍으로 받았다.
@@ -246,6 +246,7 @@
 | `E-SEA-storm` | 거친 바다 이음매 없는 무늬 1024² | `sea_storm.png` | ✅ |
 | `E-SEA-calm` | 잔잔한 밤바다 무늬 1024²(챕터 1·2 평소 바다도 바뀐다) | `sea_calm.png` | ✅ 지금은 안 씀 — 잔잔한 물은 셰이더 코드로 |
 | `E-GND-sand` | 이음매 없는 자갈 해안 무늬 1024²(챕터 2 모래 칸, `env_requests/ch2_sand_tex/`) | `ground_sand_shore.png` → `gen_ground_tex.py` | ✅ |
+| `E-GND-grass`·`E-GND-dirt` | 이음매 없는 마른 풀밭·흙길 무늬(챕터 2, `env_requests/ch2_ground_tex/`) | `ground_grass_dry.png`·`ground_dirt_path.png` → `gen_ground_tex.py` | ✅ |
 | `F-STORM-fx` | 뱃전 파도 6·파도머리 4+4·뱃머리 물보라 4·빗방울 6·번개 3·거품 띠 2·물안개 4·빗줄기 6 | `storm_fx.png` | ✅ |
 
 ### 4.6 UI `U`

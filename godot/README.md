@@ -248,7 +248,8 @@ tools/                 임시 그림·소리 생성기 (Python + Pillow·numpy, 
   뭍·성벽과 닿는 곳에 거품, 부두(planks) 앞쪽 물에 부두 옆면·그림자. 물 칸 지도는 `iso_level.gd`의 `_apply_floor`가 넣는다
   잔잔한 물은 코드(점무늬 3단 색 + 생겼다 사라지는 물비늘), 거친 물만 `sea_storm.png`. 레벨이 `soft_coast = true`(챕터 2)면 바닥 칸 전부에
   이 셰이더를 씌워 해안선·바닥 종류 경계를 마름모 대신 휜 선으로 그린다(`floor_map` = 칸별 아틀라스 줄·변형).
-  모래 칸은 칸 그림 대신 이음매 없는 무늬 `assets/env/ground_sand.png`(`python3 tools/gen_ground_tex.py .`)를 월드 좌표로 깐다.
+  모래·풀·흙 칸은 칸 그림 대신 이음매 없는 무늬 `assets/env/ground_<종류>.png`(`python3 tools/gen_ground_tex.py .`)를 월드 좌표로 깐다.
+  배 노꾼은 노 젓기 시트(`python3 tools/gen_rower.py . && python3 tools/gen_ship_crew.py .`)를 노의 위상에 맞춰 그린다.
   배(`ship.gd`): 선체 16방향은 겹치지 않고 한 장씩(경계에서 `HYST`만큼 더 돌아야 바뀜), 흘수선 거품·뱃머리 물결·V자 물결(바다 흐름 따라 떠감)
 
 - 환경은 그려 받은 한 장(`assets/source/troy_env.webp`, 어두운 단색 배경)을 `gen_env_from_sheet.py`가 잘라 덮어쓴다:

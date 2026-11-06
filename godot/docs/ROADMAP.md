@@ -26,12 +26,14 @@
 > 2026-11-05 인계: 여기까지 한 계정에서 했고, 다음은 다른 계정이 이어 한다. 그림 요청은 `tools/codex_image.sh`(모델·추론 한 곳, 기본 low)로
 > 보내고, 받은 그림 흐름은 `sprite_request/ch2_kit/README.md`·`ch1_kit/README.md`를 따른다. 커밋은 고친 파일만 경로로 더한다(OD.png·output/ 제외).
 
-1. **갤리선 직접 몰아 보기** — `godot --path . -- --chapter=2`, W·A·D로 한 바퀴. 경계에서 겹치는 잔상이 거슬리면 `ship.gd`의 `BLEND`를 줄이거나
-   선체를 32방향으로 늘린다(`ship/make_hull_guide.py`에 각도를 더해 같은 방식으로 8장 더 받기) (M4)
+1. **갤리선 직접 몰아 보기** — `godot --path . -- --chapter=2`, W·A·D로 한 바퀴. 선체는 이제 겹치지 않고 한 장씩 바뀐다(`ship.gd` `HYST`).
+   손볼 수치는 한곳에: 물결 자국 `WAKE_LIFE`·`WAKE_SPREAD`·`WAKE_PUSH`(`ship.gd`), 물비늘·해안선 `glint_amount`·`coast_wobble`·`coast_jitter`(`water.gdshader`).
+   더 매끄럽게 돌려면 선체를 32방향으로 늘린다(`ship/make_hull_guide.py`에 각도를 더해 8장 더 받기) (M4)
 2. **챕터 2 손맛 점검** — 노 단계·키 감도·바람·적 배 수·반격 물결 (M4). 코드로 본 것: 사람이 몰 때 키가 0.25초에 걸쳐 꺾이게 했다(`ship.gd` `RUDDER_IN`·`RUDDER_OUT`). 봇은 선체 77~83/120, 잃은 부하 0으로 끝나 난이도는 그대로 두었다 — 직접 몰아 보고 정한다
 3. **UI 마무리** ✅ — HUD 틀·아이콘·커서·칭호 배지·미니맵 테두리까지 연결했다(픽셀 글꼴은 잘 안 읽혀 시스템 글꼴 유지)([기록](sprite_request/APPLIED_2026-11-05.md)). 맨손 오디세우스 동작은 재요청하지 않는다 (M1)
 4. **로토스·항구 소품과 돌 던지기** ✅ — [next_batch_2026-11-05](sprite_request/next_batch_2026-11-05/README.md) 네 장 적용(돌 던지기 NE·N은 다시 받음). 승선판·열매 딴 나무 그림은 아직 안 씀 (M1·M4)
-5. **새 역할 그림 검수** — 데이포보스는 아게노르 그림을, 노꾼은 앉아 먹기 동작을 재사용 중이다. [추가 후보 3장](sprite_request/supplement_2026-11-05/README.md)을 준비했다. 왕자 후속 동작·노 위상 연결 전에는 게임에 적용하지 않는다 (M1·M4)
+5. **새 역할 그림** — 노꾼 노 젓기는 다시 받아 넣었다 ✅(`gen_rower.py`, 노의 위상에 맞춤). 데이포보스 기본·초상화 후보는 검수 통과,
+   걷기·달리기·공격1~3·강공격·막기·맞음·쓰러짐을 받은 뒤 `trojan_prince` 시트로 연결한다([검수](sprite_request/supplement_2026-11-05/REVIEW.md)) (M1·M4)
 6. **챕터 2 나머지** — 해도 화면, 적 배 올라타기 (M4). 항해복(`odysseus_sea`) 동작 37장은 5장 때 받으면 된다
 
 ---

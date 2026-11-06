@@ -204,9 +204,12 @@ func _apply_floor() -> void:
 		water_material.set_shader_parameter("floor_map", ImageTexture.create_from_image(fmap))
 		water_material.set_shader_parameter("atlas_size", Vector2(src.texture.get_size()))
 		water_material.set_shader_parameter("water_row", float(FLOOR_ROWS["water"]))
-		if FLOOR_ROWS.has("sand") and ResourceLoader.exists("res://assets/env/ground_sand.png"):
-			water_material.set_shader_parameter("sand_tex", load("res://assets/env/ground_sand.png"))
-			water_material.set_shader_parameter("sand_row", float(FLOOR_ROWS["sand"]))
+		# 이음매 없는 바닥 무늬(tools/gen_ground_tex.py)가 있는 종류는 칸 그림 대신 그것을 깐다
+		for k in ["sand", "grass", "dirt"]:
+			var tex := "res://assets/env/ground_%s.png" % k
+			if FLOOR_ROWS.has(k) and ResourceLoader.exists(tex):
+				water_material.set_shader_parameter(k + "_tex", load(tex))
+				water_material.set_shader_parameter(k + "_row", float(FLOOR_ROWS[k]))
 	if water_material:
 		var img := Image.create(W, H, false, Image.FORMAT_L8)
 		for c in floor_kind:
@@ -602,6 +605,16 @@ func _update_sea(delta: float) -> void:
 	_sea_b = (_sea_b + dir * v * delta).posmod(512.0)
 	water_material.set_shader_parameter("off_a", _sea_a.round())
 	water_material.set_shader_parameter("off_b", _sea_b.round())
+
+
+## 카메라를 지금 따라갈 곳에 바로 둔다(--start·--at으로 옮긴 뒤: 첫 대화가 게임을 멈춰 카메라가 따라가지 못하므로)
+func snap_camera() -> void:
+	if player == null or camera == null:
+		return
+	_cam_pos = player.global_position + Vector2(0, -16)
+	if camera_target and is_instance_valid(camera_target):
+		_cam_pos = camera_target.global_position + Vector2(0, -30)
+	camera.global_position = _cam_pos.round()
 
 
 func _update_camera(delta: float) -> void:

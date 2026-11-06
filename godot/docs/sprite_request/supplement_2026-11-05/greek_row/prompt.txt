@@ -1,3 +1,15 @@
+Use your built-in image generation tool to create exactly ONE image from the prompt below.
+Do not write code or edit any files. When the image is generated, reply with its saved file path only.
+Attached images: 1) style_ref.webp = the Greek soldier style reference. 2) greek_row_v1.png = the first attempt (same layout, too little motion).
+
 Create NEW production pixel-art animation sheet of a GREEK GALLEY ROWER for ODYSSEY. Reference is Greek soldier: preserve compact3-head CHIBI proportions, white linen cuirass over blue short tunic, bronze helmet WITHOUT crest, short beard, bronze bracers, sandals, warm skin and pixel style. Adapt to seated rowing: NO sword shield bow quiver food or lotus fruit. Both hands grip an IMAGINARY horizontal oar handle (game draws oar, DO NOT draw oar boat bench or props). Low seated pose, knees bent, feet planted, hips anchored. Hands in front of torso, elbows shoulders coordinated. FOUR FRAME LOOP:1 reach forward arms almost straight torso forward;2 begin pull elbows bending;3 power stroke hands pulled to lower ribs torso backward;4 recovery torso forward arms extending. Frame4 loops smoothly to1. NO eating gestures or hands at mouth. Same face and costume every frame.
 EXACT1536x1024, FOUR COLUMNS by FIVE ROWS, invisible cells384x204 with bottom4pixels magenta. Row1 EAST right profile;Row2 SOUTHEAST front-right;Row3 SOUTH straight front;Row4 NORTHEAST back-right;Row5 NORTH straight back NO face visible. Each row keeps same facing in all4frames. Exactly20 fullbody seated frames. Figure150px high, same size, hips centered horizontally, feet baseline185px offset in each row. No clipped limbs. Torso hinges forward/back, hips do not rotate during cycle. Anatomically coherent hands/arms.
 Orthographic isometric30degree top-down game camera, crisp2D pixel clusters dark thin outline, bronze cream blue brown skin, no antialias gradients or3D. ALL background EXACT FLAT#FF00FF, no ground shadow numbers labels text grid. Output only20 rower frames.
+
+CORRECTION (second attempt; the first result is attached as greek_row_v1.png): the four frames in each row looked almost identical.
+Keep the same identity, five row facings and magenta background. Increase ONLY rowing motion: frame1 shoulders reach forward over knees,
+arms straight forward; frame2 torso begins backward pull with elbows bending; frame3 shoulders clearly behind hips and fists at lower ribs;
+frame4 torso returns halfway forward. Keep hips and both planted feet at exactly the same coordinates in every frame. No head turning within
+a row. Fit the entire silhouette including feet at least 12px inside every 384x204 cell. No oar or bench. Do not repeat identical poses in
+frames 1, 2 and 4. In the S row (facing the viewer) and N row (back view) the pull must still read: lean forward = head lower and closer to
+the knees, lean back = head higher with the chest opened.

@@ -12,7 +12,7 @@
         1536,
         1024
       ],
-      "status": "candidate",
+      "status": "approved_design",
       "generator": "built-in imagegen"
     },
     {
@@ -26,7 +26,7 @@
         1254,
         1254
       ],
-      "status": "candidate",
+      "status": "approved_design",
       "generator": "built-in imagegen"
     },
     {
@@ -35,12 +35,12 @@
       "references": [
         "greek_row/style_ref.webp"
       ],
-      "result": "results/greek_row.png",
+      "result": "results/greek_row_v2.png",
       "actual_size": [
         1536,
         1024
       ],
-      "status": "candidate",
+      "status": "integrated",
       "generator": "built-in imagegen"
     }
   ]
