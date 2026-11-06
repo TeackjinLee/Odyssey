@@ -230,7 +230,7 @@ func _footstep() -> void:
 
 
 func _on_frame() -> void:
-	if not _proc and body.visible and body.animation.begins_with("walk") and body.frame % 3 == 0:
+	if not _proc and body.visible and body.animation.begins_with("walk") and body.frame % maxi(1, body.sprite_frames.get_frame_count(body.animation) / 2) == 0:
 		_footstep()
 
 

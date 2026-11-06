@@ -4,7 +4,7 @@
     "issues": []
   },
   "walk": {
-    "scale": 0.655,
+    "scale": 0.702,
     "issues": []
   },
   "roar": {
@@ -32,11 +32,11 @@
     "issues": []
   },
   "push": {
-    "scale": 0.655,
+    "scale": 0.66,
     "issues": []
   },
   "pull": {
-    "scale": 0.655,
+    "scale": 0.66,
     "issues": []
   },
   "sleep": {

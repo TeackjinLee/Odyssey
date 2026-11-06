@@ -47,17 +47,18 @@ CONFIGS = {
     },
     'v2': {
         'idle': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=4, loop=True, ref='median', steady=True),
-        # 걷기 fps 4: 걸음 폭에 비해 7은 다리가 땅보다 3배 빨라 제자리 종종걸음처럼 보였다(속도에 맞춰 speed_scale로 빨라짐)
-        'walk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=4, loop=True, ref='median', steady=True),
-        'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='median'),
+        # 걷기: 8장 느린 걸음(walk8_*, 2026-11-06 다시 받음) fps 5 — 6장 fps 7은 다리가 땅보다 3배 빨라 제자리 종종걸음처럼 보였다
+        # (빨리 걸으면 speed_scale로 빨라짐). 6장 원본 walk_*는 남겨 둠
+        'walk': dict(src=KIT + 'polyphemus_v2/results', file='walk8', layout='per_dir', cols=4, rows=2, fps=5, loop=True, ref='median', steady=True),
+        'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='median', dir_head=True),
         'club_slam': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'grab': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'drunk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
         'eye_wound': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=False, ref='first'),
         'grope': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
-        # 바위 밀기·끌기: 몸을 숙여 키가 작으므로 걷기와 같은 배율(k_like)
-        'push': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
-        'pull': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k_like='walk'),
+        # 바위 밀기·끌기: 몸을 숙여 키가 작으므로 6장 걷기(walk_*, 같은 크기로 그려 받음)와 같은 배율 0.66 고정
+        'push': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k=0.66),
+        'pull': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k=0.66),
         'sleep': dict(src=KIT + 'polyphemus_v2/results/sleep_S.png', layout='sleep', cols=2, rows=2, fps=2, loop=True, ref='width'),
     },
 }
@@ -130,7 +131,7 @@ def load_anim(name, cfg, root):
         return {d: cells[i] for i, d in enumerate(FACINGS)}
     out = {}
     for d in FACINGS:
-        p = root / cfg['src'] / f'{name}_{d}.png'
+        p = root / cfg['src'] / f"{cfg.get('file', name)}_{d}.png"
         if not p.exists():
             raise FileNotFoundError(p)
         cells = split(Image.open(p), cfg['cols'], cfg['rows'])
@@ -144,6 +145,28 @@ def torso_x(sp):
     y0, y1 = int(sp.height * 0.2), int(sp.height * 0.55)
     xs = [x for y in range(y0, y1, 2) for x in range(0, sp.width, 2) if a.getpixel((x, y))]
     return sum(xs) / len(xs) if xs else sp.width / 2
+
+
+def head_h(cell, b):
+    """발바닥 ~ 머리 꼭대기(몸통 가운데 좁은 띠에서만 — 높이 든 곤봉·팔은 빼고 잰 몸 키)"""
+    sp = cell.crop(b)
+    a = opaque(sp)
+    tx, half = torso_x(sp), max(4, int(sp.height * 0.1))
+    band = a.crop((max(0, int(tx) - half), 0, min(sp.width, int(tx) + half), sp.height)).getbbox()
+    return sp.height - (band[1] if band else 0)
+
+
+def dir_fit(cs, bs, kd, frame, anchor):
+    """한 방향 프레임이 칸 안에 들어가는 가장 큰 배율(kd 이하)"""
+    base = median(b[3] for b in bs)
+    for c, b in zip(cs, bs):
+        if base - b[1] > 0:
+            kd = min(kd, (anchor[1] - 2) / (base - b[1]))
+        if c.width / 2 - b[0] > 0:
+            kd = min(kd, (anchor[0] - 2) / (c.width / 2 - b[0]))
+        if b[2] - c.width / 2 > 0:
+            kd = min(kd, (frame[0] - anchor[0] - 2) / (b[2] - c.width / 2))
+    return kd
 
 
 def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H, k=None):
@@ -187,9 +210,13 @@ def place(frames_by_dir, cfg, frame=FRAME, anchor=ANCHOR, target=STAND_H, k=None
                 x = round(anchor[0] - torso_x(sp))
                 y = anchor[1] - sp.height
             else:
-                sp = shrink(c.crop(b), k)
-                x = round(anchor[0] + (b[0] - c.width / 2) * k)
-                y = round(anchor[1] + (b[1] - base) * k)
+                kd = k
+                if cfg.get('dir_head'):
+                    # 포효처럼 팔·곤봉을 드는 동작: 방향마다 몸 키(머리까지)를 대기 키에 맞춘다(그려 받은 크기가 방향마다 달라서)
+                    kd = dir_fit(cs, boxes[d], target / median(head_h(cc, bb) for cc, bb in zip(cs, boxes[d])), frame, anchor)
+                sp = shrink(c.crop(b), kd)
+                x = round(anchor[0] + (b[0] - c.width / 2) * kd)
+                y = round(anchor[1] + (b[1] - base) * kd)
             if x < 0 or y < 0 or x + sp.width > frame[0] or y + sp.height > frame[1]:
                 issues.append(f'{d} {i + 1}: 칸을 넘어 잘림')
             canvas = Image.new('RGBA', frame)
@@ -210,7 +237,7 @@ def pack(which, root):
         except FileNotFoundError as e:
             print('건너뜀(원본 없음):', name, e)
             continue
-        like = report.get(cfg.get('k_like', ''), {}).get('scale')
+        like = cfg.get('k')
         frames, k, issues = place(src, cfg, (FRAME, FRAME), k=like)
         for d, o in MIRROR.items():
             frames[d] = [f.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for f in frames[o]]

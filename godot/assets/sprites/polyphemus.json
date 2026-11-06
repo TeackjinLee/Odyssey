@@ -18,36 +18,36 @@
     },
     "walk": {
       "start": 4,
-      "frames": 6,
-      "fps": 4,
+      "frames": 8,
+      "fps": 5,
       "loop": true
     },
     "drunk": {
-      "start": 10,
+      "start": 12,
       "frames": 6,
       "fps": 5,
       "loop": true
     },
     "grope": {
-      "start": 16,
+      "start": 18,
       "frames": 6,
       "fps": 5,
       "loop": true
     },
     "roar": {
-      "start": 22,
+      "start": 24,
       "frames": 4,
       "fps": 5,
       "loop": false
     },
     "idle_shut": {
-      "start": 26,
+      "start": 28,
       "frames": 1,
       "fps": 1,
       "loop": true
     },
     "idle_wound": {
-      "start": 27,
+      "start": 29,
       "frames": 1,
       "fps": 1,
       "loop": true
