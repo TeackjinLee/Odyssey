@@ -15,8 +15,8 @@ one() {
   i=0
   for p in ~/.codex/generated_images/$sid/*.png(N); do i=$((i+1)); cp $p results/cand/${n}_$i.png; done
   [ $i -eq 0 ] && { echo "$n 없음"; return; }
-  case $a in idle|roar) c=2;; walk8) c=4;; *) c=3;; esac
-  [ $a = sleep ] && { c=2; h=160; } || h=380; [ $a = walk8 ] && h=360
+  case $a in idle|roar) c=2;; walk8|drunk8|grope8) c=4;; *) c=3;; esac
+  [ $a = sleep ] && { c=2; h=160; } || h=380; case $a in *8) h=360;; esac
   python3 $top/tools/pick_sheet.py $c 2 $h results/$n.png results/cand/${n}_*.png > jobs/$n.pick
   echo "$n ok ($i장 중 고름)"
 }

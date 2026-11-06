@@ -48,14 +48,14 @@ CONFIGS = {
     'v2': {
         'idle': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=4, loop=True, ref='median', steady=True),
         # 걷기: 8장 느린 걸음(walk8_*, 2026-11-06 다시 받음) fps 5 — 6장 fps 7은 다리가 땅보다 3배 빨라 제자리 종종걸음처럼 보였다
-        # (빨리 걸으면 speed_scale로 빨라짐). 6장 원본 walk_*는 남겨 둠
+        # (빨리 걸으면 speed_scale로 빨라짐). 취함·더듬기도 8장(drunk8_*·grope8_*) fps 4. 6장 원본은 남겨 둠
         'walk': dict(src=KIT + 'polyphemus_v2/results', file='walk8', layout='per_dir', cols=4, rows=2, fps=5, loop=True, ref='median', steady=True),
         'roar': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=2, rows=2, fps=5, loop=False, ref='median', dir_head=True),
         'club_slam': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
         'grab': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=6, loop=False, ref='first'),
-        'drunk': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
+        'drunk': dict(src=KIT + 'polyphemus_v2/results', file='drunk8', layout='per_dir', cols=4, rows=2, fps=4, loop=True, ref='median', steady=True),
         'eye_wound': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=7, loop=False, ref='first'),
-        'grope': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', steady=True),
+        'grope': dict(src=KIT + 'polyphemus_v2/results', file='grope8', layout='per_dir', cols=4, rows=2, fps=4, loop=True, ref='median', steady=True),
         # 바위 밀기·끌기: 몸을 숙여 키가 작으므로 6장 걷기(walk_*, 같은 크기로 그려 받음)와 같은 배율 0.66 고정
         'push': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k=0.66),
         'pull': dict(src=KIT + 'polyphemus_v2/results', layout='per_dir', cols=3, rows=2, fps=5, loop=True, ref='median', k=0.66),
